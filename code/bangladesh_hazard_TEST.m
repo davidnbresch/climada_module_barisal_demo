@@ -50,6 +50,8 @@ if ~exist('force_recalc','var'), force_recalc = 0;end
 %
 use_cbfreeze=0; % default =1 after MATLAB version 8.1.0.604 (R2013a)
 %
+module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+%
 % in essence, only the TEST country, TEST location, TEST_probabilistic
 % and the TC track set needs to be defined,
 % all further parameters below should be working
@@ -72,25 +74,23 @@ TEST_probabilistic = 0; % default=0, since fast to check
 % see climada_create_GDP_entity to create centroids file
 % centroids_file = [climada_global.modules_dir filesep 'tc_surge' filesep ...
 %     'data' filesep 'system'   filesep TEST_country_name '_centroids.mat'];
-centroids_file = [climada_global.system_dir filesep 'centroids_' TEST_country_name '.mat'];
+centroids_file = [module_data_dir filesep 'system' filesep TEST_country_name '_centroids.mat'];
 % if the centroids are generated in the present code, the entitity is also stored (not needed for this TEST)
-entity_file    = [climada_global.modules_dir filesep 'tc_surge' filesep ...
-    'data' filesep 'entities' filesep TEST_country_name '_assets.mat'];
+entity_file    = [module_data_dir filesep 'entities' filesep TEST_country_name '_entity.mat'];
 %
 % 2) tropical cyclone (TC) tracks
 % -------------------------------
 % set UNISYS TC track data file (for info, see climada_tc_read_unisys_database)
-unisys_file    = [climada_global.modules_dir filesep 'barisal_demo' filesep ...
-    'data' filesep 'tc_tracks' filesep tc_track_file];
+unisys_file    = [module_data_dir filesep 'tc_tracks' filesep tc_track_file];
 %
 % 3) bathymetry parameters set in tc_surge_hazard_create
 %
 % 4) surge hazard event set
 % -------------------------
 % define the hazard event set file to store the TEST hazard event set
-hazard_set_file_tc = [climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TC.mat'];
-hazard_set_file_ts = [climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TS.mat'];
-hazard_set_file_tr = [climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TR.mat'];
+hazard_set_file_tc = [module_data_dir filesep 'hazards' filesep TEST_country_name '_hazard_TC.mat'];
+hazard_set_file_ts = [module_data_dir filesep 'hazards' filesep TEST_country_name '_hazard_TS.mat'];
+hazard_set_file_tr = [module_data_dir filesep 'hazards' filesep TEST_country_name '_hazard_TR.mat'];
 
 % Calculations start
 % ==================
@@ -213,13 +213,14 @@ if use_cbfreeze
 end
 % up to here, hazard contains the tropical cyclone (TC) hazard event set
 
+% placeholder for wind hazard
+hazard_TC = hazard;
 
 % 3) HAZARD TORRENTIAL RAIN
 % ==========================
 if ~exist(hazard_set_file_tr,'file') || force_recalc
     
-    % placeholder for wind hazard
-    hazard_TC = hazard;
+    
     
     % load tc tracks if generated before
     if ~exist('tc_track','var')
