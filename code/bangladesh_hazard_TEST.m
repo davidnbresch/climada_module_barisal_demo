@@ -70,17 +70,17 @@ TEST_probabilistic = 0; % default=0, since fast to check
 % define the file with centroids (geo-locations of the points we later
 % evaluate and store storm surge heights at)
 % see climada_create_GDP_entity to create centroids file
-% centroids_file = [climada_global.additional_dir filesep 'tc_surge' filesep ...
+% centroids_file = [climada_global.modules_dir filesep 'tc_surge' filesep ...
 %     'data' filesep 'system'   filesep TEST_country_name '_centroids.mat'];
 centroids_file = [climada_global.system_dir filesep 'centroids_' TEST_country_name '.mat'];
 % if the centroids are generated in the present code, the entitity is also stored (not needed for this TEST)
-entity_file    = [climada_global.additional_dir filesep 'tc_surge' filesep ...
+entity_file    = [climada_global.modules_dir filesep 'tc_surge' filesep ...
     'data' filesep 'entities' filesep TEST_country_name '_assets.mat'];
 %
 % 2) tropical cyclone (TC) tracks
 % -------------------------------
 % set UNISYS TC track data file (for info, see climada_tc_read_unisys_database)
-unisys_file    = [climada_global.additional_dir filesep 'barisal_demo' filesep ...
+unisys_file    = [climada_global.modules_dir filesep 'barisal_demo' filesep ...
     'data' filesep 'tc_tracks' filesep tc_track_file];
 %
 % 3) bathymetry parameters set in tc_surge_hazard_create
@@ -88,9 +88,9 @@ unisys_file    = [climada_global.additional_dir filesep 'barisal_demo' filesep .
 % 4) surge hazard event set
 % -------------------------
 % define the hazard event set file to store the TEST hazard event set
-hazard_set_file_tc = [climada_global.additional_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TC.mat'];
-hazard_set_file_ts = [climada_global.additional_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TS.mat'];
-hazard_set_file_tr = [climada_global.additional_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TR.mat'];
+hazard_set_file_tc = [climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TC.mat'];
+hazard_set_file_ts = [climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TS.mat'];
+hazard_set_file_tr = [climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'hazards' filesep TEST_country_name '_hazard_TR.mat'];
 
 % Calculations start
 % ==================
@@ -178,16 +178,16 @@ else
     load(hazard_set_file_tc);
 end
 
-fprintf('TC: max(max(hazard.arr))=%f\n',full(max(max(hazard.arr)))); % a kind of easy check
+fprintf('TC: max(max(hazard.intensity))=%f\n',full(max(max(hazard.intensity)))); % a kind of easy check
 
 
 % FIGURE: show biggest TC event
-[~,max_tc_pos] = max(sum(hazard.arr,2)); % the maximum TC intensity
+[~,max_tc_pos] = max(sum(hazard.intensity,2)); % the maximum TC intensity
 
 main_fig = climada_figuresize(0.75,0.8);
 % main_fig = figure('Name','TEST','Position',[89 223 1014 413],'Color',[1 1 1]);
 subplot(3,1,1)
-values   = full(hazard.arr(max_tc_pos,:)); % get one TC footprint
+values   = full(hazard.intensity(max_tc_pos,:)); % get one TC footprint
 centroids.Longitude   = hazard.lon; % as the gridding routine needs centroids
 centroids.Latitude    = hazard.lat;
 [X, Y, gridded_VALUE] = climada_gridded_VALUE(values,centroids);
@@ -235,7 +235,7 @@ if ~exist(hazard_set_file_tr,'file') || force_recalc
     % generate all the rain footprints and save hazard torrential rain set
     hazard = climada_tr_hazard_set(tc_track, hazard_set_file_tr, centroids);
     
-    fprintf('TR: max(max(hazard.arr))=%f\n',full(max(max(hazard.arr)))); % a kind of easy check
+    fprintf('TR: max(max(hazard.intensity))=%f\n',full(max(max(hazard.intensity)))); % a kind of easy check
 
 else
     fprintf('loading hazard TR from %s\n',hazard_set_file_tr);
@@ -245,7 +245,7 @@ end
 % show biggest TR event
 figure(main_fig);
 subplot(3,1,2)
-values                = full(hazard.arr(max_tc_pos,:)); % get one tc footprint
+values                = full(hazard.intensity(max_tc_pos,:)); % get one tc footprint
 centroids.Longitude   = hazard.lon; % as the gridding routine needs centroids
 centroids.Latitude    = hazard.lat;
 [X, Y, gridded_VALUE] = climada_gridded_VALUE(values,centroids);
@@ -290,7 +290,7 @@ end
 % show biggest TS event
 figure(main_fig);
 subplot(3,1,3)
-values                = full(hazard.arr(max_tc_pos,:)); % get one tc footprint
+values                = full(hazard.intensity(max_tc_pos,:)); % get one tc footprint
 centroids.Longitude   = hazard.lon; % as the gridding routine needs centroids
 centroids.Latitude    = hazard.lat;
 [X, Y, gridded_VALUE] = climada_gridded_VALUE(values,centroids);
