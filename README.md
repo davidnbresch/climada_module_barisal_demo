@@ -1,7 +1,7 @@
 climada_module_barisal_demo
 ===========================
 
-Barisal, Bangladesh, demo module for tropical cyclone
+Barisal, Bangladesh, demo module for tropical cyclone - really just a demo, all numbers and results are for demonstration purposes only.
 
 this module contains the additional climada module to implement a demo tropical cyclone hazard event set for Barisal in Bangladesh.
 
