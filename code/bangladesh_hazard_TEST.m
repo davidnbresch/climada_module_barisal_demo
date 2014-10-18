@@ -36,11 +36,12 @@ function hazard=bangladesh_hazard_TEST(force_recalc)
 % MODIFICATION HISTORY:
 % David N. Bresch, david.bresch@gmail.com, 20140420
 % David N. Bresch, david.bresch@gmail.com, 20140804, major revision
+% David N. Bresch, david.bresch@gmail.com, 20141018, consistent with new module location
 %-
 
 hazard    = []; % init output
 
-global climada_global
+%%global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 % poor man's version to check arguments
@@ -72,8 +73,6 @@ TEST_probabilistic = 0; % default=0, since fast to check
 % define the file with centroids (geo-locations of the points we later
 % evaluate and store storm surge heights at)
 % see climada_create_GDP_entity to create centroids file
-% centroids_file = [climada_global.modules_dir filesep 'tc_surge' filesep ...
-%     'data' filesep 'system'   filesep TEST_country_name '_centroids.mat'];
 centroids_file = [module_data_dir filesep 'system' filesep TEST_country_name '_centroids.mat'];
 % if the centroids are generated in the present code, the entitity is also stored (not needed for this TEST)
 entity_file    = [module_data_dir filesep 'entities' filesep TEST_country_name '_entity.mat'];
