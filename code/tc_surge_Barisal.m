@@ -221,7 +221,9 @@ else
     fprintf('Done \n');
     
     % Encode each asset to nearest on-land centroid for damage calculations
-    entity.assets = climada_assets_encode_centroids(entity.assets,centroids,1,'centroids.onLand ==1');
+    temp_centroids=centroids;
+    temp_centroids.centroid_ID(centroids.onLand ==1)=-1;
+    entity.assets = climada_assets_encode(entity.assets,temp_centroids);
     
     % Save centroids as .mat, entity as .mat and .xls
     save(centroids_file, 'centroids')
