@@ -177,6 +177,8 @@ else
     load(hazard_set_file_tc);
 end
 
+hazard=climada_hazard2octave(hazard); % Octave compatibility for -v7.3 mat-files
+
 fprintf('TC: max(max(hazard.intensity))=%f\n',full(max(max(hazard.intensity)))); % a kind of easy check
 
 
