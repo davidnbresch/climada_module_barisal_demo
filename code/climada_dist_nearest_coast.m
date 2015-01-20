@@ -1,4 +1,4 @@
-function [c_lon, c_lat, d_lon, d_lat] = climada_dist_nearest_coast(lon, lat, polygon)
+function [c_lon, c_lat, d_lon, d_lat] = climada_dist_nearest_coast(lon, lat, check_country, polygon)
 % climada
 % NAME:
 %   climada_dist_nearest_coast
@@ -23,13 +23,21 @@ function [c_lon, c_lat, d_lon, d_lat] = climada_dist_nearest_coast(lon, lat, pol
 %   d_lon, d_lat:     Difference in lon & lat from coast to input point.
 % MODIFICATION HISTORY:
 %   Gilles Stassen, gillesstassen@hotmail.com, 20141201
-%   Gilles Stassen, gillesstassen@hotmail.com, 20141208 accept vector for
-%   lon & lat input
+%   Gilles Stassen, gillesstassen@hotmail.com, 20141208 accept vector for lon & lat input
+%   Gilles Stassen, gillesstassen@hotmail.com, 20141218 change variable
+%                       names whole_world_borders.lon/lat -> shapes.X/Y
+%   Gilles Stassen, gillesstassen@hotmail.com, 20141223 add check_country
+%   Gilles Stassen, 20150112 incorporate climada_geo_distance
 %-
-% Check arguments
-if ~exist('polygon', 'var'),    polygon = [];               end
-if ~exist('lon', 'var') || ~exist('lat', 'var'), return;    end
 
+% Init
+c_lon = []; c_lat = []; d_lon = []; d_lat = [];
+
+% Check arguments
+if ~exist('polygon', 'var'),    polygon = [];                   end
+if ~exist('check_country','var'), check_country = 'Bangladesh'; end % Since created for Barisal module
+if ~exist('lon', 'var') || ~exist('lat', 'var'),    return;     end
+if isempty(lon) || isempty(lat),                    return;     end
 if numel(lon) ~= numel(lat)
     fprintf('ERROR: Size of lat and lon must match. Unable to proceed.')
     return;
@@ -39,15 +47,17 @@ global climada_global
 
 if isfield(climada_global,'map_border_file') && isempty(polygon)
     load(climada_global.map_border_file)
-    polygon.lon = whole_world_borders.lon;
-    polygon.lat = whole_world_borders.lat;
-elseif ~exist(whole_world_borders,'var') && isempty(polygon)
+    [~,~,shape_index] = climada_country_name(check_country);
+    polygon.lon = shapes(shape_index).X;
+    polygon.lat = shapes(shape_index).Y;
+elseif ~exist(shapes,'var') && isempty(polygon)
     polygon = input('ERROR: No coastal information available, please provide the variable name of a polygon structure, with fields "lat" and "lon":');
 end
 
 % Does this work???
 for ndx = 1 : numel(lon)
-    r = sqrt((polygon.lon - lon(ndx)).^2 + (polygon.lat - lat(ndx)).^2);
+    % r = sqrt((polygon.lon - lon(ndx)).^2 + (polygon.lat - lat(ndx)).^2);
+    r = climada_geo_distance(lon(ndx),lat(ndx),polygon.lon,polygon.lat);
     if sum(r == min(r))==1
         c_lon(ndx) = polygon.lon(r == min(r));
         c_lat(ndx) = polygon.lat(r == min(r));

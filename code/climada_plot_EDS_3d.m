@@ -23,6 +23,7 @@ function fig=climada_plot_EDS_3d(hazard,EDS,event_i)
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com 20141204
 % David N. Bresch, david.bresch@gmail.com, 20141215, cleanup
+% Gilles Stassen, 20150114 fixed conversion issues + cleanup
 %-
 fig = []; % init output
 
@@ -70,9 +71,16 @@ end
 
 % First, generate matrix from singleton asset arrays. Define the x and y
 % axes as tmp_lon and tmp_lat respectively
-tmp_lon = linspace(min(EDS.assets.Longitude),max(EDS.assets.Longitude),numel(unique(EDS.assets.Longitude)));%unique(EDS.assets.Longitude);
-tmp_lat = linspace(min(EDS.assets.Latitude),max(EDS.assets.Latitude),numel(unique(EDS.assets.Latitude)));%unique(EDS.assets.Latitude);
+tmp_lon = unique(EDS.assets.Longitude);
+tmp_lat = unique(EDS.assets.Latitude);
 
+% Conversion factors
+dx_dlon = numel(tmp_lon)/(max(tmp_lon) - min(tmp_lon));
+dy_dlat = numel(tmp_lat)/(max(tmp_lat) - min(tmp_lat));
+
+lon_c =  min(tmp_lon);  lat_c = min(tmp_lat);
+
+% Construct matrix
 loss_plot = zeros(numel(tmp_lat),numel(tmp_lon));
 tmp_d_a_c = full(EDS.damage_at_centroid(:,event_i));
 
@@ -80,17 +88,17 @@ x = zeros(size(EDS.assets.Value));
 y = zeros(size(EDS.assets.Value));
 
 for ndx = 1: numel(EDS.assets.Value)
-    x(ndx) = find(tmp_lon == interp1(tmp_lon,tmp_lon,EDS.assets.Longitude(ndx),'nearest','extrap'));
-    y(ndx) = find(tmp_lat == interp1(tmp_lat,tmp_lat,EDS.assets.Latitude(ndx),'nearest','extrap'));
-    
-    loss_plot(y(ndx),x(ndx)) = tmp_d_a_c(ndx); % Assign values to loss plot matrix
+    x = find(tmp_lon == EDS.assets.Longitude(ndx));
+    y = find(tmp_lat == EDS.assets.Latitude(ndx));
+    loss_plot(y,x) = tmp_d_a_c(ndx);
 end
 
 % Plot 3d bar chart
 fig = figure('Name',title_str,'Color',[1 1 1]);
 set(fig,'name', title_str);
 hold on
-title(sprintf('Total damage: USD %s m',num2str(round(sum(EDS.damage_at_centroid(:,event_ii))/1e6)),'fontsize',12))
+title(['Total damage: USD'  num2str(round(sum(EDS.damage_at_centroid(:,event_ii))/1e6)) 'm'],'fontsize',12)
+%title(title_str)
 h = bar3(loss_plot);
 for i = 1:size(loss_plot,2)
     z = get(h(i),'z');
@@ -127,38 +135,35 @@ load(climada_global.map_border_file)
 
 % store also in one contiguous list (wrap-around for backward
 % compatibility)
-whole_world_borders.lon = [];
-whole_world_borders.lat = [];
+whole_world_borders.lon = [NaN];
+whole_world_borders.lat = [NaN];
 for i=1:length(shapes)
-    whole_world_borders.lon = [whole_world_borders.lon; shapes(i).X']; % NaN at end already there
-    whole_world_borders.lat = [whole_world_borders.lat; shapes(i).Y']; % NaN at end already there
+    whole_world_borders.lon = [whole_world_borders.lon; NaN; shapes(i).X']; % NaN at end already there
+    whole_world_borders.lat = [whole_world_borders.lat; NaN; shapes(i).Y']; % NaN at end already there
 end
 
 % World borders to area of interest
-tmp_lat_wb = (whole_world_borders.lat > min(tmp_lat) &...
-    whole_world_borders.lat < max(tmp_lat)) | isnan(whole_world_borders.lat);
-tmp_lon_wb = (whole_world_borders.lon > min(tmp_lon) &...
-    whole_world_borders.lon < max(tmp_lon)) | isnan(whole_world_borders.lon);
+tmp_lat_wb = (whole_world_borders.lat >= min(tmp_lat) &...
+    whole_world_borders.lat <= max(tmp_lat)) | isnan(whole_world_borders.lat);
+tmp_lon_wb = (whole_world_borders.lon >= min(tmp_lon) &...
+    whole_world_borders.lon <= max(tmp_lon)) | isnan(whole_world_borders.lon);
 
 whole_world_borders.lat = whole_world_borders.lat(tmp_lat_wb & tmp_lon_wb);
 whole_world_borders.lon = whole_world_borders.lon(tmp_lat_wb & tmp_lon_wb);
 
 % Scale borders to match bar3
-x_b = whole_world_borders.lon - min(whole_world_borders.lon);
-y_b = whole_world_borders.lat - min(whole_world_borders.lat);
-
-x_b = x_b .* (size(loss_plot,2)/max(x_b));
-y_b = y_b .* (size(loss_plot,1)/max(y_b));
+x_b = dx_dlon.*(whole_world_borders.lon - lon_c);
+y_b = dy_dlat.*(whole_world_borders.lat - lat_c);
 
 plot(x_b,y_b,'color',[81 81 81]/256);
 
 % Set axes tick labels and extent
-axis([min(x_b) max(x_b) min(y_b) max(y_b)]);
+axis([0 numel(tmp_lon) 0 numel(tmp_lat)]);
 
 view(300,30);
 
-set(gca,'XTickLabel', round(linspace(min(tmp_lon),max(tmp_lon),7).*10)./10);
-set(gca,'YTickLabel', round(linspace(min(tmp_lat),max(tmp_lat),7).*10)./10);
+set(gca,'XTickLabel', round(linspace(min(tmp_lon),max(tmp_lon),5).*10)./10);
+set(gca,'YTickLabel', round(linspace(min(tmp_lat),max(tmp_lat),5).*10)./10);
 set(gca,'ztick',[], 'zcolor', 'w');
 
 xlabel('Longitude'); ylabel('Latitude');
@@ -169,14 +174,12 @@ box off
 
 % Plot hazard
 % Scale hazard x-y data
-x_s = (hazard.lon - min(hazard.lon));
-x_s = x_s .* (size(loss_plot,2)/max(x_s));
-y_s = (hazard.lat - min(hazard.lat));
-y_s = y_s .* (size(loss_plot,1)/max(y_s));
+x_h = dx_dlon.*(hazard.lon - lon_c);
+y_h = dy_dlat.*(hazard.lat - lat_c);
 
-[x_q, y_q] = meshgrid(linspace(min(x_b),max(x_b),400),linspace(min(y_b),max(y_b),400));
+[x_q, y_q] = meshgrid(linspace(min(x_h),max(x_h),400),linspace(min(y_h),max(y_h),400));
 
-hazard_Z = griddata(x_s,y_s,hazard_intensity,x_q,y_q);
+hazard_Z = griddata(x_h,y_h,hazard_intensity,x_q,y_q);
 
 hazard_Z(hazard_Z <= 0) = NaN;
 
@@ -201,18 +204,23 @@ hold on
 % Plot text labels for three largest losses
 [sort_vals, sort_ndx] = sort(tmp_d_a_c,'descend');
 num_lbl = 3; % specify the number of text labels
-txt_x = ones(1,num_lbl).*(0.6*max(x)); % the decimal factors are a rbitrary label location adjustment parameters
-txt_y = ones(1,num_lbl).*(1.2*min(y));
+txt_x = ones(1,num_lbl).*(0.8*numel(tmp_lon)); % the decimal factors are arbitrary label location adjustment parameters
+txt_y = ones(1,num_lbl).*(0.2*numel(tmp_lat));
 txt_v = sort_vals(1:num_lbl);
 txt_z = max(txt_v).*linspace(1.2,0.6,num_lbl);
 %Make sure factors of 10 are correct w.r.t (*)
 
 for i = 1:num_lbl
-    lbl_y = [y(sort_ndx(i)) txt_y(i)];
-    lbl_x = [x(sort_ndx(i)) txt_x(i)];
+    
+    [J, I] = find(loss_plot == loss_plot(sort_ndx(i)));
+    loss_plot(sort_ndx(i)) = 0;
+    lbl_y = [J(1) txt_y(i)];
+    lbl_x = [I(1) txt_x(i)];
     lbl_z = [txt_v(i) txt_z(i)];
     plot3(lbl_x,lbl_y,lbl_z,'color',[0. 0.1 0.1])
 end
 text(txt_x,txt_y,txt_z,strcat(' USD ',num2str(round(txt_v./100000)./10),'m'),'fontsize',12);
+
+axis tight
 
 hold off
