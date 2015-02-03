@@ -168,8 +168,8 @@ end
 
 % Attempt at plotting houses....
 if exist('EDS','var')
-    hx = EDS.assets.Longitude(EDS.assets.Value>0);
-    hy = EDS.assets.Latitude(EDS.assets.Value>0);
+    hx = EDS.assets.lon(EDS.assets.Value>0);
+    hy = EDS.assets.lat(EDS.assets.Value>0);
     
     asset_elev = griddata(hazard.lon,hazard.lat,hazard.elev,hx,hy);
     hz = asset_elev;

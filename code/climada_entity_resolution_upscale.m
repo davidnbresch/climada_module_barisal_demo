@@ -35,20 +35,20 @@ total_value = sum(entity.assets.Value);
 if isfield(entity.assets,'Value_today'),total_value_today = sum(entity.assets.Value_today);end
 
 % Upscale lat lon resolution
-[lon_hr, lat_hr] = resolution_upscale(entity.assets.Longitude,...
-    entity.assets.Latitude,x_factor,y_factor);
+[lon_hr, lat_hr] = resolution_upscale(entity.assets.lon,...
+    entity.assets.lat,x_factor,y_factor);
 
-entity_hr.assets.Longitude  = lon_hr;
-entity_hr.assets.Latitude   = lat_hr;
+entity_hr.assets.lon  = lon_hr;
+entity_hr.assets.lat   = lat_hr;
 
 % Interpolate values in each field accordingly
 flds_i = fieldnames(entity.assets);
 for i = 1 : numel(flds_i)
     fld = entity.assets.(flds_i{i});
-    if numel(fld) ==numel(entity.assets.Longitude) && isnumeric(fld) &&...
+    if numel(fld) ==numel(entity.assets.lon) && isnumeric(fld) &&...
             ~(strcmp(flds_i{i}, 'Longitude') || strcmp(flds_i{i}, 'Latitude'))
-        entity_hr.assets.(flds_i{i}) = griddata(entity.assets.Longitude,...
-            entity.assets.Latitude,entity.assets.(flds_i{i}),lon_hr,lat_hr);
+        entity_hr.assets.(flds_i{i}) = griddata(entity.assets.lon,...
+            entity.assets.lat,entity.assets.(flds_i{i}),lon_hr,lat_hr);
         % Set griddata artifacts to zero
         entity_hr.assets.(flds_i{i})(entity_hr.assets.(flds_i{i}) < 1 |...
             isnan(entity_hr.assets.(flds_i{i})))=0;

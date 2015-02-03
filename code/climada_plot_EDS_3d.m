@@ -71,8 +71,8 @@ end
 
 % First, generate matrix from singleton asset arrays. Define the x and y
 % axes as tmp_lon and tmp_lat respectively
-tmp_lon = unique(EDS.assets.Longitude);
-tmp_lat = unique(EDS.assets.Latitude);
+tmp_lon = unique(EDS.assets.lon);
+tmp_lat = unique(EDS.assets.lat);
 
 % Conversion factors
 dx_dlon = numel(tmp_lon)/(max(tmp_lon) - min(tmp_lon));
@@ -88,8 +88,8 @@ x = zeros(size(EDS.assets.Value));
 y = zeros(size(EDS.assets.Value));
 
 for ndx = 1: numel(EDS.assets.Value)
-    x = find(tmp_lon == EDS.assets.Longitude(ndx));
-    y = find(tmp_lat == EDS.assets.Latitude(ndx));
+    x = find(tmp_lon == EDS.assets.lon(ndx));
+    y = find(tmp_lat == EDS.assets.lat(ndx));
     loss_plot(y,x) = tmp_d_a_c(ndx);
 end
 

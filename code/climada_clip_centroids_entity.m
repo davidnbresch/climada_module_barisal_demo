@@ -99,10 +99,10 @@ shapes = shapes(shape_index);
 
 if ~isempty(centroids)
     % Trim centroids struct
-    tmp_lon = centroids.Longitude < bounding_box(2) & ...
-        centroids.Longitude > bounding_box(1);
-    tmp_lat = centroids.Latitude< bounding_box(4) & ...
-        centroids.Latitude > bounding_box(3);
+    tmp_lon = centroids.lon < bounding_box(2) & ...
+        centroids.lon > bounding_box(1);
+    tmp_lat = centroids.lat< bounding_box(4) & ...
+        centroids.lat > bounding_box(3);
     
     % For each field with the same number of data points as there are
     % centroids, trim to bounding box
@@ -119,17 +119,17 @@ if ~isempty(centroids)
     
     % Reassign logical onLand values based on higher resolution Bangladesh
     % polygon and centroids
-    in = inpolygon(centroids.Longitude,centroids.Latitude,shapes.X,shapes.Y);
+    in = inpolygon(centroids.lon,centroids.lat,shapes.X,shapes.Y);
     centroids.onLand = false(size(centroids.centroid_ID));
     centroids.onLand(in) = 1;
 end
 
 if ~isempty(entity)
     
-    tmp_lon = entity.assets.Longitude < bounding_box(2) & ...
-        entity.assets.Longitude > bounding_box(1);
-    tmp_lat = entity.assets.Latitude < bounding_box(4) & ...
-        entity.assets.Latitude > bounding_box(3);
+    tmp_lon = entity.assets.lon < bounding_box(2) & ...
+        entity.assets.lon > bounding_box(1);
+    tmp_lat = entity.assets.lat < bounding_box(4) & ...
+        entity.assets.lat > bounding_box(3);
     
     % Trim entity structure to bounding box
     flds = fieldnames(entity.assets);
@@ -149,8 +149,8 @@ if ~isempty(entity)
         fprintf('moving assets onto land...')
         
         inval = entity.assets.Value > 0;
-        tmp_lon = entity.assets.Longitude(inval);
-        tmp_lat = entity.assets.Latitude(inval);
+        tmp_lon = entity.assets.lon(inval);
+        tmp_lat = entity.assets.lat(inval);
         
         inland = inpolygon(tmp_lon,tmp_lat,shapes.X,shapes.Y); % can take some time
         
@@ -162,8 +162,8 @@ if ~isempty(entity)
         tmp_lon(~inland) = tmp_lon_water;
         tmp_lat(~inland) = tmp_lat_water;
         
-        entity.assets.Longitude(inval) = tmp_lon;
-        entity.assets.Latitude(inval) = tmp_lat;
+        entity.assets.lon(inval) = tmp_lon;
+        entity.assets.lat(inval) = tmp_lat;
         
         fprintf(' done \n')
     end

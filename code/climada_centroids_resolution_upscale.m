@@ -1,5 +1,4 @@
 function [centroids_hr] = climada_centroids_resolution_upscale(centroids,x_factor,y_factor)
-
 % climada upscale the resolution of a given centroids struct
 % NAME:
 %   climada_centroids_resolution_upscale
@@ -31,11 +30,11 @@ if ~exist('x_factor','var'),    fprintf(err_str);   return;     end
 if ~exist('y_factor','var'),    fprintf(err_str);   return;     end
 
 % Scale centroids lat lon
-[lon_hr, lat_hr] = resolution_upscale(centroids.Longitude,...
-    centroids.Latitude,x_factor,y_factor);
+[lon_hr, lat_hr] = resolution_upscale(centroids.lon,...
+    centroids.lat,x_factor,y_factor);
 
-centroids_hr.Longitude = lon_hr;
-centroids_hr.Latitude = lat_hr;
+centroids_hr.lon = lon_hr;
+centroids_hr.lat = lat_hr;
 
 % Interpolate the data in each field of the centroids struct
 flds_i = fieldnames(centroids);
@@ -44,8 +43,8 @@ for i = 1 : numel(flds_i)
     fld = centroids.(flds_i{i});
     if numel(fld) > 1 && isnumeric(fld) &&...
             ~(strcmp(flds_i{i}, 'Longitude') || strcmp(flds_i{i}, 'Latitude'))
-        centroids_hr.(flds_i{i}) = griddata(centroids.Longitude,...
-            centroids.Latitude,centroids.(flds_i{i}),lon_hr,lat_hr);
+        centroids_hr.(flds_i{i}) = griddata(centroids.lon,...
+            centroids.lat,centroids.(flds_i{i}),lon_hr,lat_hr);
     end
 end
 

@@ -140,8 +140,8 @@ end
 
 if isstruct(centroids)
     
-    lon_crop_ndx  = min(centroids.Longitude)<= lon & lon <= max(centroids.Longitude);
-    lat_crop_ndx  = min(centroids.Latitude)<= lat & lat <= max(centroids.Latitude);
+    lon_crop_ndx  = min(centroids.lon)<= lon & lon <= max(centroids.lon);
+    lat_crop_ndx  = min(centroids.lat)<= lat & lat <= max(centroids.lat);
     lon_crop = lon(lon_crop_ndx & lat_crop_ndx);
     lat_crop = lat(lon_crop_ndx & lat_crop_ndx);
     elev_crop = elev(lon_crop_ndx & lat_crop_ndx);
@@ -151,8 +151,8 @@ if isstruct(centroids)
     t0 = clock;
     format_str = '%s';
     for centroid_i = 1: n_centroids
-        %r_i = climada_geo_distance(centroids.Longitude(centroid_i),centroids.Latitude(centroid_i),lon_crop,lat_crop);
-        r_i = sqrt((centroids.Longitude(centroid_i)-lon_crop).^2 + (centroids.Latitude(centroid_i)-lat_crop).^2);
+        %r_i = climada_geo_distance(centroids.lon(centroid_i),centroids.lat(centroid_i),lon_crop,lat_crop);
+        r_i = sqrt((centroids.lon(centroid_i)-lon_crop).^2 + (centroids.lat(centroid_i)-lat_crop).^2);
         [~,ndx] = min(r_i);
         DEM.elevation_m(centroid_i) = elev_crop(ndx);
         
@@ -172,13 +172,13 @@ if isstruct(centroids)
         end
     end
     DEM.centroid_ID = centroids.centroid_ID;
-    DEM.lon         = centroids.Longitude;
-    DEM.lat         = centroids.Latitude;
+    DEM.lon         = centroids.lon;
+    DEM.lat         = centroids.lat;
     fprintf(format_str,sprintf('processing DEM took %3.0f seconds \n',etime(clock,t0)));
     
     rect = [min(DEM.lon) max(DEM.lon) min(DEM.lat) max(DEM.lat)];
     
-    %     DEM.elevation_m = griddata(lon_crop, lat_crop, elev_crop, centroids.Longitude, centroids.Latitude);
+    %     DEM.elevation_m = griddata(lon_crop, lat_crop, elev_crop, centroids.lon, centroids.lat);
     %     DEM.centroid_ID = centroids.centroid_ID;
 else
     if ~isempty(centroids)
@@ -198,10 +198,10 @@ else
         DEM.lat         = lat;
         
         % Generate centroids struct at same resolution as DEM if not provided
-        centroids.Longitude     = lon;
-        centroids.Latitude      = lat;
+        centroids.lon     = lon;
+        centroids.lat      = lat;
         centroids.elevation_m   = elev;
-        n_centroids = numel(centroids.Longitude);
+        n_centroids = numel(centroids.lon);
         centroids.centroid_ID   = [1:n_centroids]';
         DEM.centroid_ID         = [1:n_centroids]';
         centroids.onLand        = ones(n_centroids,1);
@@ -209,11 +209,11 @@ else
         
         if exist(climada_global.map_border_file,'file')
             load(climada_global.map_border_file)
-            %     in = inpolygon(centroids.Longitude,centroids.Latitude,shapes.X,shapes.Y);
+            %     in = inpolygon(centroids.lon,centroids.lat,shapes.X,shapes.Y);
             %     centroids.onLand = false(size(centroids.centroid_ID));
             %     centroids.onLand(in) = 1;
             
-            n_centroids = numel(centroids.Longitude);
+            n_centroids = numel(centroids.lon);
             
             if isfield(shapes,'NAME')
                 for i = 1 : n_centroids

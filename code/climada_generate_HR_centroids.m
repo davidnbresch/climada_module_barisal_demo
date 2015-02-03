@@ -38,8 +38,8 @@ n_centroids = n_lon * n_lat;
 fprintf(sprintf('generating centroids at %3.2f km resolution \n', resolution_km));
 for i = 0 : n_lon - 1
     ndx = i * n_lat;
-    centroids.Latitude (1,ndx + 1 : ndx + n_lat)= (1:n_lat) .* resolution_ang + min_lat;
-    centroids.Longitude(1,ndx + 1 : ndx + n_lat) = (n_lon - i) .* resolution_ang + min_lon;
+    centroids.lat (1,ndx + 1 : ndx + n_lat)= (1:n_lat) .* resolution_ang + min_lat;
+    centroids.lon(1,ndx + 1 : ndx + n_lat) = (n_lon - i) .* resolution_ang + min_lon;
 end
 centroids.centroid_ID = [1:n_centroids];
 
@@ -47,7 +47,7 @@ centroids.onLand = true(size(centroids.centroid_ID));
 
 if exist(climada_global.map_border_file,'file')
     load(climada_global.map_border_file)
-    in = inpolygon(centroids.Longitude,centroids.Latitude,shapes.X,shapes.Y);
+    in = inpolygon(centroids.lon,centroids.lat,shapes.X,shapes.Y);
     centroids.onLand = false(size(centroids.centroid_ID));
     centroids.onLand(in) = 1;
 
