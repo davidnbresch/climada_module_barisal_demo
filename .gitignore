@@ -12,3 +12,7 @@ docs/literature
 data/results/Sidr_2007_Bangladesh_Barisal.avi
 
 data/results/Sidr_2007_Bangladesh_Barisal_detailed.avi
+
+data/results/Barisal_HR_hazard_TC.mat
+data/results/Barisal_HR_hazard_TR.mat
+data/results/Barisal_HR_hazard_TS.mat
