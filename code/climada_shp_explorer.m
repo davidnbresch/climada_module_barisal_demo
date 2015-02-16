@@ -88,6 +88,11 @@ for file_i=1:length(shapes_files)
         fprintf('%s ',field_names{field_i})
     end
     fprintf('\n')
+    if strcmp(fN,'natural')
+        color_i=color_i+1;
+        if color_i>length(color_list),color_i=1;end
+        continue;
+    end
     for shape_i=1:fast_check:length(shapes)
         if strcmp(shapes(shape_i).Geometry,'Polygon')
             pos=find(~isnan(shapes(shape_i).X)); % remove NaN to fill
