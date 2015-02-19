@@ -8,10 +8,11 @@ function [DEM, centroids] = climada_read_srtm_DEM(srtm_dir, centroids, DEM_save_
 %   Read the digital elevation model data from the files in an existing
 %   srtm directory. Data can be downloaded from http://srtm.csi.cgiar.org/SELECTION/inputCoord.asp
 % CALLING SEQUENCE:
-%   DEM = climada_read_srtm_DEM(srtm_dir, centroids, check_plot)
+%   DEM = climada_read_srtm_DEM(srtm_dir, centroids, DEM_save_file, smooth, check_plot)
 % EXAMPLE:
-%   DEM = climada_read_srtm_DEM(srtm_dir, [], 1)
+%   DEM = climada_read_srtm_DEM(srtm_dir,[],[],[],1)
 %   DEM = climada_read_srtm_DEM
+%   [DEM, centroids] = climada_read_srtm_DEM(srtm_dir,[min_lon max_lon min_lat max_lat], DEM_save_file, 4,1)
 % INPUTS:
 %   srtm_dir:   The directory of an srtm data tile folder, containing at
 %               least a .hdr and a .tif file
@@ -32,7 +33,7 @@ function [DEM, centroids] = climada_read_srtm_DEM(srtm_dir, centroids, DEM_save_
 %               of the DEM, otherwise, it is much faster to generate
 %               centroids directly from the DEM.
 %   smooth:     Can either be set to an integer N (smooth by default filter
-%               specified by a matrix size NxN with values 1/N) or a
+%               specified by a matrix size NxN with values 1/N^2) or a
 %               smoothing filter. Default = [] (no smoothing).
 %   check plot: Specify whether to plot a relief of the DEM, default = 0
 % OUTPUTS:
@@ -43,18 +44,27 @@ function [DEM, centroids] = climada_read_srtm_DEM(srtm_dir, centroids, DEM_save_
 %               .lon:           Longitude
 %               .centroid_ID:   Only if centroids provided as input or if
 %                               centroids input set to 1.
+%   centroids:  Climada centroids struct with fields:
+%               .elevation_m:   Elevation data
+%               .lat:           Latitude
+%               .lon:           Longitude
+%               .centroid_ID:   Only if centroids provided as input or if
+%                               centroids input set to 1.
+%               .onLand:        Set to 0 if .elevation_m <0, 1 otherwise
+%               .admin0_name    Country name
+%               .admin0_ISO3    ISO 3 country code
 % MODIFICATION HISTORY:
 %   Gilles Stassen 20150107
 %-
 
-DEM =[];
+DEM =[]; 
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
-if ~exist('srtm_dir','var')
+if ~exist('srtm_dir','var') || isempty(srtm_dir)
     srtm_dir = uigetdir(module_data_dir,'Choose srtm tile');
 end
 
@@ -120,6 +130,7 @@ for file_i = 1 : numel(srtm_files)
     [~, ~, fE] = fileparts(srtm_files(file_i).name);
     
     if strcmp(fE, '.tif')
+        fprintf('reading and processing DEM... ')
         DEM_grid = imread([srtm_dir filesep srtm_files(file_i).name]);
         DEM_grid(DEM_grid== min(min(DEM_grid))) = min(DEM_grid(DEM_grid~= min(min(DEM_grid))));
         DEM_grid = double(DEM_grid);
@@ -134,6 +145,7 @@ for file_i = 1 : numel(srtm_files)
         end
         [elev, lon, lat] = climada_grid2array(DEM_grid, reference_box);
         % elev(elev== min(elev)) = min(elev(elev~= min(elev)));
+        fprintf('done \n')
         break;
     end
 end
@@ -154,7 +166,7 @@ if isstruct(centroids)
         %r_i = climada_geo_distance(centroids.lon(centroid_i),centroids.lat(centroid_i),lon_crop,lat_crop);
         r_i = sqrt((centroids.lon(centroid_i)-lon_crop).^2 + (centroids.lat(centroid_i)-lat_crop).^2);
         [~,ndx] = min(r_i);
-        DEM.elevation_m(centroid_i) = elev_crop(ndx);
+        DEM.elevation_m(centroid_i) = elev_crop(ndx)';
         
         % the progress management
         mod_step = 100;
@@ -181,7 +193,7 @@ if isstruct(centroids)
     %     DEM.elevation_m = griddata(lon_crop, lat_crop, elev_crop, centroids.lon, centroids.lat);
     %     DEM.centroid_ID = centroids.centroid_ID;
 else
-    if ~isempty(centroids)
+    if ~isempty(centroids) && nargout == 2
         fprintf('generating centroids from DEM...');
         if numel(centroids) == 4 % centroids_rect has been provided as input
             rect = centroids;
@@ -193,18 +205,18 @@ else
         end
         clear centroids
         
-        DEM.elevation_m = elev;
-        DEM.lon         = lon;
-        DEM.lat         = lat;
+        DEM.elevation_m = elev';
+        DEM.lon         = lon';
+        DEM.lat         = lat';
         
         % Generate centroids struct at same resolution as DEM if not provided
-        centroids.lon     = lon;
-        centroids.lat      = lat;
-        centroids.elevation_m   = elev;
+        centroids.lon           = lon';
+        centroids.lat           = lat';
+        centroids.elevation_m   = elev';
         n_centroids = numel(centroids.lon);
-        centroids.centroid_ID   = [1:n_centroids]';
+        centroids.centroid_ID   = [1:n_centroids];
         DEM.centroid_ID         = [1:n_centroids]';
-        centroids.onLand        = ones(n_centroids,1);
+        centroids.onLand        = ones(1,n_centroids);
         centroids.onLand(elev<0)= 0; % May be inaccurate when there are land points below sea level, but much faster than using inpolygon
         
         if exist(climada_global.map_border_file,'file')
@@ -268,18 +280,21 @@ if check_plot
     end
     Z = Z';
     
+    % relief plot
     figure('Name', '2D Relief Plot', 'color', 'w');
     imagesc(tmp_x,tmp_y,Z);
     hold on
-    axis(rect)
-    axis equal
     set(gca,'YDir','reverse');
     colormap(color_map);
-    caxis([-1 30]);
+    caxis([-1 20]);
     xlabel('Longitude');
     ylabel('Latitude');
+    %climada_plot_world_borders
+    axis equal
+    axis(rect)
     hold off
     
+    % surface plot
     figure('Name', '3D Surface Plot', 'color', 'w');
     tri = delaunay(DEM.lon, DEM.lat);
     trisurf(tri,DEM.lon,DEM.lat,DEM.elevation_m);
@@ -288,7 +303,7 @@ if check_plot
     axis(rect)
     set(gca,'YDir','reverse');
     colormap(color_map);
-    caxis([-1 30]);
+    caxis([-1 20]);
     xlabel('Longitude');
     ylabel('Latitude');
     view(330,70)

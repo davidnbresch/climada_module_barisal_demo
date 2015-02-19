@@ -1,4 +1,4 @@
-function [hazard,EDS,centroids,entity]=tc_surge_Barisal_HR(force_centroids_entity_recalc,force_hazard_recalc,check_plots)
+function [hazard,EDS,centroids,entity,profile_stats]=tc_surge_Barisal_HR(force_centroids_recalc,force_entity_recalc, force_hazard_recalc,check_plots)
 % climada
 % MODULE:
 %   barisal_demo
@@ -36,6 +36,13 @@ function [hazard,EDS,centroids,entity]=tc_surge_Barisal_HR(force_centroids_entit
 %   hazard: Struct with fields
 %             .TS:    Storm surge hazard set (with usual fields)
 %             .TC:    Tropical cyclone hazard set
+%             .TR:    .ori:   Torrential rain hazard set from rainfields 
+%                             calculated usingR-CLIPER
+%                     .mod:   Modified TR hazard set to fit with the
+%                             historical precipitation information stored
+%                             in the MA hazard set
+%             .MA:    Monsoon Asia hazard set, containing only historical
+%                     data from the APHRODITE data set - used for validation
 %   EDS:    Struct with fields
 %             .TS:    Storm surge event damage set
 %             .TC:    Tropical cyclone event damage set
@@ -48,23 +55,24 @@ function [hazard,EDS,centroids,entity]=tc_surge_Barisal_HR(force_centroids_entit
 %                           hardwired for admin 3
 %-
 
-hazard=[]; EDS = []; centroids = []; entity = []; % init output
+hazard=[]; EDS = []; centroids = []; entity = []; profile_stats = [];% init output
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 % Check input variables
-if ~exist('force_centroids_entity_recalc','var'),   force_centroids_entity_recalc = 0;  end
-if ~exist('force_hazard_recalc','var'),             force_hazard_recalc = 0;            end
-if ~exist('check_plots','var'),                     check_plots = 1;                    end
+if ~exist('force_centroids_recalc', 'var'), force_centroids_recalc = 0; end
+if ~exist('force_entity_recalc',    'var'), force_entity_recalc = 0;    end
+if ~exist('force_hazard_recalc',    'var'), force_hazard_recalc = 0;    end
+if ~exist('check_plots',            'var'), check_plots = 1;            end
 % PARAMETERS
 %
 % set global variables (be careful, they should be reset, see bottom of code)
-climada_global_EDS_at_centroid=climada_global.EDS_at_centroid; % store for reset
+if ~isfield(climada_global, 'climada_global_ori')
+    climada_global.climada_global_ori = climada_global; % store for reset
+end
 climada_global.EDS_at_centroid = 1;
-climada_global_waitbar = climada_global.waitbar; % store for reset
 climada_global.waitbar = 0; % suppress waitbar
-climada_global_tc_default_min_timestep = climada_global.tc.default_min_TimeStep;
 climada_global.tc.default_min_TimeStep = 1/4;
 %
 % the module's data folder:
@@ -111,7 +119,6 @@ if ~exist(BGD_country_shapefile_mat,'file')
 end
 
 % replace the map border shape file (be careful, they should be reset)
-orig_climada_global_map_border_file=climada_global.map_border_file; % store for reset
 climada_global.map_border_file=BGD_country_shapefile_mat;
 
 % % make sure there is a .mat version of the border shapes file
@@ -125,6 +132,8 @@ climada_global.map_border_file=BGD_country_shapefile_mat;
 % % replace the map border shape file (be careful, they should be reset)
 % orig_climada_global_map_border_file=climada_global.map_border_file; % store for reset
 % climada_global.map_border_file=BGD_admin2_shapefile_mat;
+
+profile clear; profile on
 
 % 1) Centroids for study region
 % -----------------------------
@@ -153,6 +162,8 @@ DEM_save_file = [module_data_dir filesep 'system' filesep 'Barisal_HR_DEM.mat'];
 hazard_set_file_tc=[module_data_dir filesep 'hazards' filesep 'Barisal_HR_hazard_TC.mat'];
 hazard_set_file_ts=[module_data_dir filesep 'hazards' filesep 'Barisal_HR_hazard_TS.mat'];
 hazard_set_file_tr=[module_data_dir filesep 'hazards' filesep 'Barisal_HR_hazard_TR.mat'];
+hazard_set_file_ma=[module_data_dir filesep 'hazards' filesep 'Barisal_HR_hazard_MA.mat'];
+hazard_set_file_mod_tr=[module_data_dir filesep 'hazards' filesep 'Barisal_HR_hazard_mod_TR.mat'];
 % CALCULATIONS
 % ==============
 % 1) Read the centroids
@@ -183,22 +194,52 @@ end
 
 % Load existing centroids and entity files if it exists, and unless user
 % specifies to recaulculate the centroids & entity
-if isempty(force_centroids_entity_recalc),force_centroids_entity_recalc=0;end
-if exist(centroids_file,'file') && exist(DEM_save_file,'file') &&...
-        (exist(entity_file,'file') || exist(entity_file_xls,'file')) && ...
-        ~force_centroids_entity_recalc
+if isempty(force_centroids_recalc)
+    force_centroids_recalc=0;
+elseif force_centroids_recalc && ~force_hazard_recalc;
+    cprintf([0.25 0.25 1],'NOTE: recalculation of centroids mandates regeneration of hazard sets \n');
+    force_hazard_recalc = 1;
+end
+
+if exist(centroids_file,'file') && exist(DEM_save_file,'file') &&  ~force_centroids_recalc
+    fprintf('loading centroids from %s \n',centroids_file)
     load(centroids_file)    % load centroids
+    fprintf('loading digital elevation model from %s \n', DEM_save_file)
     load(DEM_save_file)     % load DEM
+else
+    % Get centroids for the whole of Bangladesh
+    % centroids_BGD = climada_create_GDP_entity(country_name,[],0,1);
     
+    % Get high resolution centroids for bounding box
+    centroids_90m_check = 1;
+    if ~centroids_90m_check
+        % Generate centroids independently of DEM (only sensible when
+        % choosing a lower resolution than that of DEM)
+        centroids = climada_generate_HR_centroids(centroids_rect,1.8);
+        % assign elevation to centroids
+        [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids, DEM_save_file, 5, 0);
+    else        
+        [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids_rect, DEM_save_file, 5, 0);
+    end
+    fprintf('saving centroids to %s \n',centroids_file)
+    save(centroids_file, 'centroids')
+end
+
+if isempty(force_entity_recalc), force_entity_recalc=0; end
+
+if (exist(entity_file,'file') || exist(entity_file_xls,'file')) && ~force_entity_recalc
     if exist(entity_file,'file') && exist(entity_file_xls,'file')
         xls_dir = dir(entity_file_xls); mat_dir = dir(entity_file);
         if datenum(xls_dir.date) > datenum(mat_dir.date) % Read excel file only if it is newer
+            fprintf('loading entity from %s \n',entity_file_xls)
             entity = climada_entity_read(entity_file_xls,'SKIP');  % Read existing entity Excel file
             save(entity_file,'entity') % Save any updates made to excel file in mat file
         else
+            fprintf('loading entity from %s \n',entity_file)
             load(entity_file)
         end
     else
+        fprintf('loading entity from %s \n',entity_file)
         load(entity_file)
     end % load entity
 else
@@ -213,24 +254,10 @@ else
         save(entity_BGD_file,'entity_BGD');     % Save for next time
     end
     
-    % Get centroids for the whole of Bangladesh
-    % centroids_BGD = climada_create_GDP_entity(country_name,[],0,1);
-    
-    % Get high resolution centroids for bounding box
-    centroids_90m_check = 0;
-    if ~centroids_90m_check
-        % Generate centroids independently of DEM (only sensible when
-        % choosing a lower resolution than that of DEM)
-        centroids = climada_generate_HR_centroids(centroids_rect,0.9);
-        [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids, DEM_save_file, 5, 0);
-    else
-        [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids_rect, DEM_save_file, 5, 0);
-    end
-    
     % Clip the centroids and entity to the bounding box (centroids_rect) of
     % the desired region. Increase the resolution of centroids (also
     % possible for assets, but not really necessary)
-    % Clip aand increase resolution of centroids. Waterborne assets moved onto land
+    % Clip and increase resolution of centroids. Waterborne assets moved onto land
     [~, entity] = climada_clip_centroids_entity([], entity_BGD, centroids_rect, [], 1);
     
     % Encode each asset to nearest on-land centroid for damage calculations
@@ -239,8 +266,6 @@ else
     entity.assets = climada_assets_encode(entity.assets,temp_centroids);
     clear temp_centroids % Free up memory
     
-    % Save centroids as .mat, entity as .mat and .xls
-    save(centroids_file, 'centroids')
     save(entity_file, 'entity')
     climada_entity_save_xls(entity,entity_file_xls,0,0,0);
     % The last three input args define whether damage functions, measures
@@ -249,21 +274,23 @@ else
 end
 
 % Plot entity assets
-entity.assets.reference_year = 2014;
-figure('name','Asset distribution Barisal','color','w')
-colormap(flipud(copper))
-climada_plot_entity_assets(entity,centroids);
-hold on
-% Plot location
-if ~isempty(location)
-    text(location.longitude+0.05,location.latitude,10,location.name,'fontsize',14,'color',[1 0 0],'backgroundcolor',[1 1 1])
-    plot3(location.longitude,location.latitude,10,'or','markersize',40, 'linewidth', 3);
+if check_plots
+    entity.assets.reference_year = 2014;
+    figure('name','Asset distribution Barisal','color','w')
+    colormap(flipud(copper))
+    climada_plot_entity_assets(entity,centroids);
+    hold on
+    % Plot location
+%     if ~isempty(location)
+%         text(location.longitude+0.05,location.latitude,10,location.name,'fontsize',14,'color',[1 0 0],'backgroundcolor',[1 1 1])
+%         plot3(location.longitude,location.latitude,10,'or','markersize',40, 'linewidth', 3);
+%     end
+    % Plot details
+    if details_check
+        climada_shp_explorer([module_data_dir filesep 'entities' filesep 'BGD_shapes' filesep 'buildings.shp']);
+    end
+    hold off
 end
-% Plot details
-if details_check
-    climada_shp_explorer([module_data_dir filesep 'entities' filesep 'BGD_shapes' filesep 'buildings.shp']);
-end
-hold off
 
 % 2) Create TC hazard event set
 % -----------------------------------
@@ -283,30 +310,31 @@ if ~exist(hazard_set_file_tc,'file') || force_hazard_recalc
         % Expand set of tracks by generating probabilistic tracks
         % See function header for more details on generating probabilistic
         % tracks, such as specifying ensemble size, max angle etc.
-        tc_track = climada_tc_random_walk(tc_track);
+        tc_track = climada_tc_random_walk_position_windspeed(tc_track,[],[],[],[],0);
         close
         if exist('climada_tc_track_wind_decay_calculate','file')
             % Add the inland decay correction to all probabilistic nodes
             tc_track   = climada_tc_track_wind_decay(tc_track, p_rel,0);
         end
-        
-        % Plot the tracks
-        figure('Name','TC tracks','Color',[1 1 1]);
-        hold on
-        for event_i=1:length(tc_track) % plot all tracks
-            plot(tc_track(event_i).lon,tc_track(event_i).lat,'-b');
-        end % event_i
-        % Overlay historic (to make them visible, too)
-        for event_i=1:length(tc_track)
-            if tc_track(event_i).orig_event_flag
-                plot(tc_track(event_i).lon,tc_track(event_i).lat,'-r');
-            end
-        end % event_i
-        climada_plot_world_borders(2)
-        box on
-        axis equal
-        axis(centroids_rect);
-        xlabel('blue: probabilistic, red: historic');
+        if check_plots
+            % Plot the tracks
+            figure('Name','TC tracks','Color',[1 1 1]);
+            hold on
+            for event_i=1:length(tc_track) % plot all tracks
+                plot(tc_track(event_i).lon,tc_track(event_i).lat,'-b');
+            end % event_i
+            % Overlay historic (to make them visible, too)
+            for event_i=1:length(tc_track)
+                if tc_track(event_i).orig_event_flag
+                    plot(tc_track(event_i).lon,tc_track(event_i).lat,'-r');
+                end
+            end % event_i
+            climada_plot_world_borders(2)
+            box on
+            axis equal
+            axis(centroids_rect);
+            xlabel('blue: probabilistic, red: historic');
+        end
     end
     % Generate all the wind footprints: create TC hazard set
     hazard_tc = climada_tc_hazard_set(tc_track, hazard_set_file_tc, centroids);
@@ -314,17 +342,17 @@ if ~exist(hazard_set_file_tc,'file') || force_hazard_recalc
     save(hazard_set_file_tc,'hazard_tc');
     
 else
-    fprintf('loading TC wind hazard set from %s\n',hazard_set_file_tc);
-    load(hazard_set_file_tc); % Load existing hazard
+    fprintf('loading TC wind hazard set from %s \n',hazard_set_file_tc);
+    load(hazard_set_file_tc); % Load existing hazard        
+    %hazard_tc = hazard; clear hazard;
 end
-
-fprintf('TC: max(max(hazard.intensity))=%f\n',full(max(max(hazard_tc.intensity)))); % a kind of easy check
 
 % 3) Create TS hazard event set
 % -----------------------------------
 if ~exist(hazard_set_file_ts,'file') || force_hazard_recalc
     hazard_ts = tc_surge_hazard_create(hazard_tc,hazard_set_file_ts,DEM);
 else
+    fprintf('loading TS hazard set file from %s \n',hazard_set_file_ts);
     load(hazard_set_file_ts);
     hazard_ts = hazard; clear hazard;
 end
@@ -338,7 +366,7 @@ if ~exist(hazard_set_file_tr, 'file')  || force_hazard_recalc
                 [~, p_rel]  = climada_tc_track_wind_decay_calculate(tc_track,0);
             else fprintf('No inland decay, consider module tc_hazard_advanced\n'); end
             
-            tc_track = climada_tc_random_walk(tc_track);
+            tc_track = climada_tc_random_walk_position_windspeed(tc_track,[],[],[],[],0,0);
             close
             if exist('climada_tc_track_wind_decay_calculate','file')
                 tc_track   = climada_tc_track_wind_decay(tc_track, p_rel,0);
@@ -347,8 +375,26 @@ if ~exist(hazard_set_file_tr, 'file')  || force_hazard_recalc
     end
     hazard_tr = climada_tr_hazard_set(tc_track, hazard_set_file_tr,centroids);
 else
+    fprintf('loading TR hazard set file from %s \n',hazard_set_file_tr);
     load(hazard_set_file_tr);
     hazard_tr = hazard; clear hazard;
+end
+
+% 5) Validate TR hazard set using historical APHRODITE MA daily
+%    precipitation data
+if ~exist(hazard_set_file_ma,'file') || force_hazard_recalc
+    hazard_ma = climada_ma_hazard_set(1972:2007,centroids,hazard_set_file_ma,check_plots);  
+else
+    fprintf('loading MA hazard set file from %s \n',hazard_set_file_ma);
+    load(hazard_set_file_ma);
+    hazard_ma = hazard; clear hazard;
+end
+if ~exist(hazard_set_file_mod_tr,'file') || force_hazard_recalc
+    hazard_mod_tr = climada_mod_tr_hazard_set(hazard_tr,hazard_ma,location,hazard_set_file_mod_tr, check_plots);   
+else
+    fprintf('loading RF hazard set file from %s \n',hazard_set_file_mod_tr);
+    load(hazard_set_file_mod_tr);
+    hazard_mod_tr = hazard; clear hazard;
 end
 
 if check_plots
@@ -403,49 +449,63 @@ if check_plots
     
     % Plot the hazard sets for largest event
     [~,max_tc_pos]=max(sum(hazard_tc.intensity,2).* hazard_tc.orig_event_flag'); % the maximum TC intensity
-    max_event_fig_title = sprintf('Storm surge Barisal admin 3 for largest event # %i in the year %i',max_tc_pos,hazard_tc.yyyy(max_tc_pos));
-    main_fig=figure('Name',max_event_fig_title,'Position',[89 223 1521 413],'Color',[1 1 1]); % [89 223 1014 413]
-    figure(main_fig)
-    subplot(1,3,1)%'title', 'Max Wind Speed [m/s]')
+    max_event_fig_title = sprintf('Hazard Barisal admin 3 for largest TC event # %i in the year %i',max_tc_pos,hazard_tc.yyyy(max_tc_pos));
+    %main_fig=figure('Name',max_event_fig_title,'Position',[89 223 1521 413],'Color',[1 1 1]); % [89 223 1014 413]
+    figure('Name',max_event_fig_title, 'color', 'w')
+    %subplot(1,3,1)%'title', 'Max Wind Speed [m/s]')
+    %h(1) = subaxis(1,3,1,'SV',0.1);
     colormap(map_tc) % set the colormap to match the max event plot
     climada_hazard_plot(hazard_tc,max_tc_pos,location);
-    cbfreeze
-    freezeColors
-    figure(main_fig)
-    subplot(1,3,2)%,'title', 'Max Storm Surge Height [m]')
+    %cbfreeze
+    %freezeColors(h(1))
+    %figure(main_fig)
+    figure('Name',max_event_fig_title, 'color', 'w')
+    %subplot(1,3,2)%,'title', 'Max Storm Surge Height [m]')
+    %h(2) = subaxis(1,3,2,'SV',0.1);
     colormap(map_ts) % Set the colormap to match the max event plot
     climada_hazard_plot(hazard_ts,max_tc_pos,location);
-    cbfreeze
-    freezeColors
-    figure(main_fig)
-    subplot(1,3,3)
+    %cbfreeze
+    %freezeColors(h(2))
+    %figure(main_fig)
+    figure('Name',max_event_fig_title, 'color', 'w')
+    %subplot(1,3,3)
+    %h(3) = subaxis(1,3,3,'SV',0.1);
     colormap(map_tr) % Set the colormap to match the max event plot
     climada_hazard_plot(hazard_tr,max_tc_pos,location);
     hold off
     
+    
     % Plot the max intensity at each centroid
-    max_intensity_fig = figure('Name','Maximum hazard intenstity at each centroid','Position',[89 223 1521 413],'Color',[1 1 1]); % [89 223 1014 413]
-    figure(max_intensity_fig)
-    subplot(1,3,1)%'title', 'Max Wind Speed [m/s]')
+    %max_intensity_fig = figure('Name','Maximum hazard intenstity at each centroid','Position',[89 223 1521 413],'Color',[1 1 1]); % [89 223 1014 413]
+    %figure(max_intensity_fig)
+    figure('Name','Maximum hazard intenstity at each centroid','color','w')
+    %subplot(1,3,1)%'title', 'Max Wind Speed [m/s]')
     colormap(map_tc) % set the colormap to match the max event plot
     climada_hazard_plot(hazard_tc,0,location);
-    cbfreeze
-    freezeColors
-    figure(max_intensity_fig)
-    subplot(1,3,2)%,'title', 'Max Storm Surge Height [m]')
+    %cbfreeze
+    %freezeColors
+    %figure(max_intensity_fig)
+    figure('Name','Maximum hazard intenstity at each centroid','color','w')
+    %subplot(1,3,2)%,'title', 'Max Storm Surge Height [m]')
     colormap(map_ts) % Set the colormap to match the max event plot
     climada_hazard_plot(hazard_ts,0,location);
-    cbfreeze
-    freezeColors
-    figure(max_intensity_fig)
-    subplot(1,3,3)
+    %cbfreeze
+    %freezeColors
+    %figure(max_intensity_fig)
+    figure('Name','Maximum hazard intenstity at each centroid','color','w')
+    %subplot(1,3,3)
     colormap(map_tr) % Set the colormap to match the max event plot
     climada_hazard_plot(hazard_tr,0,location);
     hold off
     
+    
     % Plot intensity v. return period for storm surge: the integers specify the
     % return periods of interest
     climada_hazard_stats(hazard_ts,[1 4 10 40 100 400],1,'TS');
+    hold off
+    climada_hazard_stats(hazard_tc,[1 4 10 40 100 400],1,'TC');
+    hold off
+    climada_hazard_stats(hazard_tr,[1 4 10 40 100 400],1,'TR');
     hold off
 end
 
@@ -465,30 +525,33 @@ EDS_tr = climada_EDS_calc(entity,hazard_tr);
 % tc_surge_plot_3d_Barisal(hazard_ts,max_tc_pos);
 
 if check_plots
+    % 3d plot of event damage for largest event
     climada_plot_EDS_3d(hazard_tc,EDS_tc);
     climada_plot_EDS_3d(hazard_ts,EDS_ts);
     climada_plot_EDS_3d(hazard_tr,EDS_tr);
-end
-
-TS_measures_impact = climada_measures_impact(entity,hazard_ts,'no');
-TS_measures_impact.title_str = 'Adaptation Cost Curve Barisal Province';
-
-if check_plots
+    
+    % Cost benefit analysis of adaptation measures, and c-b plot
+    TS_measures_impact = climada_measures_impact(entity,hazard_ts,'no');
+    TS_measures_impact.title_str = 'Adaptation Cost Curve Barisal Province';
     climada_adaptation_cost_curve(TS_measures_impact,[],[],[],[],[],1); % The 1 triggers reverse benefit-cost ratio (as opposed to cost-benefit)
 end
 
+profile_stats = profile('INFO'); profile off;
+
 EDS.TS = EDS_ts;
 EDS.TC = EDS_tc;
-EDS.TC = EDS_tr;
+EDS.TR = EDS_tr;
 
-hazard.TS = hazard_ts;
-hazard.TC = hazard_tc;
-hazard.TR = hazard_tr;
+hazard.TS       = hazard_ts;
+hazard.TC       = hazard_tc;
+hazard.TR.ori   = hazard_tr;
+hazard.TR.mod   = hazard_mod_tr;
+hazard.MA       = hazard_ma;
 
 % reset global variables
-climada_global.EDS_at_centroid=climada_global_EDS_at_centroid;
-climada_global.waitbar=climada_global_waitbar;
-climada_global.tc.default_min_TimeStep=climada_global_tc_default_min_timestep;
-climada_global.map_border_file=orig_climada_global_map_border_file;
+if isfield(climada_global,'climada_global_ori')
+    climada_global = climada_global.climada_global_ori;
+end
+
 
 return
