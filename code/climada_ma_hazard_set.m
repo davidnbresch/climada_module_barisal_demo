@@ -153,7 +153,11 @@ end
 
 if ~strcmp(hazard_set_file,'NO_SAVE');
     fprintf('saving MA monsoon Asia hazard set as %s\n',hazard_set_file);
-    save(hazard_set_file,'hazard','-v7.3');
+    try
+        save(hazard_set_file,'hazard','-v7.3');
+    catch
+        cprintf([1 0 0], 'ERROR: can not write to file, try saving MA hazard manually \n')
+    end
 end
 
 if check_plots,figure('color','w'); climada_hazard_plot_HR(hazard,0);end % show max rainfall over ALL events
