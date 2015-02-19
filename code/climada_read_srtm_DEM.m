@@ -64,6 +64,7 @@ if ~climada_init_vars,return;end % init/import global variables
 
 module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
+% gui to select srtm data if not provided
 if ~exist('srtm_dir','var') || isempty(srtm_dir)
     srtm_dir = uigetdir(module_data_dir,'Choose srtm tile');
 end
@@ -215,7 +216,7 @@ else
         centroids.elevation_m   = elev';
         n_centroids = numel(centroids.lon);
         centroids.centroid_ID   = [1:n_centroids];
-        DEM.centroid_ID         = [1:n_centroids]';
+        DEM.centroid_ID         = [1:n_centroids];
         centroids.onLand        = ones(1,n_centroids);
         centroids.onLand(elev<0)= 0; % May be inaccurate when there are land points below sea level, but much faster than using inpolygon
         
@@ -247,7 +248,7 @@ else
 end
 
 if ~isempty(DEM_save_file)
-    save(DEM_save_file,'DEM', 'centroids', 'DEM_grid');
+    save(DEM_save_file,'DEM', 'centroids');
 end
 
 if check_plot
@@ -315,3 +316,4 @@ if check_plot
 end
 
 return
+
