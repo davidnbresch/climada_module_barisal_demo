@@ -1,4 +1,4 @@
-function fig=climada_plot_EDS_3d(hazard,EDS,event_i)
+function fig=climada_EDS_plot_3d(hazard,EDS,event_i)
 % climada visualise event damage
 % NAME:
 %   climada_plot_EDS_3d
