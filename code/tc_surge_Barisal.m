@@ -256,8 +256,7 @@ else
     % Clip the centroids and entity to the bounding box (centroids_rect) of
     % the desired region. Increase the resolution of centroids (also
     % possible for assets, but not really necessary)
-    % Clip and increase resolution of centroids. Waterborne assets moved onto land
-    [~, entity] = climada_clip_centroids_entity([], entity_BGD, centroids_rect, [], 1);
+    entity = climada_entity_crop(entity_BGD, centroids_rect,1);
     
     % Encode each asset to nearest on-land centroid for damage calculations
     temp_centroids=centroids;
