@@ -16,3 +16,9 @@ data/results/Sidr_2007_Bangladesh_Barisal_detailed.avi
 data/results/Barisal_HR_hazard_TC.mat
 data/results/Barisal_HR_hazard_TR.mat
 data/results/Barisal_HR_hazard_TS.mat
+code/climada_centroids_runoff.m
+code/test_bed.m
+data/hazards/Barisal_4_hazard_MA.mat
+data/hazards/Barisal_4_hazard_TR.mat
+data/hazards/Barisal_4_hazard_mod_TR.mat
+data/system/as_bas_ll_r500m/
