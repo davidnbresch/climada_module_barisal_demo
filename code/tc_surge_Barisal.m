@@ -63,7 +63,8 @@ if adm_lvl > 4
     fprintf('\t 0: Country \n \t 1: Division \n \t 2: Province \n \t 3: District \n \t 4: Sub-district \n');
     return;
 end
-if ~exist('force_centroids_entity_recalc','var'),   force_centroids_entity_recalc = 0;  end
+if ~exist('force_entity_recalc','var'),             force_entity_recalc = 0;            end
+if ~exist('force_centroids_recalc','var'),          force_centroids_recalc = 0;         end
 if ~exist('force_hazard_recalc','var'),             force_hazard_recalc = 0;            end
 if ~exist('check_plots','var'),                     check_plots = 1;                    end
 
