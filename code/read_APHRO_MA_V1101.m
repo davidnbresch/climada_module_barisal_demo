@@ -5,13 +5,13 @@ function [precip_grid, precip_array] = read_APHRO_MA_V1101(years, centroids_rect
 % PURPOSE:
 %   Read in the Monsoon Asia daily precipitation data from the APHRODITE
 %   gridded .nc data file. The original data was downloaded from 
-%   http://www.chikyu.ac.jp/precip/cgi-bin/aphrodite/script/aphrodite_cgi.cgi/download?file=%2FV1101%2FAPHRO_MA_V1101%2F025deg%2Fnc
+%   http://www.chikyu.ac.jp/precip/products/index.html
 %   The information is structered into both a gridded structure, and a
 %   singleton array structure, which may then be further processed.
 %   next: climada_ma_hazard_set
 %   
 %   See the following for more information on the original source:
-%   http://www.chikyu.ac.jp/precip/cgi-bin/aphrodite/script/aphrodite_cgi.cgi/download?file=%2FV1101%2FAPHRO_MA_V1101%2F025deg%2Fnc
+%   http://www.chikyu.ac.jp/precip/products/index.html
 %   http://iridl.ldeo.columbia.edu/SOURCES/.RIHN/.aphrodite/.V1003R1/
 %   http://www.chikyu.ac.jp/precip/cgi-bin/aphrodite/script/aphrodite_cgi.cgi/register
 %
@@ -44,7 +44,8 @@ function [precip_grid, precip_array] = read_APHRO_MA_V1101(years, centroids_rect
 %                       .lon:    NxM vector with longitudinal coords for each point
 %                       .lon:    NxM vector with latitudinal coords for each point
 % MODIFICATION HISTORY:
-% Gilles Stassen, gillesstassen@hotmail.com, 20150121
+%   Gilles Stassen, gillesstassen@hotmail.com, 20150121
+%   Gilles Stassen, gillesstassen@hotmail.com, 20150224 improved arg check, minor bug fixes
 %-
 
 precip_grid.time = [];      precip_array.time = [];
@@ -109,10 +110,20 @@ for year_i = 1 : numel(years)
         fld_name = precip_nc_info.Variables(fld_i).Name;
         tmp_p_g.(fld_name)=ncread(APHRO_nc_file.name,fld_name);
     end
+    
+    % info 
+    precip_grid.nc_info     = precip_nc_info;
+    precip_array.nc_info    = precip_nc_info;
 
     
     % crop to centroids rect
-    if ~isempty(centroids_rect)
+    if ~isempty(centroids_rect) && numel(centroids_rect) == 4
+        
+        if length(centroids_rect) == 2
+            % Bounding box of size [2, 2] as input; rearrange
+            centroids_rect = [centroids_rect(:,1)' centroids_rect(:,2)'];
+        end
+        
         lon_logical = ceil(tmp_p_g.longitude) >= centroids_rect(1) & floor(tmp_p_g.longitude) <= centroids_rect(2);
         lat_logical = ceil(tmp_p_g.latitude) >= centroids_rect(3) & floor(tmp_p_g.latitude) <= centroids_rect(4);
         tmp_p_g.longitude = tmp_p_g.longitude(lon_logical);
@@ -163,7 +174,7 @@ if check_plot
     for day_i = 1 : n_days
         title(sprintf('Daily precipitation in %s [mm]',datestr(datenum(year,'yyyy')+day_i)));
         if any(any(tmp_p_g.precip(:,:,day_i)))
-            s = surf(tmp_p_g.lon,tmp_p_g.lat,permute(tmp_p_g.precip(:,:,day_i)-100,[2 1 3]));
+            s = surf(tmp_p_g.longitude,tmp_p_g.latitude,permute(tmp_p_g.precip(:,:,day_i)-100,[2 1 3]));
             shading('interp')
             pause(0.2)
             delete(s);
@@ -180,7 +191,7 @@ if isstruct(location)
     figure('name', sprintf('Daily precipitation in %s during %s',strrep(location.name,' ',''),year), 'color', 'w');
     hold on
     title(sprintf('Daily precipitation in %s during %s',strrep(location.name,' ',''),year));
-    r = climada_geo_distance(location.longitude, location.latitude,precip_array.lon, precip_array.lat);
+    r = climada_geo_distance(location.lon, location.lat,precip_array.lon, precip_array.lat);
     [~, r_ndx] = min(r);
     plot(precip_array.time, precip_array.precip(r_ndx,:))
     ylabel('Precipitation [mm]')

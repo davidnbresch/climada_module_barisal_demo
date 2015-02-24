@@ -404,7 +404,7 @@ end
 if ~exist(hazard_set_file_mod_tr,'file') || force_hazard_recalc
     hazard_mod_tr = climada_mod_tr_hazard_set(hazard_tr,hazard_ma,location,hazard_set_file_mod_tr, check_plots);   
 else
-    fprintf('loading RF hazard set file from %s \n',hazard_set_file_mod_tr);
+    fprintf('loading modified TR hazard set file from %s \n',hazard_set_file_mod_tr);
     load(hazard_set_file_mod_tr);
     hazard_mod_tr = hazard; clear hazard;
 end

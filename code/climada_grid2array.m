@@ -1,6 +1,32 @@
 function [data, x, y] = climada_grid2array(data_grid, x_vector, y_vector)
-
-data = [];      x = [];     y = [];
+% climada
+% MODULE:
+%   barisal_demo
+% NAME:
+%   climada_grid2array
+% PURPOSE:
+%   Restructure gridded data into singleton arrays. Used in
+%   climada_read_srtm_DEM and read_APHRO_MA_V1101
+% CALLING SEQUENCE:
+% EXAMPLE:
+% INPUTS:
+%   data_grid:  Gridded data  
+% OPTIONAL INPUT PARAMETERS:
+%   x_vector:   Monotonically in/decreasing vector defining the x values of
+%               each of the columns of the data grid. If y_vector is left
+%               empty, x_vector can also be a vector of size 4, defining
+%               the corners of the grid as [min(x) max(x) min(y) max(y)]
+%   x_vector:   Monotonically in/decreasing vector defining the x values of
+%               each of the rows of the data grid.
+% OUTPUTS:
+%   data:       The original data structured as a singleton array 
+%   x:          The x data structured as singleton array, same length as data array
+%   y:          The y data structured as singleton array, same length as data array
+% MODIFICATION HISTORY:
+%   Gilles Stassen 20150107
+%   Gilles Stassen 20150224 major cleanup
+%-
+data = [];      x = [];     y = []; %init
 
 if ~exist('data_grid',      'var'),     return;             end
 if ~exist('x_vector',       'var'),     x_vector = [];      end
@@ -17,85 +43,52 @@ end
 switch ndims(data_grid)
     case 2
         data    = zeros(numel(data_grid),1);
-        tmp_x   = zeros(numel(data_grid),1);
-        tmp_y   = zeros(numel(data_grid),1);
+        x   = zeros(numel(data_grid),1);
+        y   = zeros(numel(data_grid),1);
         
         [size_y, size_x] = size(data_grid);
+
+        if isempty(reference_box)
+            reference_box = [1 size_x 1 size_y];
+        end
+        
+        dx = (reference_box(2) - reference_box(1))/size_x;
+        dy = (reference_box(4) - reference_box(3))/size_y;
+
+        for i = 1 : size_x
+            ndx = (i-1)*size_y;
+            data(ndx + 1 : ndx + size_y)    = data_grid(i,:);
+            y   (ndx + 1 : ndx + size_y,1)  = (size_x - i+1) * dy;
+            x   (ndx + 1 : ndx + size_y,1)  = (0:size_y-1) .* dx;
+        end
+
+        x = x + reference_box(1);
+        y = y + reference_box(3);
+    case 3
+        [size_y, size_x, size_t] = size(data_grid);
         
         if isempty(reference_box)
             reference_box = [1 size_x 1 size_y];
         end
         
-        if size_x <= size_y
-            tmp_grid = data_grid;
-            trans_check = 0;
-        else
-            tmp_grid = data_grid';
-            trans_check = 1;
-        end
-        
-        [size_y, size_x] = size(tmp_grid);
         dx = (reference_box(2) - reference_box(1))/size_x;
         dy = (reference_box(4) - reference_box(3))/size_y;
-        
-        %t0 = clock;
-        for i = 1 : size_x
-            ndx = (i-1)*size_y;
-            data    (ndx + 1 : ndx + size_y)    = tmp_grid(:,i);
-            tmp_y   (ndx + 1 : ndx + size_y,1)  = i*dy;%(size_x - i+1) * dy;
-            tmp_x   (ndx + 1 : ndx + size_y,1)  = (1:size_y) .* dx;
-        end
-        %time_elapsed = clock - t0;
-        %fprintf('converting from grid to array took %f sec \n',time_elapsed);
-        
-        if trans_check
-            x = tmp_y; y = tmp_x;
-        else
-            x = tmp_x; y = tmp_y;
-        end
-        
-        x = x + reference_box(1);
-        y = y + reference_box(3);
-    case 3
-        [size_y, size_x, size_t] = size(data_grid);
         
         try
             data    = zeros(size_x*size_y,size_t);
         catch
             data    = sparse(size_x*size_y,size_t);
         end
-        tmp_x   = zeros(size_x*size_y,1);
-        tmp_y   = zeros(size_x*size_y,1);
-        
-        if isempty(reference_box)
-            reference_box = [1 size_x 1 size_y];
-        end
-        
-        if size_x <= size_y
-            tmp_grid = data_grid;
-            trans_check = 0;
-        else
-            tmp_grid = permute(data_grid,[2 1 3]);
-            trans_check = 1;
-        end
-        
-        [size_y, size_x,size_t] = size(tmp_grid);
-        dx = (reference_box(2) - reference_box(1))/size_x;
-        dy = (reference_box(4) - reference_box(3))/size_y;
-        
+        x   = zeros(size_x*size_y,1);
+        y   = zeros(size_x*size_y,1);
+
         for i = 1 : size_x
             ndx = (i-1)*size_y;
-            data    (ndx + 1 : ndx + size_x,:)  = squeeze(tmp_grid(i,:,:));
-            tmp_y   (ndx + 1 : ndx + size_y,1)  = (size_x - i+1) * dy;
-            tmp_x   (ndx + 1 : ndx + size_y,1)  = (1:size_y) .* dx;
+            data    (ndx + 1 : ndx + size_x,:)  = squeeze(data_grid(i,:,:));
+            y   (ndx + 1 : ndx + size_y,1)      = (size_x - i+1) * dy;
+            x   (ndx + 1 : ndx + size_y,1)      = (1:size_y) .* dx;
         end
-        
-        if trans_check
-            x = tmp_y; y = tmp_x;
-        else
-            x = tmp_x; y = tmp_y;
-        end
-        
+
         x = x + reference_box(1);
         y = y + reference_box(3);
     otherwise
