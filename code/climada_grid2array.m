@@ -55,11 +55,11 @@ switch ndims(data_grid)
         dx = (reference_box(2) - reference_box(1))/size_x;
         dy = (reference_box(4) - reference_box(3))/size_y;
 
-        for i = 1 : size_x
-            ndx = (i-1)*size_y;
-            data(ndx + 1 : ndx + size_y)    = data_grid(i,:);
-            y   (ndx + 1 : ndx + size_y,1)  = (size_x - i+1) * dy;
-            x   (ndx + 1 : ndx + size_y,1)  = (0:size_y-1) .* dx;
+        for j = 1 : size_y
+            ndx = (j-1)*size_x;
+            data(ndx + 1 : ndx + size_x)    = data_grid(j,:);
+            y   (ndx + 1 : ndx + size_x,1)  = (size_y - j+1) * dx;
+            x   (ndx + 1 : ndx + size_x,1)  = (0:size_x-1) .* dy;
         end
 
         x = x + reference_box(1);
@@ -82,11 +82,11 @@ switch ndims(data_grid)
         x   = zeros(size_x*size_y,1);
         y   = zeros(size_x*size_y,1);
 
-        for i = 1 : size_x
-            ndx = (i-1)*size_y;
-            data    (ndx + 1 : ndx + size_x,:)  = squeeze(data_grid(i,:,:));
-            y   (ndx + 1 : ndx + size_y,1)      = (size_x - i+1) * dy;
-            x   (ndx + 1 : ndx + size_y,1)      = (1:size_y) .* dx;
+        for j = 1 : size_y
+            ndx = (j-1)*size_x;
+            data(ndx + 1 : ndx + size_x,:)      = squeeze(data_grid(j,:,:));
+            y   (ndx + 1 : ndx + size_x,1)      = (size_y - j+1) * dx;
+            x   (ndx + 1 : ndx + size_x,1)      = (1:size_x) .* dy;
         end
 
         x = x + reference_box(1);
