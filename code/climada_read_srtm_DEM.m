@@ -24,12 +24,12 @@ function [DEM, centroids] = climada_read_srtm_DEM(srtm_dir, centroidsORcountry, 
 %               hence will have an extra field .centroid_ID. The extra
 %               field is required for tc_surge_hazard_create if you wish to
 %               provide your own topography data (e.g. srtm).
-%               If this input is set to 1 (i.e. not a centroids struct), a
+%               If this input is left empty , a
 %               centroids struct will be generated at the same resolution
 %               as the DEM.
 %               If set to a 4-element vector (centroids_rect), these 4
 %               points will define the area of interest, which is
-%               subsequently cropped out.
+%               subsequently cropped out of the DEM.
 %               NOTE:   It is only sensible to provide a centroids struct
 %               as input if its resolution is significantly lower than that
 %               of the DEM, otherwise, it is much faster to generate
@@ -92,6 +92,14 @@ if ~exist('check_plot',         'var'),     check_plot          = 0;    end
 if ~isempty(centroidsORcountry)
     if isstruct(centroidsORcountry)
         centroids   = centroidsORcountry; clear centroidsORcountry
+        if isfield(centroids,'countryname')
+            country_name    =   centroids.countryname;
+            [country_name, ~, occurrence]=unique(country_name);
+            country_name    =   country_name(mode(occurrence));
+            country_name    =   country_name{1};
+        else
+            country_name = [];
+        end
         rect        = [min(centroids.lon) max(centroids.lon) min(centroids.lat) max(centroids.lat)];
     elseif numel(centroidsORcountry) == 4
         centroids   = [];
@@ -118,6 +126,7 @@ if ~isempty(country_name), cntry_str = sprintf(' for %s',country_name'); else cn
 
 % load srtm tile from internet and unzip
 if strcmp(srtm_dir, 'DL')
+    dl_check = 1;
     clear srtm_dir
     
     % conversion to srtm tile indices
@@ -173,7 +182,7 @@ if strcmp(srtm_dir, 'DL')
         if ~skip_file
             unzip(srtm_URL{tile_i}, srtm_dir{tile_i})
         else
-            pause(2)
+            pause(1)
         end
     end
 else
@@ -280,9 +289,6 @@ end
 
 % store as singleton arrays in DEM structure
 [elev, lon, lat] = climada_grid2array(DEM_grid, reference_box);
-DEM.elevation_m     = elev';
-DEM.lon             = lon';
-DEM.lat             = lat';
 fprintf('done \n')
 
 if isstruct(centroids)
@@ -298,65 +304,59 @@ if isstruct(centroids)
     DEM.lat             = lat_crop';
     
     n_centroids = numel(centroids.centroid_ID);
-    fprintf('processing centroid elevation \n');
+    fprintf('processing centroid elevation... ');
     t0 = clock;
-    format_str = '%s';
-    for centroid_i = 1: n_centroids
-        
-        %         if min(DEM.lon) > centroids.lon(centroid_i) || max(DEM.lon) < centroids.lon(centroid_i) || ...
-        %                  min(DEM.lat) > centroids.lat(centroid_i) || max(DEM.lat) < centroids.lat(centroid_i)
-        %              centroids.elevation_m(centroid_i) = NaN;
-        %              continue
-        %         end
-        
-        %r_i = climada_geo_distance(centroids.lon(centroid_i),centroids.lat(centroid_i),lon_crop,lat_crop);
-        r_i = sqrt((centroids.lon(centroid_i)-lon_crop).^2 + (centroids.lat(centroid_i)-lat_crop).^2);
-        [~,ndx] = min(r_i);
-        DEM.centroid_ID(ndx) = centroid_i;
-        centroids.elevation_m(centroid_i) = elev_crop(ndx)';
-        % the progress management
-        mod_step = 100;
-        if mod(centroid_i,mod_step)==0
-            t_elapsed_event   = etime(clock,t0)/centroid_i;
-            events_remaining  = n_centroids-centroid_i;
-            t_projected_sec   = t_elapsed_event*events_remaining;
-            if t_projected_sec<60
-                msgstr = sprintf('est. %3.0f sec left (%i/%i centroids)',t_projected_sec,   centroid_i,n_centroids);
-            else
-                msgstr = sprintf('est. %3.1f min left (%i/%i centroids)',t_projected_sec/60,centroid_i,n_centroids);
-            end
-            fprintf(format_str,msgstr); % write progress to stdout
-            format_str=[repmat('\b',1,length(msgstr)) '%s']; % back to begin of line
+%     format_str = '%s';
+%     for centroid_i = 1: n_centroids
+%         
+%         %r_i = climada_geo_distance(centroids.lon(centroid_i),centroids.lat(centroid_i),lon_crop,lat_crop);
+%         r_i = sqrt((centroids.lon(centroid_i)-lon_crop).^2 + (centroids.lat(centroid_i)-lat_crop).^2);
+%         [~,ndx] = min(r_i);
+%         DEM.centroid_ID(ndx) = centroid_i;
+%         centroids.elevation_m(centroid_i) = elev_crop(ndx)';
+%         % the progress management
+%         mod_step = 100;
+%         if mod(centroid_i,mod_step)==0
+%             t_elapsed_event   = etime(clock,t0)/centroid_i;
+%             events_remaining  = n_centroids-centroid_i;
+%             t_projected_sec   = t_elapsed_event*events_remaining;
+%             if t_projected_sec<60
+%                 msgstr = sprintf('est. %3.0f sec left (%i/%i centroids)',t_projected_sec,   centroid_i,n_centroids);
+%             else
+%                 msgstr = sprintf('est. %3.1f min left (%i/%i centroids)',t_projected_sec/60,centroid_i,n_centroids);
+%             end
+%             fprintf(format_str,msgstr); % write progress to stdout
+%             format_str=[repmat('\b',1,length(msgstr)) '%s']; % back to begin of line
+%         end
+%     end
+
+%     F_DEM = scatteredInterpolant(DEM.lon',DEM.lat',DEM.elevation_m');
+    F_DEM = scatteredInterpolant(lon_crop,lat_crop,elev_crop);
+    centroids.elevation_m = F_DEM(centroids.lon',centroids.lat')';
+    fprintf('done \n')
+%     fprintf(format_str,sprintf('processing centroid elevation%s took %3.0f seconds \n',cntry_str, etime(clock,t0)));
+    
+    if ~dl_check % only necessary when existing data is selected, avoid warning message due to imperfect cropping
+        % deal with DEM edges if they do not reach extent of centroids
+        if min(DEM.lon) > min(centroids.lon) || max(DEM.lon) < max(centroids.lon)
+            cprintf([1 0.25 0.25], ['WARNING: longitudinal extent of centroids exceeds '...
+                'that of DEM \n \t \t Elevation not processed for some centroids \n'])
         end
-    end
-    
-    fprintf(format_str,sprintf('processing DEM%s took %3.0f seconds \n',cntry_str, etime(clock,t0)));
-    
-    if min(DEM.lon) > min(centroids.lon) || max(DEM.lon) < max(centroids.lon)
-        cprintf([1 0.25 0.25], ['WARNING: longitudinal extent of centroids exceeds '...
-            'that of DEM \n \t \t Elevation not processed for some centroids \n'])
-    end
-    if min(DEM.lat) > min(centroids.lat) || max(DEM.lat) < max(centroids.lat)
-        cprintf([1 0.25 0.25], ['WARNING: latitudinal extent of centroids exceeds '...
-            'that of DEM \n \t \t Elevation not processed for some centroids \n'])
+        if min(DEM.lat) > min(centroids.lat) || max(DEM.lat) < max(centroids.lat)
+            cprintf([1 0.25 0.25], ['WARNING: latitudinal extent of centroids exceeds '...
+                'that of DEM \n \t \t Elevation not processed for some centroids \n'])
+        end
     end
     
     centroids.elevation_m(min(DEM.lon) > centroids.lon) = NaN;
     centroids.elevation_m(max(DEM.lon) > centroids.lon) = NaN;
     centroids.elevation_m(min(DEM.lat) > centroids.lat) = NaN;
     centroids.elevation_m(max(DEM.lat) > centroids.lat) = NaN;
-    
-    
-    %     DEM.centroid_ID = centroids.centroid_ID;
-    %     DEM.lon         = centroids.lon;
-    %     DEM.lat         = centroids.lat;
-    
+
     if ~exist('rect','var') || isempty(rect)
         rect = [min(DEM.lon) max(DEM.lon) min(DEM.lat) max(DEM.lat)];
     end
     
-    %     DEM.elevation_m = griddata(lon_crop, lat_crop, elev_crop, centroids.lon, centroids.lat);
-    %     DEM.centroid_ID = centroids.centroid_ID;
 elseif ~isempty(rect)
         
     if min(DEM.lon) > rect(1) || max(DEM.lon) < rect(2)
@@ -418,96 +418,43 @@ elseif ~isempty(rect)
     end
     fprintf(' done \n');
 else
-    DEM.elevation_m = elev;
-    DEM.lon         = lon;
-    DEM.lat         = lat;
+    DEM.elevation_m = elev';
+    DEM.lon         = lon';
+    DEM.lat         = lat';
     rect            = reference_box;
 end
-
+clear elev lon lat
 
 if ~isempty(DEM_save_file)
     save(DEM_save_file,'DEM', 'centroids');
 end
 
 if check_plot
-    fprintf('plotting DEM%s...',cntry_str)
-    R =[0.1569 0.0000 0.1176 0.3686 0.6353 0.8745 0.9647 0.7843 0.6353 0.5608 0.6353 0.6980 0.7804 0.8588 0.9255 1.0000];
-    G =[0.2118 0.6882 0.8275 0.8784 0.9216 0.9725 0.8980 0.6980 0.4941 0.3804 0.4902 0.5882 0.6902 0.8039 0.8941 1.0000];
-    B =[0.8039 0.3961 0.4078 0.4549 0.5098 0.5725 0.5843 0.4627 0.3686 0.3294 0.4549 0.5451 0.6667 0.7922 0.8863 1.0000];
-    
-    % ignore blues if no water on map
-    if min(min(DEM_grid)) >=0
-        R = R(2:end); G = G(2:end); B = B(2:end);
-    end
-    
-    R_          = interp1([1:numel(R)],R,[1:1/5:numel(R)]);
-    G_          = interp1([1:numel(G)],G,[1:1/5:numel(G)]);
-    B_          = interp1([1:numel(B)],B,[1:1/5:numel(B)]);
-    color_map   = [R_' G_' B_'];
-    
-    
-%     color_map = [
-%         40  54  154
-%         0   201  50
-%         30  211 104
-%         94  224 116
-%         162 235 130
-%         223 248 146
-%         246 229 149
-%         200 178 118
-%         162 126  94
-%         143  97  84
-%         162 125 116
-%         178 150 139
-%         199 176 170
-%         219 205 202
-%         236 228 226
-%         255 255 255
-%         ]./255;
-    
-    x = DEM.lon; y = DEM.lat;
-
-    tmp_x = unique(x);
-    tmp_y = unique(y);
-%     
-%     for i = 1 : numel(tmp_x)
-%         Z(i,:) = DEM.elevation_m(DEM.lon == tmp_x(i));
-%     end
-%     Z = Z';
-    
     % relief plot
     figure('Name', '2D Relief Plot', 'color', 'w');
-    %imagesc(tmp_x,fliplr(tmp_y),Z);
-    imagesc(tmp_x,fliplr(tmp_y),DEM_grid)
     hold on
-    colormap(color_map);
-    caxis([-(max(elev) - min(elev))/(length(colormap)-1) max(elev)]);
+    title(sprintf('Digital Elevation Model %s', cntry_str))
+
+    if isempty(which('climada_DEM_plot'))
+        fprintf('Download DEM plotting function from http://ch.mathworks.com/matlabcentral/fileexchange/36380-dem--shaded-relief-image-plot--digital-elevation-model-\n')
+        fprintf('and rename dem -> climada_DEM_plot for awesome relief plot \n')
+        fprintf('using imagesc instead\n')
+        [s_x,s_y]   = size(DEM_grid);
+        tmp_x       = linspace(reference_box(1),reference_box(2),s_x);
+        tmp_y       = linspace(reference_box(3),reference_box(4),s_y);
+        imagesc(tmp_x,tmp_y,DEM_grid)
+    else
+        [s_y,s_x]   = size(DEM_grid);
+        tmp_x       = linspace(reference_box(1),reference_box(2),s_x);
+        tmp_y       = linspace(reference_box(3),reference_box(4),s_y);
+        climada_DEM_plot(tmp_x,fliplr(tmp_y),DEM_grid)
+    end
     xlabel('Longitude');
     ylabel('Latitude');
-    climada_plot_world_borders
     axis equal
     axis(rect)
     set(gca,'Ydir','normal')
     hold off
-    
-    % surface plot
-    figure('Name', '3D Surface Plot', 'color', 'w');
-    tri = delaunay(DEM.lon, DEM.lat);
-    trisurf(tri,DEM.lon,DEM.lat,DEM.elevation_m);
-    shading interp
-    hold on
-    axis(rect)
-    colormap(color_map);
-    caxis([-(max(elev) - min(elev))/(length(colormap)-1) max(elev)]);
-    xlabel('Longitude');
-    ylabel('Latitude');
-    view(330,70)
-    set(gca,'ztick',[], 'zcolor', 'w');
-    grid off
-    box off
-    hold off
-    
-    fprintf(' done \n')
 end
 
 return
