@@ -68,34 +68,37 @@ n_centroids = n_lon * n_lat;
 
 fprintf(sprintf('generating centroids at %3.2f km resolution... ', resolution_km));
 for i = 0 : n_lon - 1
-    ndx = i * n_lat;
-    centroids.lat(1,ndx + 1 : ndx + n_lat)= (1:n_lat) .* resolution_ang + min_lat;
-    centroids.lon(1,ndx + 1 : ndx + n_lat)= (n_lon - i) .* resolution_ang + min_lon;
+    ndx = i*n_lat;
+    centroids.lat(1,ndx + 1 : ndx + n_lat)= (0:n_lat-1) .* resolution_ang + min_lat;
+    centroids.lon(1,ndx + 1 : ndx + n_lat)= i .* resolution_ang + min_lon;
+    %ndx = i * n_lat;
+    %centroids.lat(1,ndx + 1 : ndx + n_lat)= (1:n_lat) .* resolution_ang + min_lat;
+    %centroids.lon(1,ndx + 1 : ndx + n_lat)= (n_lon - i) .* resolution_ang + min_lon;
 end
 centroids.centroid_ID = [1:n_centroids];
 
 centroids.onLand = true(size(centroids.centroid_ID));
 
-if exist(climada_global.map_border_file,'file')
-    load(climada_global.map_border_file)
-    in = inpolygon(centroids.lon,centroids.lat,shapes.X,shapes.Y);
-    centroids.onLand = false(size(centroids.centroid_ID));
-    centroids.onLand(in) = true;
-    
-    if isfield(shapes,'NAME')
-        for i = 1 : n_centroids
-            centroids.countryname{i} = shapes.NAME;
-        end
-        centroids.admin0_name = shapes.NAME;
-    end
-    if isfield(shapes,'ADM0_A3')
-        centroids.admin0_ISO3 = shapes.ADM0_A3;
-    end
-    fprintf('done \n')
-else
-    fprintf('done \n')
+% if exist(climada_global.map_border_file,'file')
+%     load(climada_global.map_border_file)
+%     in = inpolygon(centroids.lon,centroids.lat,shapes.X,shapes.Y);
+%     centroids.onLand = false(size(centroids.centroid_ID));
+%     centroids.onLand(in) = true;
+%     
+%     if isfield(shapes,'NAME')
+%         for i = 1:n_centroids
+%             centroids.countryname{i} = shapes.NAME;
+%         end
+%         centroids.admin0_name = shapes.NAME;
+%     end
+%     if isfield(shapes,'ADM0_A3')
+%         centroids.admin0_ISO3 = shapes.ADM0_A3;
+%     end
+%     fprintf('done \n')
+% else
+%     fprintf('done \n')
     fprintf('WARNING: no border info found, centroids.onLand set to 1 for all centroids \n')
-end
+% end
 
 centroids.comment = sprintf('%f km resolution centroids, created on %s', resolution_km,datestr(now,'dd/mm/yyyy'));
 

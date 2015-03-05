@@ -1,0 +1,7 @@
+
+Download OpenStreetMap data for this region:
+Bangladesh
+http://download.geofabrik.de/asia/bangladesh.html
+
+Open Street Map
+http://www.openstreetmap.org/#map=14/22.6987/90.3681
