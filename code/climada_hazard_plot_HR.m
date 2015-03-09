@@ -48,17 +48,8 @@ if isempty(hazard),return;end
 hazard=climada_hazard2octave(hazard); % Octave compatibility for -v7.3 mat-files
 
 % if interested in historical events only
-if hist_check && length(hazard.centroid_ID) ~= length(hazard.event_ID) && isfield(hazard,'orig_event_flag')
-    flds = fieldnames(hazard);
-    for fld_i = 1: length(flds)
-        event_dim = size(hazard.(flds{fld_i}))== hazard.event_count;
-        if event_dim(1)
-            hazard.(flds{fld_i}) = hazard.(flds{fld_i})(hazard.orig_event_flag ==1,:);
-        end
-        if event_dim(2)
-            hazard.(flds{fld_i}) = hazard.(flds{fld_i})(:,hazard.orig_event_flag ==1);
-        end
-    end
+if hist_check && event_i > 0
+    event_i = interp1(hazard.event_ID(hazard.orig_event_flag ==1),hazard.event_ID(hazard.orig_event_flag ==1),event_i,'nearest');
 end
 
 % Prepare data

@@ -213,7 +213,7 @@ else
     else centroids_90m_check = 0; end
     if ~centroids_90m_check
         centroid_resolution_km = 1.8;
-        centroids = climada_generate_HR_centroids(centroids_rect,centroid_resolution_km);
+        centroids = climada_generate_centroids(centroids_rect,centroid_resolution_km);
         % Assign elevation to centroids
         [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids, DEM_save_file, 5, check_plots);
     else
@@ -466,8 +466,8 @@ EDS_ts = climada_EDS_calc(entity,hazard_ts);
 % tc_surge_plot_3d_Barisal(hazard_ts,max_tc_pos);
 
 if check_plots
-    climada_plot_EDS_3d(hazard_tc,EDS_tc);
-    climada_plot_EDS_3d(hazard_ts,EDS_ts);
+    climada_EDS_plot_3d(hazard_tc,EDS_tc);
+    climada_EDS_plot_3d(hazard_ts,EDS_ts);
 %    climada_plot_EDS_3d(hazard_tr,EDS_tr);
 end
 if check_plots
