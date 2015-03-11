@@ -1,12 +1,16 @@
 ####Welcome to the ***climada additional module*** barisal_demo
 
-#####First steps
-* Go to the [wiki](../../../climada/wiki/Home) and read the [introduction](../../../climada/wiki/Home) and find out what _**climada**_ and ECA is. 
+#####If you are already familiar with the core ***climada***, dive into this additonal module focusing on Barisal, Bangladesh
+* Read the barisal specific introduction document for [tropical cyclones](/blob/master/docs/climada_module_barisal_demo_tropical_cyclones.pdf?raw=true) and for [storm surge](/blob/master/docs/climada_module_barisal_demo_storm_surge.pdf?raw=true).
 * See an [example video](../../../climada/wiki/NatCat-modelling#example-hurricane-sidr-affects-bangladesh) of Hurricane Sidr affecting Bangladesh. 
+
+
+#####Get to know ***climada***
+* Go to the [wiki](../../../climada/wiki/Home) and read the [introduction](../../../climada/wiki/Home) and find out what _**climada**_ and ECA is. 
 * Are you ready to start adapting? This wiki page helps you to [get started!](../../../climada/wiki/Getting-started)  
 * Read more on [natural catastrophe modelling](../../../climada/wiki/NatCat-modelling) and look at the GUI that we have prepared for you.
 * Read the [core ***climada*** manual (PDF)](../../../climada/docs/climada_manual.pdf?raw=true).
-* Read the barisal specific introduction document for [tropical cyclones](/blob/master/docs/climada_module_barisal_demo_tropical_cyclones.pdf?raw=true) and for [storm surge](/blob/master/docs/climada_module_barisal_demo_storm_surge.pdf?raw=true).
+
 
 
 <br>
