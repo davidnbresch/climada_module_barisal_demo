@@ -257,20 +257,16 @@ for tile_i = 1 : n_tiles
 end
 
 DEM_grid = []; 
-if n_tiles > 1
-    % Concatenate tiles
-    for i = srtm_min_lon_ndx: srtm_max_lon_ndx
-        DEM_grid_j = [];
-        for j = srtm_max_lat_ndx: srtm_min_lat_ndx
-            DEM_grid_j = [DEM_grid_j ; raw(i,j).grid];
-        end
-        DEM_grid = [DEM_grid DEM_grid_j];
+
+% Concatenate tiles
+for i = srtm_min_lon_ndx: srtm_max_lon_ndx
+    DEM_grid_j = [];
+    for j = srtm_max_lat_ndx: srtm_min_lat_ndx
+        DEM_grid_j = [DEM_grid_j ; raw(i,j).grid];
     end
-    clear raw DEM_grid_j
-else
-    DEM_grid = raw(1,1).grid;
-    clear raw
+    DEM_grid = [DEM_grid DEM_grid_j];
 end
+clear raw DEM_grid_j
 
 reference_box = [min(extremes.lon) max(extremes.lon) min(extremes.lat) max(extremes.lat)];
 
@@ -349,9 +345,9 @@ if isstruct(centroids)
     end
     
     centroids.elevation_m(min(DEM.lon) > centroids.lon) = NaN;
-    centroids.elevation_m(max(DEM.lon) > centroids.lon) = NaN;
+    centroids.elevation_m(max(DEM.lon) < centroids.lon) = NaN;
     centroids.elevation_m(min(DEM.lat) > centroids.lat) = NaN;
-    centroids.elevation_m(max(DEM.lat) > centroids.lat) = NaN;
+    centroids.elevation_m(max(DEM.lat) < centroids.lat) = NaN;
 
     if ~exist('rect','var') || isempty(rect)
         rect = [min(DEM.lon) max(DEM.lon) min(DEM.lat) max(DEM.lat)];

@@ -229,7 +229,7 @@ if isempty(force_entity_recalc), force_entity_recalc=0; end
 if (exist(entity_file,'file') || exist(entity_file_xls,'file')) && ~force_entity_recalc
     if exist(entity_file,'file') && exist(entity_file_xls,'file')
         xls_dir = dir(entity_file_xls); mat_dir = dir(entity_file);
-        if datenum(xls_dir.date) > datenum(mat_dir.date) % Read excel file only if it is newer
+        if xls_dir.datenum - mat_dir.datenum >0 % Read excel file only if it is newer
             fprintf('loading entity from %s \n',entity_file_xls)
             entity = climada_entity_read(entity_file_xls,'SKIP');  % Read existing entity Excel file
             save(entity_file,'entity') % Save any updates made to excel file in mat file
