@@ -26,3 +26,7 @@ data/system/srtm_38_03
 data/system/srtm_39_03
 data/system/srtm_40_03
 data/system/srtm_55_03
+
+data/hazards/BCC_hazard_FL.mat
+data/results/Barisal_hazard_flood.kmz
+data/results/BCC_boundary.kmz
