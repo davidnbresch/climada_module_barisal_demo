@@ -26,6 +26,7 @@ data/system/srtm_38_03
 data/system/srtm_39_03
 data/system/srtm_40_03
 data/system/srtm_55_03
+<<<<<<< HEAD
 data/hazards/Barisal_2_hazard_TR.mat
 data/precip_data/
 data/system/shp_files/
@@ -52,3 +53,9 @@ data/system/srtm_55_07/srtm_55_07.tfw
 data/hazards/
 data/system/as_bas_15s_beta/
 data/system/srtm_55_07/srtm_55_07.tif
+=======
+
+data/hazards/BCC_hazard_FL.mat
+data/results/Barisal_hazard_flood.kmz
+data/results/BCC_boundary.kmz
+>>>>>>> 3763dc9efc15348f10deed91b45bbf24cbfa3538
