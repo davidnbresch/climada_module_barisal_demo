@@ -195,7 +195,7 @@ if isempty(force_centroids_recalc)
     force_centroids_recalc=0;
 elseif force_centroids_recalc == 1 && force_hazard_recalc == 0
      cprintf([0.25 0.25 1],'NOTE: recalculation of centroids mandates regeneration of hazard sets \n');
-     force_hazard_recalc = 1;
+     %force_hazard_recalc = 1;
 end
 
 if exist(centroids_file,'file') && exist(DEM_save_file,'file') &&  ~force_centroids_recalc

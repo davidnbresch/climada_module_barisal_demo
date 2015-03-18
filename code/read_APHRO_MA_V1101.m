@@ -27,7 +27,7 @@ function [precip_grid, precip_array] = read_APHRO_MA_V1101(years, centroids_rect
 %                   original data set.
 % OPTIONAL INPUT PARAMETERS:
 %   precip_save_file:   path and filename of save location for output files
-%   location:           struct with fields .longitude, .latitude, which
+%   location:           struct with fields .lon, .lat, which
 %                       defines a 'sampling point' for graph of rainfall timeseries
 %   check_plots:        whether to show time lapse of daily data;
 % OUTPUTS:
@@ -46,6 +46,7 @@ function [precip_grid, precip_array] = read_APHRO_MA_V1101(years, centroids_rect
 % MODIFICATION HISTORY:
 %   Gilles Stassen, gillesstassen@hotmail.com, 20150121
 %   Gilles Stassen, gillesstassen@hotmail.com, 20150224 improved arg check, minor bug fixes
+%   Gilles Stassen, gillesstassen@hotmail.com, 20150317 .longitude -> .lon
 %-
 
 precip_grid.time = [];      precip_array.time = [];
@@ -124,18 +125,18 @@ for year_i = 1 : numel(years)
             centroids_rect = [centroids_rect(:,1)' centroids_rect(:,2)'];
         end
         
-        lon_logical = ceil(tmp_p_g.longitude) >= centroids_rect(1) & floor(tmp_p_g.longitude) <= centroids_rect(2);
-        lat_logical = ceil(tmp_p_g.latitude) >= centroids_rect(3) & floor(tmp_p_g.latitude) <= centroids_rect(4);
-        tmp_p_g.longitude = tmp_p_g.longitude(lon_logical);
-        tmp_p_g.latitude = tmp_p_g.latitude(lat_logical);
-        tmp_p_g.precip = tmp_p_g.precip(lon_logical,lat_logical,:);
+        lon_logical = ceil(tmp_p_g.lon) >= centroids_rect(1) & floor(tmp_p_g.lon) <= centroids_rect(2);
+        lat_logical = ceil(tmp_p_g.lat) >= centroids_rect(3) & floor(tmp_p_g.lat) <= centroids_rect(4);
+        tmp_p_g.lon         = tmp_p_g.lon(lon_logical);
+        tmp_p_g.lat         = tmp_p_g.lat(lat_logical);
+        tmp_p_g.precip      = tmp_p_g.precip(lon_logical,lat_logical,:);
     end
     
     tmp_p_g.precip(tmp_p_g.precip < 0) = 0;
     tmp_p_g.precip = double(tmp_p_g.precip);
     
-    [tmp_p_a.precip, tmp_p_a.longitude, tmp_p_a.latitude] = ...
-        climada_grid2array(tmp_p_g.precip, tmp_p_g.longitude, tmp_p_g.longitude);
+    [tmp_p_a.precip, tmp_p_a.lon, tmp_p_a.lat] = ...
+        climada_grid2array(tmp_p_g.precip, tmp_p_g.lon, tmp_p_g.lat);
     tmp_p_a.time = tmp_p_g.time;
     
     precip_grid.time(end+1:end+numel(tmp_p_g.time)) = tmp_p_g.time + datenum(year, 'yyyy');
@@ -147,11 +148,11 @@ fprintf('done \n')
 
 precip_grid.precip(:,:,1) = [];
 
-precip_array.time = precip_grid.time;
-precip_grid.lon = tmp_p_g.longitude;
-precip_grid.lat = tmp_p_g.latitude;
-precip_array.lon = tmp_p_a.longitude;
-precip_array.lat = tmp_p_a.latitude;
+precip_array.time   = precip_grid.time;
+precip_grid.lon     = tmp_p_g.lon;
+precip_grid.lat     = tmp_p_g.lat;
+precip_array.lon    = tmp_p_a.lon;
+precip_array.lat    = tmp_p_a.lat;
 
 % precip_grid.time = sort(precip_grid.time,'ascend');
 % precip_grid.precip = sort(precip_grid.precip,3,'ascend');
@@ -174,15 +175,15 @@ if check_plot
     for day_i = 1 : n_days
         title(sprintf('Daily precipitation in %s [mm]',datestr(datenum(year,'yyyy')+day_i)));
         if any(any(tmp_p_g.precip(:,:,day_i)))
-            s = surf(tmp_p_g.longitude,tmp_p_g.latitude,permute(tmp_p_g.precip(:,:,day_i)-100,[2 1 3]));
+            s = surf(tmp_p_g.lon,tmp_p_g.lat,permute(tmp_p_g.precip(:,:,day_i)-100,[2 1 3]));
             shading('interp')
             pause(0.2)
             delete(s);
         else
             pause(0.2)
         end
-        % contourf(precip_grid.longitude,precip_grid.latitude,permute(precip_grid.precip(:,:,day_i),[2 1 3]));
-        % imagesc(precip_grid.longitude,precip_grid.latitude,permute(precip_grid.precip(:,:,day_i),[2 1 3]));
+        % contourf(precip_grid.lon,precip_grid.lat,permute(precip_grid.precip(:,:,day_i),[2 1 3]));
+        % imagesc(precip_grid.lon,precip_grid.lat,permute(precip_grid.precip(:,:,day_i),[2 1 3]));
     end
     hold off
 end

@@ -48,7 +48,7 @@ centroids_rect=[min(centroids.lon) max(centroids.lon)...
 
 % prompt for hazard_set_file if not given
 if isempty(hazard_set_file) % local GUI
-    hazard_set_file=[climada_global.data_dir filesep 'hazards' filesep 'RF_hazard.mat'];
+    hazard_set_file=[module_data_dir filesep 'hazards' filesep 'test_MA_hazard.mat'];
     [fN, fP] = uiputfile(hazard_set_file, 'Save new MA hazard event set as:');
     if isequal(fN,0) || isequal(fP,0)
         return; % cancel
@@ -68,14 +68,15 @@ end
 
 min_year   = min(years);
 max_year   = max(years);
-precip_grid.time = precip_grid.time(precip_grid.time > datenum(num2str(min_year),'yyyy') & ...
-                                    precip_grid.time < datenum(num2str(max_year),'yyyy')      );
-precip_grid.precip = precip_grid.precip(:,:,precip_grid.time > datenum(num2str(min_year),'yyyy') & ...
-                                            precip_grid.time < datenum(num2str(max_year),'yyyy')      );
-precip_array.time = precip_grid.time(precip_grid.time > datenum(num2str(min_year),'yyyy') & ...
-                                    precip_grid.time < datenum(num2str(max_year),'yyyy')      );
-precip_array.precip = precip_grid.precip(:,precip_grid.time > datenum(num2str(min_year),'yyyy') & ...
-                                            precip_grid.time < datenum(num2str(max_year),'yyyy')      );
+
+% select relevant time period
+t_ndx = precip_array.time >= datenum(min_year,01, 01) & precip_array.time <= datenum(max_year,12, 31);
+
+precip_array.time = precip_array.time(t_ndx);
+precip_array.precip = precip_array.precip(:,t_ndx);
+precip_grid.time = precip_grid.time(t_ndx);
+precip_grid.precip = precip_grid.precip(:,:,t_ndx);
+clear t_ndx
 
 orig_years = max_year - min_year+1;
 
@@ -101,8 +102,11 @@ hazard.frequency        = ones(1,hazard.event_count)*event_frequency;
 hazard.peril_ID='MA';
 hazard.comment=sprintf('MA hazard event set, generated %s',datestr(now));
 
-%hazard.intensity        = spalloc(hazard.event_count,length(hazard.lon),ceil(hazard.event_count*length(hazard.lon)*0.3));
-hazard.intensity        = zeros(hazard.event_count,numel(centroids.centroid_ID));
+try
+    hazard.intensity        = spalloc(hazard.event_count,length(hazard.lon),ceil(hazard.event_count*length(hazard.lon)*0.3));
+catch
+    hazard.intensity        = zeros(hazard.event_count,numel(centroids.centroid_ID));
+end
 fprintf('processing MA precipitation at centroids for %i events...\n',hazard.event_count)
 mod_step = 10; format_str = '%s'; t0 = clock;
 % [LON, LAT] = meshgrid(double(precip_grid.lon),double(precip_grid.lat));
@@ -125,15 +129,13 @@ for event_i = 1:hazard.event_count
         else
             msgstr = sprintf('est. %3.1f min left (%i/%i events)',t_projected_sec/60,event_i,hazard.event_count);
         end
-        if climada_global.waitbar
-            waitbar(event_i/hazard.event_count,h,msgstr); % update waitbar
-        else
-            fprintf(format_str,msgstr); % write progress to stdout
-            format_str=[repmat('\b',1,length(msgstr)) '%s']; % back to begin of line
-        end
+        fprintf(format_str,msgstr); % write progress to stdout
+        format_str=[repmat('\b',1,length(msgstr)) '%s']; % back to begin of line
     end
 end
-hazard.intensity    = sparse(hazard.intensity);
+try 
+    hazard.intensity    = sparse(hazard.intensity);
+end
 fprintf(format_str,sprintf('processing rainfall at %i centroids for %i events took %3.1f seconds \n', ...
     numel(hazard.centroid_ID),hazard.event_count,etime(clock,t0)));
 
@@ -160,6 +162,6 @@ if ~strcmp(hazard_set_file,'NO_SAVE');
     end
 end
 
-if check_plots,figure('color','w'); climada_hazard_plot_HR(hazard,0);end % show max rainfall over ALL events
+if check_plots,figure('color','w'); climada_hazard_plot_hr(hazard,0);end % show max rainfall over ALL events
 
 return

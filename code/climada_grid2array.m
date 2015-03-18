@@ -5,8 +5,10 @@ function [data, x, y] = climada_grid2array(data_grid, x_vector, y_vector)
 % NAME:
 %   climada_grid2array
 % PURPOSE:
-%   Restructure gridded data into singleton arrays. Used in
-%   climada_read_srtm_DEM and read_APHRO_MA_V1101
+%   Restructure gridded data into singleton arrays. For consistency with
+%   imagesc, the first index in data_grid corresponds to the x coords,
+%   while the second index corresponds to the y coords. Used in
+%   climada_read_srtm_DEM, read_APHRO_MA_V1101 and climada_rf_hazard_set
 % CALLING SEQUENCE:
 % EXAMPLE:
 % INPUTS:

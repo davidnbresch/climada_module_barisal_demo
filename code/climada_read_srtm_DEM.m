@@ -124,20 +124,23 @@ else
 end
 if ~isempty(country_name), cntry_str = sprintf(' for %s',country_name'); else cntry_str = ''; end
 
+% conversion to srtm tile indices
+srtm_min_lon_ndx = ceil(72 * (rect(1) + 180)/(179.28+180.00));
+srtm_max_lon_ndx = ceil(72 * (rect(2) + 180)/(179.28+180.00));
+srtm_min_lat_ndx = ceil(24 * (60 - rect(3)) /( 60.00+ 57.83));
+srtm_max_lat_ndx = ceil(24 * (60 - rect(4)) /( 60.00+ 57.83));
+
+[I,J]   = meshgrid([srtm_min_lon_ndx: srtm_max_lon_ndx],[srtm_max_lat_ndx: srtm_min_lat_ndx]);
+
+n_tiles = (1+srtm_max_lon_ndx-srtm_min_lon_ndx)*(1+srtm_min_lat_ndx-srtm_max_lat_ndx);
+
 % load srtm tile from internet and unzip
+dl_check = 0;
 if strcmp(srtm_dir, 'DL')
     dl_check = 1;
     clear srtm_dir
     
-    % conversion to srtm tile indices
-    srtm_min_lon_ndx = ceil(72 * (rect(1) + 180)/(179.28+180.00));
-    srtm_max_lon_ndx = ceil(72 * (rect(2) + 180)/(179.28+180.00));
-    srtm_min_lat_ndx = ceil(24 * (60 - rect(3)) /( 60.00+ 57.83));
-    srtm_max_lat_ndx = ceil(24 * (60 - rect(4)) /( 60.00+ 57.83));
-    
     % construct filenames
-    n_tiles = (1+srtm_max_lon_ndx-srtm_min_lon_ndx)*(1+srtm_min_lat_ndx-srtm_max_lat_ndx);
-    
     if n_tiles > 9
         warn_msg = sprintf('WARNING: Your specified region of interest requires %i DEM tiles. \n\t \t Computation may be slow and Matlab may crash. Are you sure you wish to continue? (y/n) ',n_tiles);
         response = input(warn_msg,'s');
@@ -147,7 +150,6 @@ if strcmp(srtm_dir, 'DL')
         end
     end   
     
-    [I,J]   = meshgrid([srtm_min_lon_ndx: srtm_max_lon_ndx],[srtm_max_lat_ndx: srtm_min_lat_ndx]);
     t0 = clock;
     format_str = '%s';
     for tile_i = 1 : n_tiles
@@ -186,7 +188,6 @@ if strcmp(srtm_dir, 'DL')
         end
     end
 else
-    n_tiles = 1; I = 1; J = 1;
     tmp         = srtm_dir;     clear srtm_dir
     srtm_dir{1} = tmp;          clear tmp
 end
@@ -259,6 +260,7 @@ end
 DEM_grid = []; 
 
 % Concatenate tiles
+
 for i = srtm_min_lon_ndx: srtm_max_lon_ndx
     DEM_grid_j = [];
     for j = srtm_max_lat_ndx: srtm_min_lat_ndx
@@ -289,8 +291,8 @@ fprintf('done \n')
 
 if isstruct(centroids)
     % crop to rect
-    lon_crop_ndx    = min(centroids.lon)<= lon & lon <= max(centroids.lon);
-    lat_crop_ndx    = min(centroids.lat)<= lat & lat <= max(centroids.lat);
+    lon_crop_ndx    = rect(1) <= lon & lon <= rect(2);
+    lat_crop_ndx    = rect(3) <= lat & lat <= rect(4);
     lon_crop        = lon(lon_crop_ndx & lat_crop_ndx);
     lat_crop        = lat(lon_crop_ndx & lat_crop_ndx);
     elev_crop       = elev(lon_crop_ndx & lat_crop_ndx);
@@ -334,37 +336,37 @@ if isstruct(centroids)
     
     if ~dl_check % only necessary when existing data is selected, avoid warning message due to imperfect cropping
         % deal with DEM edges if they do not reach extent of centroids
-        if min(DEM.lon) > min(centroids.lon) || max(DEM.lon) < max(centroids.lon)
+        if min(lon) > min(centroids.lon) || max(lon) < max(centroids.lon)
             cprintf([1 0.25 0.25], ['WARNING: longitudinal extent of centroids exceeds '...
                 'that of DEM \n \t \t Elevation not processed for some centroids \n'])
         end
-        if min(DEM.lat) > min(centroids.lat) || max(DEM.lat) < max(centroids.lat)
+        if min(lat) > min(centroids.lat) || max(lat) < max(centroids.lat)
             cprintf([1 0.25 0.25], ['WARNING: latitudinal extent of centroids exceeds '...
                 'that of DEM \n \t \t Elevation not processed for some centroids \n'])
         end
     end
     
-    centroids.elevation_m(min(DEM.lon) > centroids.lon) = NaN;
-    centroids.elevation_m(max(DEM.lon) < centroids.lon) = NaN;
-    centroids.elevation_m(min(DEM.lat) > centroids.lat) = NaN;
-    centroids.elevation_m(max(DEM.lat) < centroids.lat) = NaN;
+    centroids.elevation_m(min(lon) > centroids.lon) = NaN;
+    centroids.elevation_m(max(lon) < centroids.lon) = NaN;
+    centroids.elevation_m(min(lat) > centroids.lat) = NaN;
+    centroids.elevation_m(max(lat) < centroids.lat) = NaN;
 
     if ~exist('rect','var') || isempty(rect)
         rect = [min(DEM.lon) max(DEM.lon) min(DEM.lat) max(DEM.lat)];
     end
     
 elseif ~isempty(rect)
-        
-    if min(DEM.lon) > rect(1) || max(DEM.lon) < rect(2)
+
+    if min(lon) > rect(1) || max(lon) < rect(2)
         cprintf([1 0.25 0.25], ['WARNING: DEM does not cover longitudinal extent'...
             'defined by centroids rect \n \t \t Spatial extent of centroids limited to DEM \n'])
     end
 
-    if min(DEM.lat) > rect(3) || max(DEM.lat) < rect(4)
+    if min(lat) > rect(3) || max(lat) < rect(4)
         cprintf([1 0.25 0.25], ['WARNING: DEM does not cover latitudinal extent'...
             'defined by centroids rect \n \t \t Spatial extent of centroids limited to DEM \n'])
     end
-
+    
     fprintf('generating centroids from DEM...');
     
     % crop to rect
@@ -443,7 +445,11 @@ if check_plot
         [s_y,s_x]   = size(DEM_grid);
         tmp_x       = linspace(reference_box(1),reference_box(2),s_x);
         tmp_y       = linspace(reference_box(3),reference_box(4),s_y);
-        climada_DEM_plot(tmp_x,fliplr(tmp_y),DEM_grid)
+        if numel(DEM_grid) <= (2 * 6001 * 6001)
+            climada_DEM_plot(tmp_x,fliplr(tmp_y),DEM_grid, 'NoDecim')
+        else
+            climada_DEM_plot(tmp_x,fliplr(tmp_y),DEM_grid)
+        end
     end
     xlabel('Longitude');
     ylabel('Latitude');
