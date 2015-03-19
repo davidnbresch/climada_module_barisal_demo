@@ -1,36 +1,33 @@
 
-data/system/5_45_11_48_F182010.v4c.avg_lights_x_pct.lzw.tiff
-
-
-data/system/87_20_94_27_F182010.v4c.avg_lights_x_pct.lzw.tiff
-
-
-data/system/88_20_93_27_F182010.v4c.avg_lights_x_pct.lzw.tiff
+code/climada_centroids_runoff.m
+code/test_bed.m
 
 docs/literature
 
 data/results/Sidr_2007_Bangladesh_Barisal.avi
-
 data/results/Sidr_2007_Bangladesh_Barisal_detailed.avi
-
 data/results/Barisal_HR_hazard_TC.mat
 data/results/Barisal_HR_hazard_TR.mat
 data/results/Barisal_HR_hazard_TS.mat
-code/climada_centroids_runoff.m
-code/test_bed.m
+
 data/hazards/Barisal_4_hazard_MA.mat
 data/hazards/Barisal_4_hazard_TR.mat
 data/hazards/Barisal_4_hazard_mod_TR.mat
+data/hazards/Barisal_2_hazard_TR.mat
+
+data/precip_data/
+
+data/system/5_45_11_48_F182010.v4c.avg_lights_x_pct.lzw.tiff
+data/system/87_20_94_27_F182010.v4c.avg_lights_x_pct.lzw.tiff
+data/system/88_20_93_27_F182010.v4c.avg_lights_x_pct.lzw.tiff
+
+data/system/shp_files/
+data/system/as_bas_15s_beta/as_bas_15s_beta.shp.xml
 data/system/as_bas_ll_r500m/
 data/system/srtm_38_03
 data/system/srtm_39_03
 data/system/srtm_40_03
 data/system/srtm_55_03
-<<<<<<< HEAD
-data/hazards/Barisal_2_hazard_TR.mat
-data/precip_data/
-data/system/shp_files/
-data/system/as_bas_15s_beta/as_bas_15s_beta.shp.xml
 data/system/srtm_37_02/readme.txt
 data/system/srtm_37_02/srtm_37_02.hdr
 data/system/srtm_37_02/srtm_37_02.tfw
@@ -50,12 +47,7 @@ data/system/srtm_54_08/srtm_54_08.tif
 data/system/srtm_55_07/readme.txt
 data/system/srtm_55_07/srtm_55_07.hdr
 data/system/srtm_55_07/srtm_55_07.tfw
-data/hazards/
 data/system/as_bas_15s_beta/
 data/system/srtm_55_07/srtm_55_07.tif
-=======
 
-data/hazards/BCC_hazard_FL.mat
-data/results/Barisal_hazard_flood.kmz
-data/results/BCC_boundary.kmz
->>>>>>> 3763dc9efc15348f10deed91b45bbf24cbfa3538
+
