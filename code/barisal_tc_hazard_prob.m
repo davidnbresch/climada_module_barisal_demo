@@ -1,4 +1,28 @@
 
+%% plot historical tc tracks
+tc_track_file = [climada_global.data_dir filesep 'tc_tracks' filesep 'tracks_n_indian_proc'];
+load(tc_track_file)
+
+fig = climada_figuresize(0.5,0.7);
+check_country = 'Bangladesh';
+keep_boundary = 0;
+climada_plot_world_borders(1,check_country,'',keep_boundary,'');
+track_count = numel(tc_track);
+for track_i = 1:track_count
+    h = climada_plot_tc_track_stormcategory(tc_track(track_i),5,[]);
+end
+%add legend, makes it quite slow
+climada_plot_tc_track_stormcategory(0,8,1);
+axis equal
+axis([79 98 14 28])
+% axis([70 110 06 32])   
+filename = [filesep 'results' filesep 'TC_tracks_NIO_hist.pdf'];
+print(fig,'-dpdf',[climada_global.data_dir filename])
+fprintf('figure saved in %s \n', filename) 
+datestr(tc_track(1).datenum(1))
+datestr(tc_track(end).datenum(end))
+
+
 
 %% create tc track probabilistic for barisal
 tc_track_file = [climada_global.data_dir filesep 'tc_tracks' filesep 'tracks_n_indian_proc'];
@@ -13,6 +37,7 @@ tc_track      = climada_tc_random_walk_position_windspeed(tc_track,tc_track_save
 % Maxangle = [];
 % tc_track_out  = climada_tc_random_walk(tc_track,ens_size,ens_amp,Maxangle,0);
 save(tc_track_save, 'tc_track')
+load(tc_track_save)
 
 
 %% create tc track figure
@@ -47,12 +72,25 @@ print(fig,'-dpdf',[climada_global.data_dir foldername])
 % datestr(hazard.datenum(172*4+1:173*4))
 % datestr(hazard.datenum((event_i-1)*(ens_size+1)+1:1:event_i*(ens_size+1)))
 
+climada_plot_probabilistic_wind_speed_map(tc_track, (event_i-1)*(ens_size+1)+1)
+
+%% footprint figure
+% climada_plot_tc_footprint(hazard,tc_track((event_i-1)*(ens_size+1)+1))
+% caxis_range = '';
+% res=climada_hazard_plot(hazard,(event_i-1)*(ens_size+1)+1);
+% 
+% load([climada_global.modules_dir filesep 'barisal_demo' filesep 'data' filesep 'entities' filesep 'Barisal_BCC_1km_100.mat'])
+% focus_region = [70 110 06 32];
+% check_mode = '';
+% tc_track_1 = tc_track((event_i-1)*(ens_size+1)+1);
+% hazard = climada_event_damage_data_tc(tc_track_1,entity,'',0,check_mode,focus_region);
+% climada_event_damage_animation
 
 
 %% create probabilistic tc hazard set
 centroids_file  = [climada_global.data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
 load(centroids_file)
-hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'BCC_hazard_TC_prob'];
+hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC_prob'];
 hazard = climada_tc_hazard_set(tc_track, hazard_set_file, centroids);
 
 % tweek the frequencies
@@ -63,7 +101,7 @@ hazard.frequency  = hazard.frequency_ori*6;
 save(hazard_set_file,'hazard')
 
 % just loading not calculating
-hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'BCC_hazard_TC_prob'];
+hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC_prob'];
 load(hazard_set_file)
 
 

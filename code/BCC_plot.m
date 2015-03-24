@@ -25,7 +25,7 @@ if ~climada_init_vars,return;end % init/import global variables
 
 
 %parameters
-check_printplot = 1;
+check_printplot = 0;
 axislim = [90.25 90.45 22.6 22.8]; %barisal close up BCC
 % axislim = [90.20 90.55 22.55 22.85]; %barisal bigger BCC
 % axislim = [88.5 93 21 24]; %coastal bangladesh
@@ -34,7 +34,7 @@ axislim = [90.25 90.45 22.6 22.8]; %barisal close up BCC
 % locate the module's data
 module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 % for testing
-module_data_dir  = '\\CHRB1065.CORP.GWPNET.COM\homes\X\S3BXXW\Documents\lea\climada_git\climada_modules\barisal_demo\data';
+% module_data_dir  = '\\CHRB1065.CORP.GWPNET.COM\homes\X\S3BXXW\Documents\lea\climada_git\climada_modules\barisal_demo\data';
 GIS_dir          = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBangladesh\Barisal_GIS\WGS1984';
 GIS_open_dat_dir = [module_data_dir filesep 'entities' filesep 'BGD_adm'];
 
