@@ -108,9 +108,14 @@ if ~isempty(centroidsORcountry)
         centroids   = [];
         country_name= centroidsORcountry; clear centroidsORcountry
         [country_name,country_ISO3,shape_index] = climada_country_name(country_name);
+        if isempty(shape_index)
+            cprintf([1 0 0],'ERROR: invalid country name \n')
+            [country_name,country_ISO3,shape_index] = climada_country_name;
+        end
+        
         % bb          = shapes(shape_index).BoundingBox;    % countries with colonies pose problems here...
         bb          = [min(shapes(shape_index).X) min(shapes(shape_index).Y)
-                       max(shapes(shape_index).X) max(shapes(shape_index).Y)];
+            max(shapes(shape_index).X) max(shapes(shape_index).Y)];
         rect        = [bb(:,1)' bb(:,2)']; clear bb
     end
 else
@@ -119,16 +124,17 @@ else
     if isempty(country_name), return; end % error message already printed in climada_country_name
     % bb          = shapes(shape_index).BoundingBox;    % countries with colonies pose problems here...
     bb          = [min(shapes(shape_index).X) min(shapes(shape_index).Y)
-               max(shapes(shape_index).X) max(shapes(shape_index).Y)];
+        max(shapes(shape_index).X) max(shapes(shape_index).Y)];
     rect        = [bb(:,1)' bb(:,2)']; clear bb
 end
 if ~isempty(country_name), cntry_str = sprintf(' for %s',country_name'); else cntry_str = ''; end
 
 % conversion to srtm tile indices
-srtm_min_lon_ndx = ceil(72 * (rect(1) + 180)/(179.28+180.00));
-srtm_max_lon_ndx = ceil(72 * (rect(2) + 180)/(179.28+180.00));
-srtm_min_lat_ndx = ceil(24 * (60 - rect(3)) /( 60.00+ 57.83));
-srtm_max_lat_ndx = ceil(24 * (60 - rect(4)) /( 60.00+ 57.83));
+rect_buffer      = 0.5;     % set buffer to avoid missing data due to imperfect conversions below
+srtm_min_lon_ndx = ceil(72 * (rect(1)-rect_buffer + 180)/(179.28+180.00));
+srtm_max_lon_ndx = ceil(72 * (rect(2)+rect_buffer + 180)/(179.28+180.00));
+srtm_min_lat_ndx = ceil(24 * (60 - rect(3)+rect_buffer) /( 60.00+ 57.83));
+srtm_max_lat_ndx = ceil(24 * (60 - rect(4)-rect_buffer) /( 60.00+ 57.83));
 
 [I,J]   = meshgrid([srtm_min_lon_ndx: srtm_max_lon_ndx],[srtm_max_lat_ndx: srtm_min_lat_ndx]);
 
@@ -148,7 +154,7 @@ if strcmp(srtm_dir, 'DL')
             fprintf('aborting\n')
             return
         end
-    end   
+    end
     
     t0 = clock;
     format_str = '%s';
@@ -257,7 +263,7 @@ for tile_i = 1 : n_tiles
     end
 end
 
-DEM_grid = []; 
+DEM_grid = [];
 
 % Concatenate tiles
 
@@ -286,7 +292,7 @@ if ~isempty(smooth) && any(smooth) && ~isnan(smooth)
 end
 
 % store as singleton arrays in DEM structure
-[elev, lon, lat] = climada_grid2array(DEM_grid, reference_box);
+[elev, lon, lat] = climada_grid2array(DEM_grid', reference_box);
 fprintf('done \n')
 
 if isstruct(centroids)
@@ -304,35 +310,37 @@ if isstruct(centroids)
     n_centroids = numel(centroids.centroid_ID);
     fprintf('processing centroid elevation... ');
     t0 = clock;
-%     format_str = '%s';
-%     for centroid_i = 1: n_centroids
-%         
-%         %r_i = climada_geo_distance(centroids.lon(centroid_i),centroids.lat(centroid_i),lon_crop,lat_crop);
-%         r_i = sqrt((centroids.lon(centroid_i)-lon_crop).^2 + (centroids.lat(centroid_i)-lat_crop).^2);
-%         [~,ndx] = min(r_i);
-%         DEM.centroid_ID(ndx) = centroid_i;
-%         centroids.elevation_m(centroid_i) = elev_crop(ndx)';
-%         % the progress management
-%         mod_step = 100;
-%         if mod(centroid_i,mod_step)==0
-%             t_elapsed_event   = etime(clock,t0)/centroid_i;
-%             events_remaining  = n_centroids-centroid_i;
-%             t_projected_sec   = t_elapsed_event*events_remaining;
-%             if t_projected_sec<60
-%                 msgstr = sprintf('est. %3.0f sec left (%i/%i centroids)',t_projected_sec,   centroid_i,n_centroids);
-%             else
-%                 msgstr = sprintf('est. %3.1f min left (%i/%i centroids)',t_projected_sec/60,centroid_i,n_centroids);
-%             end
-%             fprintf(format_str,msgstr); % write progress to stdout
-%             format_str=[repmat('\b',1,length(msgstr)) '%s']; % back to begin of line
-%         end
-%     end
-
-%     F_DEM = scatteredInterpolant(DEM.lon',DEM.lat',DEM.elevation_m');
-    F_DEM = scatteredInterpolant(lon_crop,lat_crop,elev_crop);
-    centroids.elevation_m = F_DEM(centroids.lon',centroids.lat')';
-    fprintf('done \n')
-%     fprintf(format_str,sprintf('processing centroid elevation%s took %3.0f seconds \n',cntry_str, etime(clock,t0)));
+    format_str = '%s';
+    if n_tiles > 2
+        for centroid_i = 1: n_centroids
+            r_i = climada_geo_distance(centroids.lon(centroid_i),centroids.lat(centroid_i),lon_crop,lat_crop);
+            %r_i = sqrt((centroids.lon(centroid_i)-lon_crop).^2 + (centroids.lat(centroid_i)-lat_crop).^2);
+            [~,ndx] = min(r_i);
+            DEM.centroid_ID(ndx) = centroid_i;
+            centroids.elevation_m(centroid_i) = elev_crop(ndx)';
+            % the progress management
+            mod_step = 100;
+            if mod(centroid_i,mod_step)==0
+                t_elapsed_event   = etime(clock,t0)/centroid_i;
+                events_remaining  = n_centroids-centroid_i;
+                t_projected_sec   = t_elapsed_event*events_remaining;
+                if t_projected_sec<60
+                    msgstr = sprintf('est. %3.0f sec left (%i/%i centroids)',t_projected_sec,   centroid_i,n_centroids);
+                else
+                    msgstr = sprintf('est. %3.1f min left (%i/%i centroids)',t_projected_sec/60,centroid_i,n_centroids);
+                end
+                fprintf(format_str,msgstr); % write progress to stdout
+                format_str=[repmat('\b',1,length(msgstr)) '%s']; % back to begin of line
+            end
+        end
+    else
+        
+        F_DEM = scatteredInterpolant(DEM.lon',DEM.lat',DEM.elevation_m');
+        F_DEM = scatteredInterpolant(lon_crop,lat_crop,elev_crop);
+        centroids.elevation_m = F_DEM(centroids.lon',centroids.lat')';
+        fprintf('done \n')
+    end
+    fprintf(format_str,sprintf('processing centroid elevation%s took %3.0f seconds \n',cntry_str, etime(clock,t0)));
     
     if ~dl_check % only necessary when existing data is selected, avoid warning message due to imperfect cropping
         % deal with DEM edges if they do not reach extent of centroids
@@ -350,18 +358,18 @@ if isstruct(centroids)
     centroids.elevation_m(max(lon) < centroids.lon) = NaN;
     centroids.elevation_m(min(lat) > centroids.lat) = NaN;
     centroids.elevation_m(max(lat) < centroids.lat) = NaN;
-
+    
     if ~exist('rect','var') || isempty(rect)
         rect = [min(DEM.lon) max(DEM.lon) min(DEM.lat) max(DEM.lat)];
     end
     
 elseif ~isempty(rect)
-
+    
     if min(lon) > rect(1) || max(lon) < rect(2)
         cprintf([1 0.25 0.25], ['WARNING: DEM does not cover longitudinal extent'...
             'defined by centroids rect \n \t \t Spatial extent of centroids limited to DEM \n'])
     end
-
+    
     if min(lat) > rect(3) || max(lat) < rect(4)
         cprintf([1 0.25 0.25], ['WARNING: DEM does not cover latitudinal extent'...
             'defined by centroids rect \n \t \t Spatial extent of centroids limited to DEM \n'])
@@ -432,7 +440,7 @@ if check_plot
     figure('Name', '2D Relief Plot', 'color', 'w');
     hold on
     title(sprintf('Digital Elevation Model %s', cntry_str))
-
+    
     if isempty(which('climada_DEM_plot'))
         fprintf('Download DEM plotting function from http://ch.mathworks.com/matlabcentral/fileexchange/36380-dem--shaded-relief-image-plot--digital-elevation-model-\n')
         fprintf('and rename dem -> climada_DEM_plot for awesome relief plot \n')

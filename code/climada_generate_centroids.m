@@ -1,4 +1,4 @@
-function centroids = climada_generate_centroids(centroids_rectORcountry_name, resolution_km)
+function centroids = climada_generate_centroids(centroids_rectORcountry_name, resolution_km, buffer_check, check_plot)
 % climada generate high resolution centroids
 % MODULE:
 %   barisal_demo
@@ -30,6 +30,8 @@ function centroids = climada_generate_centroids(centroids_rectORcountry_name, re
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com, 20150119
 % Gilles Stassen, 20150128, added .comment field
+% Gilles Stassen, 20150326, added buffer
+% Gilles Stassen, 20150408, increased buffer size
 %-
 centroids = [];
 
@@ -43,6 +45,7 @@ else
     shapes_check = 0;
 end
 
+country_check = 0;
 if ~exist('centroids_rectORcountry_name','var')
     if ~shapes_check
         % need shapes for country input
@@ -58,6 +61,7 @@ if ~exist('centroids_rectORcountry_name','var')
         bb             = [min(shapes(shape_index).X) min(shapes(shape_index).Y)
                           max(shapes(shape_index).X) max(shapes(shape_index).Y)];
         centroids_rect = [bb(:,1)' bb(:,2)']; clear bb
+        country_check  = 1;
     end
     
 elseif ischar(centroids_rectORcountry_name) 
@@ -74,6 +78,7 @@ elseif ischar(centroids_rectORcountry_name)
     bb             = [min(shapes(shape_index).X) min(shapes(shape_index).Y)
                       max(shapes(shape_index).X) max(shapes(shape_index).Y)];
     centroids_rect = [bb(:,1)' bb(:,2)']; clear bb
+    country_check  = 1;
 elseif isnumeric(centroids_rectORcountry_name) && length(centroids_rectORcountry_name) == 4
     % input is centroids rect
     centroids_rect = centroids_rectORcountry_name; clear centroids_rectORcountry_name
@@ -88,6 +93,9 @@ if ~exist('resolution_km','var') || isempty(resolution_km)
 end
 resolution_ang = resolution_km / (111.12);
 
+if ~exist('buffer_check',   'var'),     buffer_check    = 1;    end
+if ~exist('check_plot',     'var'),     check_plot      = 0;    end
+
 min_lon = centroids_rect(1);
 max_lon = centroids_rect(2);
 min_lat = centroids_rect(3);
@@ -95,38 +103,56 @@ max_lat = centroids_rect(4);
 
 n_lon = round((max_lon - min_lon)/(resolution_ang)) + 1;
 n_lat = round((max_lat - min_lat)/(resolution_ang)) + 1;
-n_centroids = n_lon * n_lat;
 
 fprintf(sprintf('generating centroids at %3.2f km resolution... ', resolution_km));
+t0 = clock;
+% construct regular grid
 for i = 0 : n_lon - 1
     ndx = i * n_lat;
     centroids.lat(1,ndx + 1 : ndx + n_lat)= (1:n_lat) .* resolution_ang + min_lat;
     centroids.lon(1,ndx + 1 : ndx + n_lat)= (n_lon - i) .* resolution_ang + min_lon;
 end
-centroids.centroid_ID = [1:n_centroids];
-
-centroids.onLand = nan(size(centroids.centroid_ID));
-
-coastline = climada_coastline_read;
-
-if ~isempty(coastline)
-    in = inpolygon(centroids.lon,centroids.lat,coastline.lon,coastline.lat);
-    centroids.onLand        = false(size(centroids.centroid_ID));
-    centroids.onLand(in)    = true;
-else
-    fprintf('WARNING: coastline info not found, .onLand set to NaN \n')
-end
 
 if shapes_check
+    if buffer_check
+        % take only high resolution centroids for country
+        country_ndx   = inpolygon(centroids.lon,centroids.lat,shapes(shape_index).X,shapes(shape_index).Y);
+        centroids.lon = centroids.lon(country_ndx);
+        centroids.lat = centroids.lat(country_ndx);
+        
+        % generate coarser grid for buffer centroids (resolution reduced by
+        % factor of 4)
+        buffer_resolution_ang = resolution_ang * 4;
+        n_lon = round((max_lon - min_lon)/(buffer_resolution_ang)) + 2;
+        n_lat = round((max_lat - min_lat)/(buffer_resolution_ang)) + 3;
+
+        for i = 0 : n_lon + 1
+            ndx = i * n_lat;
+            buffer.lat(1,ndx + 1 : ndx + n_lat)= (-1 : n_lat-2) .* buffer_resolution_ang + min_lat;
+            buffer.lon(1,ndx + 1 : ndx + n_lat)= (n_lon - i) .* buffer_resolution_ang + min_lon;
+        end
+        
+        % take only buffer centroids outside country border
+        buffer_ndx = inpolygon(buffer.lon,buffer.lat,shapes(shape_index).X,shapes(shape_index).Y);
+        buffer.lon = buffer.lon(~buffer_ndx);
+        buffer.lat = buffer.lat(~buffer_ndx);
+        
+        % concatenate
+        buffer_logical      = [zeros(size(centroids.lon)) ones(size(buffer.lon))];
+        centroids.lon       = [centroids.lon buffer.lon];
+        centroids.lat       = [centroids.lat buffer.lat];
+    end
+    
+    
     if exist('country_name','var') 
-        for i = 1 : n_centroids
-            centroids.countryname{i} = country_name;
+        for i = 1 : length(centroids.lon)
+            centroids.country_name{i} = country_name;
         end
         centroids.admin0_ISO3 = ISO_3;
     else
         if shapes_check && isfield(shapes,'NAME')
-            for i = 1 : n_centroids
-                centroids.countryname{i} = shapes.NAME;
+            for i = 1 : length(centroids.lon)
+                centroids.country_name{i} = shapes.NAME;
             end
             centroids.admin0_name = shapes.NAME;
         end
@@ -135,8 +161,39 @@ if shapes_check
         end
     end
 end
-fprintf('done \n')
 
+centroids.centroid_ID = 1:length(centroids.lon);
+
+% coastline is terrible.
+centroids.onLand = ones(size(centroids.centroid_ID));
+centroids.onLand(buffer_logical ==1) = 0;
+% 
+% coastline = climada_coastline_read;
+% 
+% if ~isempty(coastline)
+%     in = inpolygon(centroids.lon,centroids.lat,coastline.lon,coastline.lat);
+%     centroids.onLand        = true(size(centroids.centroid_ID));
+%     centroids.onLand(~in & buffer_logical)   = false;
+% else
+%     fprintf('WARNING: coastline info not found, .onLand set to NaN \n')
+% end
+fprintf('done \n')
+tf = clock;
+fprintf('generating %i centroids for %s took %3.2f seconds \n',length(centroids.centroid_ID),country_name, etime(tf,t0));
 centroids.comment = sprintf('%3.2f km resolution centroids, created on %s', resolution_km,datestr(now,'dd/mm/yyyy'));
+
+if check_plot
+    figure('name','Centroids','color','w')
+    hold on
+    climada_plot_world_borders
+    scatter(centroids.lon(centroids.onLand ==1),centroids.lat(centroids.onLand == 1),'xr');
+    scatter(centroids.lon(centroids.onLand ==0),centroids.lat(centroids.onLand == 0),'ob');
+    if exist('country_name','var') && ~isempty(country_name)
+        title(sprintf('Centroids for %s',country_name));
+    end
+    axis([min(centroids.lon) max(centroids.lon) min(centroids.lat) max(centroids.lat)])
+    xlabel('Longitude')
+    ylabel('Latitude')
+end
 
 return

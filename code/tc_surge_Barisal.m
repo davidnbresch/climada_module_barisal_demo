@@ -195,7 +195,7 @@ if isempty(force_centroids_recalc)
     force_centroids_recalc=0;
 elseif force_centroids_recalc == 1 && force_hazard_recalc == 0
      cprintf([0.25 0.25 1],'NOTE: recalculation of centroids mandates regeneration of hazard sets \n');
-     %force_hazard_recalc = 1;
+     force_hazard_recalc = 1;
 end
 
 if exist(centroids_file,'file') && exist(DEM_save_file,'file') &&  ~force_centroids_recalc
@@ -215,10 +215,10 @@ else
         centroid_resolution_km = 1.8;
         centroids = climada_generate_centroids(centroids_rect,centroid_resolution_km);
         % Assign elevation to centroids
-        [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids, DEM_save_file, 5, check_plots);
+        [DEM, centroids] = climada_read_srtm_DEM('DL',centroids, DEM_save_file, 5, check_plots);
     else
         % generate centroids from DEM
-        [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids_rect, DEM_save_file, 8, check_plots);
+        [DEM, centroids] = climada_read_srtm_DEM('DL',centroids_rect, DEM_save_file, 8, check_plots);
     end
     fprintf('saving centroids to %s \n',centroids_file)
     save(centroids_file, 'centroids')
@@ -358,7 +358,9 @@ end
 % 3) Create TS hazard event set
 % -----------------------------------
 if ~exist(hazard_set_file_ts,'file') || force_hazard_recalc
-    hazard_ts = tc_surge_hazard_create(hazard_tc,hazard_set_file_ts,DEM);
+    % policy research working paper 5280 "Vulnerability of Bangladesh to Cyclones in a Changing Climate"
+    surge_params = [0.1252 -1.7005]; 
+    hazard_ts = tc_surge_hazard_create(hazard_tc,hazard_set_file_ts,centroids,[],surge_params);
 else
     fprintf('loading TS surge hazard set from %s\n',hazard_set_file_ts);
     load(hazard_set_file_ts);
@@ -415,29 +417,29 @@ if check_plots
     max_event_fig_title = sprintf('Storm surge Barisal admin 3 for largest event # %i in the year %i',max_tc_pos,hazard_tc.yyyy(max_tc_pos));
 
     figure('Name',max_event_fig_title,'Color',[1 1 1])
-    climada_hazard_plot_HR(hazard_tc,max_tc_pos);
+    climada_hazard_plot_hr(hazard_tc,max_tc_pos);
     hold off
     
     figure('Name',max_event_fig_title,'Color',[1 1 1])
-    climada_hazard_plot_HR(hazard_ts,max_tc_pos);
+    climada_hazard_plot_hr(hazard_ts,max_tc_pos);
     hold off
     
     figure('Name',max_event_fig_title,'Color',[1 1 1])
-    climada_hazard_plot_HR(hazard_tr,max_tc_pos);
+    climada_hazard_plot_hr(hazard_tr,max_tc_pos);
     hold off
     drawnow
     
     % Plot the max intensity at each centroid
     figure('Name','Maximum hazard intenstity at each centroid','color','w')
-    climada_hazard_plot_HR(hazard_tc,0);
+    climada_hazard_plot_hr(hazard_tc,0);
     hold off
     
     figure('Name','Maximum hazard intenstity at each centroid','color','w')
-    climada_hazard_plot_HR(hazard_ts,0);
+    climada_hazard_plot_hr(hazard_ts,0);
     hold off
     
     figure('Name','Maximum hazard intenstity at each centroid','color','w')
-    climada_hazard_plot_HR(hazard_tr,0);
+    climada_hazard_plot_hr(hazard_tr,0);
     hold off
     drawnow
     
