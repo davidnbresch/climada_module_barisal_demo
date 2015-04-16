@@ -30,8 +30,8 @@ E.g. if the addition module is named climada_module_MODULE_NAME, we should have
 .../climada/code  
 .../climada/data  
 .../climada/docs  
-and then
-.../climada/modules/MODULE_NAME with contents such as 
+and then  
+.../climada/modules/MODULE_NAME with contents such as   
 .../climada/modules/MODULE_NAME/code  
 .../climada/modules/MODULE_NAME/data  
 .../climada/modules/MODULE_NAME/docs  
