@@ -1,4 +1,4 @@
-function centroids = climada_generate_centroids(centroids_rectORcountry_name, resolution_km, buffer_check, check_plot)
+function centroids = climada_generate_centroids(centroids_rectORcountry_nameORshapes, resolution_km, buffer_check, save_file, check_plot)
 % climada generate high resolution centroids
 % MODULE:
 %   barisal_demo
@@ -8,8 +8,8 @@ function centroids = climada_generate_centroids(centroids_rectORcountry_name, re
 %   Given a rectangle defining the location of interest, generate an evenly
 %   spaced rectilinear grid of hazard centroids
 % CALLING SEQUENCE:
-%   centroids = climada_generate_HR_centroids(centroids_rect, resolution_km);
-%   centroids = climada_generate_HR_centroids([min_lon max_lon min_lat max_lat], resolution_km);
+%   centroids = climada_generate_centroids(centroids_rect, resolution_km,buffer_check,check_plot);
+%   centroids = climada_generate_centroids(country_name, resolution_km,buffer_check,check_plot);
 % EXAMPLE:
 %   centroids = climada_generate_HR_centroids([75.0 77.8 21.3 25.1], resolution_km);
 % INPUTS:
@@ -32,6 +32,7 @@ function centroids = climada_generate_centroids(centroids_rectORcountry_name, re
 % Gilles Stassen, 20150128, added .comment field
 % Gilles Stassen, 20150326, added buffer
 % Gilles Stassen, 20150408, increased buffer size
+% Gilles Stassen, 20150416, save functionality, general shape input
 %-
 centroids = [];
 
@@ -46,7 +47,8 @@ else
 end
 
 country_check = 0;
-if ~exist('centroids_rectORcountry_name','var')
+country_name = '' ; ISO3 = ''; % init
+if ~exist('centroids_rectORcountry_nameORshapes','var')
     if ~shapes_check
         % need shapes for country input
         fprintf('ERROR: no world border info found \n')
@@ -56,7 +58,7 @@ if ~exist('centroids_rectORcountry_name','var')
     if length(shapes) == 1 && isfield(shapes,'BoundingBox')
         centroids_rect =[shapes.BoundingBox(:,1)' shapes.BoundingBox(:,2)'];
     else
-        [country_name,ISO_3,shape_index] = climada_country_name('Single');
+        [country_name,ISO3,shape_index] = climada_country_name('Single');
         if isempty(country_name), return; end % error message already printed in climada_country_name
         bb             = [min(shapes(shape_index).X) min(shapes(shape_index).Y)
                           max(shapes(shape_index).X) max(shapes(shape_index).Y)];
@@ -64,24 +66,37 @@ if ~exist('centroids_rectORcountry_name','var')
         country_check  = 1;
     end
     
-elseif ischar(centroids_rectORcountry_name) 
+elseif ischar(centroids_rectORcountry_nameORshapes) 
     if ~shapes_check
         % need shapes for country input
         fprintf('ERROR: no world border info found \n')
         return
     end
     %input is country name
-    country_name = centroids_rectORcountry_name; clear centroids_rectORcountry_name
-    [country_name,ISO_3,shape_index] = climada_country_name(country_name);
+    country_name = centroids_rectORcountry_nameORshapes; clear centroids_rectORcountry_name
+    [country_name,ISO3,shape_index] = climada_country_name(country_name);
     if isempty(country_name),   return;             end % error message already printed in climada_country_name
     if length(shapes) == 1,     shape_index = 1;    end
     bb             = [min(shapes(shape_index).X) min(shapes(shape_index).Y)
                       max(shapes(shape_index).X) max(shapes(shape_index).Y)];
     centroids_rect = [bb(:,1)' bb(:,2)']; clear bb
     country_check  = 1;
-elseif isnumeric(centroids_rectORcountry_name) && length(centroids_rectORcountry_name) == 4
+elseif isnumeric(centroids_rectORcountry_nameORshapes) && length(centroids_rectORcountry_nameORshapes) == 4
     % input is centroids rect
-    centroids_rect = centroids_rectORcountry_name; clear centroids_rectORcountry_name
+    centroids_rect = centroids_rectORcountry_nameORshapes; clear centroids_rectORcountry_name
+elseif isstruct(centroids_rectORcountry_nameORshapes)
+    %input is shapes
+    shapes = centroids_rectORcountry_nameORshapes;
+    if isfield(shapes,'X') && isfield(shapes,'Y')
+        shapes_check = 1;
+        shape_index  = 1;
+        bb             =   [min(shapes(shape_index).X) min(shapes(shape_index).Y)
+                            max(shapes(shape_index).X) max(shapes(shape_index).Y)];
+        centroids_rect = [bb(:,1)' bb(:,2)']; clear bb
+    else
+        fprintf('ERROR: invalid input argument, shapes must have fields ''X'' and ''Y'' \n')
+        return
+    end
 else
     fprintf('ERROR: invalid input argument \n')
     return
@@ -93,8 +108,9 @@ if ~exist('resolution_km','var') || isempty(resolution_km)
 end
 resolution_ang = resolution_km / (111.12);
 
-if ~exist('buffer_check',   'var'),     buffer_check    = 1;    end
-if ~exist('check_plot',     'var'),     check_plot      = 0;    end
+if ~exist('buffer_check',   'var'),     buffer_check    = 1;        end
+if ~exist('save_file','var')||isempty(save_file),save_file = 'AUTO';end
+if ~exist('check_plot',     'var'),     check_plot      = 0;        end
 
 min_lon = centroids_rect(1);
 max_lon = centroids_rect(2);
@@ -148,7 +164,7 @@ if shapes_check
         for i = 1 : length(centroids.lon)
             centroids.country_name{i} = country_name;
         end
-        centroids.admin0_ISO3 = ISO_3;
+        centroids.admin0_ISO3 = ISO3;
     else
         if shapes_check && isfield(shapes,'NAME')
             for i = 1 : length(centroids.lon)
@@ -166,7 +182,9 @@ centroids.centroid_ID = 1:length(centroids.lon);
 
 % coastline is terrible.
 centroids.onLand = ones(size(centroids.centroid_ID));
-centroids.onLand(buffer_logical ==1) = 0;
+if exist('buffer_logical','var')
+    centroids.onLand(buffer_logical ==1) = 0;
+end
 % 
 % coastline = climada_coastline_read;
 % 
@@ -181,6 +199,23 @@ fprintf('done \n')
 tf = clock;
 fprintf('generating %i centroids for %s took %3.2f seconds \n',length(centroids.centroid_ID),country_name, etime(tf,t0));
 centroids.comment = sprintf('%3.2f km resolution centroids, created on %s', resolution_km,datestr(now,'dd/mm/yyyy'));
+
+if ischar(save_file) && ~strcmp(save_file,'NO_SAVE')
+    if strcmp(save_file,'AUTO')
+        if country_check
+            save_file = [climada_global.data_dir filesep 'system' filesep 'centroids_' ISO3 '_' datestr(now,'ddmmyy') '.mat'];
+        else
+            save_file = [climada_global.data_dir filesep 'system' filesep 'centroids_' datestr(now,'ddmmyy') '.mat'];
+        end
+        fprintf('autosaving centroids as %s \n', save_file)
+        centroids.filename = save_file;
+        save(save_file, 'centroids')
+    else
+        fprintf('saving centroids as %s \n', save_file)
+        centroids.filename = save_file;
+        save(save_file, 'centroids')        
+    end
+end
 
 if check_plot
     figure('name','Centroids','color','w')
