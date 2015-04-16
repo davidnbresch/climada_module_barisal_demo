@@ -1,7 +1,7 @@
-function [lat,lon] = utm2ll(x,y,datum,varargin)
+function [lon,lat] = utm2ll(x,y,datum,varargin)
 %UTM2LL UTM to Lat/Lon coordinates precise conversion.
-%	[LAT,LON]=UTM2LL(X,Y,ZONE) converts BTM coordinates X,Y (in meters)
-%	defined in the UTM ZONE (integer) to latitude LAT and longitude LON 
+%	[LON,LAT]=UTM2LL(X,Y,ZONE) converts BTM coordinates X,Y (in meters)
+%	defined in the UTM ZONE (integer) to longitude LON and latitude LAT
 %	(in degrees). Default datum is WGS84.
 %
 %	X, Y and F can be scalars, vectors or matrix. Outputs LAT and LON will
@@ -33,7 +33,7 @@ function [lat,lon] = utm2ll(x,y,datum,varargin)
 %	Created: 2001-08-23
 %	Updated: 2015-01-29
 %   Changed to BTM: Ruud van der Ent, 2015-03-13
-
+%   Lea Mueller, muellele@gmail.com, 20150415, order change, first lon, then lat
 
 %	Copyright (c) 2001-2015, François Beauducel, covered by BSD License.
 %	All rights reserved.

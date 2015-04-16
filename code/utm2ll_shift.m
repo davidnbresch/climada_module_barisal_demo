@@ -1,4 +1,4 @@
-function [lat,lon] = utm2ll_shift(X,Y,datum)
+function [lon, lat] = utm2ll_shift(X,Y,datum)
 % climada
 % MODULE:
 %   barisal_demo
@@ -7,12 +7,12 @@ function [lat,lon] = utm2ll_shift(X,Y,datum)
 % PURPOSE:
 %   Transform local UTM/btm coordinates (GCS  Everest 1830, used in
 %   Barisal, Bangladesh, X,Y (in meters)) into worldwide
-%   lat-lon-coordinates (in degrees). Additionally a shift is added to
+%   lon-lat-coordinates (in degrees). Additionally a shift is added to
 %   improve the transformation. Default datum is WGS84.
 % CALLING SEQUENCE:
-%   [lat,lon] = utm2ll_shift(X,Y,datum)
+%   [lon,lat] = utm2ll_shift(X,Y,datum)
 % EXAMPLE:
-%   [lat,lon] = utm2ll_shift(X,Y)
+%   [lon,lat] = utm2ll_shift(X,Y)
 % INPUTS:
 %   X: Eastin meter
 %   Y: North in meter
@@ -27,9 +27,10 @@ function [lat,lon] = utm2ll_shift(X,Y,datum)
 % OUTPUTS:
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20150315, initial
+% Lea Mueller, muellele@gmail.com, 20150415, order change, first lon, then lat
 %-
 
-lat=[]; lon=[]; % init output
+lon=[]; lat=[]; % init output
 
 % poor man's version to check arguments
 % and to set default value where  appropriate
@@ -44,7 +45,7 @@ delta_X = -270;
 delta_Y = +305;
 
 % Calculation
-[lat, lon] = utm2ll(X+delta_X, Y+delta_Y, datum);
+[lon,lat] = utm2ll(X+delta_X, Y+delta_Y, datum);
 
 
 
