@@ -18,7 +18,7 @@ function [data, x, y] = climada_grid2array(data_grid, x_vector, y_vector)
 %               each of the columns of the data grid. If y_vector is left
 %               empty, x_vector can also be a vector of size 4, defining
 %               the corners of the grid as [min(x) max(x) min(y) max(y)]
-%   x_vector:   Monotonically in/decreasing vector defining the x values of
+%   y_vector:   Monotonically in/decreasing vector defining the x values of
 %               each of the rows of the data grid.
 % OUTPUTS:
 %   data:       The original data structured as a singleton array 
@@ -48,33 +48,33 @@ switch ndims(data_grid)
         x   = zeros(numel(data_grid),1);
         y   = zeros(numel(data_grid),1);
         
-        [size_y, size_x] = size(data_grid);
+        [size_x, size_y] = size(data_grid);
 
         if isempty(reference_box)
             reference_box = [1 size_x 1 size_y];
         end
         
-        dx = (reference_box(2) - reference_box(1))/size_x;
-        dy = (reference_box(4) - reference_box(3))/size_y;
+        dx = (reference_box(2) - reference_box(1))/(size_x-1);
+        dy = (reference_box(4) - reference_box(3))/(size_y-1);
 
         for j = 1 : size_y
             ndx = (j-1)*size_x;
-            data(ndx + 1 : ndx + size_x)    = data_grid(j,:);
-            y   (ndx + 1 : ndx + size_x,1)  = (size_y - j+1) * dx;
+            data(ndx + 1 : ndx + size_x)    = data_grid(:,j);
+            y   (ndx + 1 : ndx + size_x,1)  = (size_y - j) * dx;
             x   (ndx + 1 : ndx + size_x,1)  = (0:size_x-1) .* dy;
         end
 
         x = x + reference_box(1);
         y = y + reference_box(3);
     case 3
-        [size_y, size_x, size_t] = size(data_grid);
+        [size_x, size_y, size_t] = size(data_grid);
         
         if isempty(reference_box)
             reference_box = [1 size_x 1 size_y];
         end
         
-        dx = (reference_box(2) - reference_box(1))/size_x;
-        dy = (reference_box(4) - reference_box(3))/size_y;
+        dx = (reference_box(2) - reference_box(1))/(size_x-1);
+        dy = (reference_box(4) - reference_box(3))/(size_y-1);
         
         try
             data    = zeros(size_x*size_y,size_t);
@@ -86,9 +86,9 @@ switch ndims(data_grid)
 
         for j = 1 : size_y
             ndx = (j-1)*size_x;
-            data(ndx + 1 : ndx + size_x,:)      = squeeze(data_grid(j,:,:));
-            y   (ndx + 1 : ndx + size_x,1)      = (size_y - j+1) * dx;
-            x   (ndx + 1 : ndx + size_x,1)      = (1:size_x) .* dy;
+            data(ndx + 1 : ndx + size_x,:)      = squeeze(data_grid(:,j,:));
+            y   (ndx + 1 : ndx + size_x,1)      = (size_y - j) * dx;
+            x   (ndx + 1 : ndx + size_x,1)      = (0:size_x-1) .* dy;
         end
 
         x = x + reference_box(1);
