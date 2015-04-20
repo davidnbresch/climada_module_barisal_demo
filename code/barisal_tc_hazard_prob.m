@@ -95,7 +95,7 @@ hazard = climada_tc_hazard_set(tc_track, hazard_set_file, centroids);
 
 % tweek the frequencies
 hazard.frequency_ori = hazard.frequency;
-hazard.frequency  = hazard.frequency_ori*6;
+hazard.frequency     = hazard.frequency_ori*6;
 % ori_flag          = logical(hazard.orig_event_flag);
 % hazard.frequency(ori_flag) = hazard.frequency_ori(ori_flag);
 save(hazard_set_file,'hazard')
