@@ -100,10 +100,13 @@ hazard.frequency     = hazard.frequency_ori*6;
 % hazard.frequency(ori_flag) = hazard.frequency_ori(ori_flag);
 save(hazard_set_file,'hazard')
 
+% add tc track category manually
+% hazard.category = [tc_track.category];
+% hazard.category(hazard.category<0) = 0;
+
 % just loading not calculating
 hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC_prob'];
 load(hazard_set_file)
-
 
 %% view wind results in Barisal (centroid ID 30)
 centroid_ID = [30];
@@ -120,7 +123,7 @@ orig_event_flag = logical(hazard.orig_event_flag);
 indx = (indx-1)*(ens_size+1)+1;
 hazard.name{indx}
 datestr(hazard.datenum(indx))
-% yes, this is Sidr: 46.8 m/s at centroid_ID 30
+% yes, this is Sidr: 46.8 m/s at centroid_ID 30, 10 Nov 2007
 
 % datestr(hazard.datenum(172*4+1:173*4))
 % int_Sidr = full(hazard.intensity(172*10+1,centroid_ID))
