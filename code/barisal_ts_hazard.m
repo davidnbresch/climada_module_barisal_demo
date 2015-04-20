@@ -50,9 +50,9 @@ load(centroids_file)
 % plot(centroids.lon, centroids.lat,'+')
 
 %% assign elevation to centroids
-% srtm_data_dir = [module_data_dir filesep 'system' filesep 'srtm_55_08'];
-% check_plots = 1;
-% [DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids, DEM_save_file, 5, check_plots);
+srtm_data_dir = [module_data_dir filesep 'system' filesep 'srtm_55_08'];
+check_plots = 1;
+[DEM, centroids] = climada_read_srtm_DEM(srtm_data_dir,centroids, DEM_save_file, 5, check_plots);
 % [DEM, centroids] = climada_read_srtm_DEM(srtm_dir, centroidsORcountry, DEM_save_file, smooth, check_plot)
 
 % hazard_tc.elevation_m = interp2(DEM.lon,DEM.lat,DEM.elevation_m,hazard_tc.lon(1),hazard_tc.lat(1),'nearest');

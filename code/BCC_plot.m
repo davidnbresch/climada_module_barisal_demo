@@ -35,14 +35,18 @@ axislim = [90.25 90.45 22.6 22.8]; %barisal close up BCC
 module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 % for testing
 % module_data_dir  = '\\CHRB1065.CORP.GWPNET.COM\homes\X\S3BXXW\Documents\lea\climada_git\climada_modules\barisal_demo\data';
-GIS_dir          = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBangladesh\Barisal_GIS\WGS1984';
+% GIS_dir          = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBangladesh\Barisal_GIS\WGS1984';
+GIS_dir          = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBangladesh\Barisal_GIS\GIS';
 GIS_open_dat_dir = [module_data_dir filesep 'entities' filesep 'BGD_adm'];
 
 
 % read shape files
 % BCC boundaries
-BCC_file = 'CityCorporationAreaPolyBCC_P.shp'; 
+% BCC_file = 'CityCorporationAreaPolyBCC_P.shp'; 
+BCC_file = 'City Corporation Area Poly BCC.shp'; 
 BCC      = climada_shaperead([GIS_dir filesep BCC_file],0,1,0,1); % 0 for no-save
+%transform local coordinates (GCS  Everest 1830) to WGS1984
+[BCC(1).lon,BCC(1).lat] = utm2ll_shift(BCC(1).X, BCC(1).Y);
 
 % admin 4 
 shp_file_ = 'BGD_adm'; i = 4;
@@ -61,7 +65,8 @@ end
 %% prepare figure
 close all; h=[];
 fig = climada_figuresize(0.5,0.7);
-h(1) = plot(BCC(1).X,BCC(1).Y,'color',[240 128 128]/255);
+% h(1) = plot(BCC(1).X,BCC(1).Y,'color',[240 128 128]/255);
+h(1) = plot(BCC(1).lon,BCC(1).lat,'color',[240 128 128]/255);
 hold on
 % admin4
 for shape_i=1:length(shapes)
