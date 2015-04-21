@@ -335,7 +335,7 @@ if isstruct(centroids)
         end
     else
         
-        F_DEM = scatteredInterpolant(DEM.lon',DEM.lat',DEM.elevation_m');
+        % F_DEM = scatteredInterpolant(DEM.lon',DEM.lat',DEM.elevation_m');
         F_DEM = scatteredInterpolant(lon_crop,lat_crop,elev_crop);
         centroids.elevation_m = F_DEM(centroids.lon',centroids.lat')';
         fprintf('done \n')
