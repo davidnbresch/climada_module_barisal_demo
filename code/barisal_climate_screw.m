@@ -1,5 +1,34 @@
 function screw = barisal_climate_screw(peril_ID, time_horizon, scen_type)
-
+% NAME:
+% barisal_climate_screw
+% PURPOSE:
+%   Generate a climate change screw structure for the city of Barisal,
+%   based on the data and methodology outlined in the ECA Barisal base line
+%   report.
+% CALLING SEQUENCE:
+%   screw = barisal_climate_screw(peril_ID, time_horizon, scen_type)
+% EXAMPLE:
+%   screw = barisal_climate_screw('TC', 2050, 'extreme')
+% INPUTS:
+%   if no input provided, the default climate screw for TC 2030 moderate
+%   scenario will be returned.
+% OPTIONAL INPUT PARAMETERS:
+%   peril_ID:       defines the peril to which the screw applies
+%   time_horizon:   defines the year at which the screw applies [2030 or 2050]
+%   scen_type:      defines the scenario type to which the screw applies [moderate or extreme]
+% OUTPUTS:
+%   screw:      defines the climate change scenario. A 1xN structure with
+%               fields:
+%                   .hazard_fld     defines the hazard field to be changed
+%                   .change         extent of the change at time horizon
+%                   .year           time horizon
+%                   .hazard_crit    hazard field to which criteria apply
+%                   .criteria       criteria for events/locations to change
+%                   .bsxfun_op      operation of change (e.g. @times,@plus) (function handle)
+%               specifying N transformations to the original hazard set.
+% MODIFICATION HISTORY:
+%   Gilles Stassen, gillesstassen@hotmail.com, 20150421 
+%-
 
 if ~exist('peril_ID'    ,'var'),    peril_ID        = 'TC';         end
 if ~exist('time_horizon','var'),    time_horizon    = 2030;         end
