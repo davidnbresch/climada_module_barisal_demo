@@ -104,6 +104,59 @@ climada_EDS_DFC(EDS);
 
 
 
+%% waterfall graph for today, 2030, 2050
+asset_cat  = unique(entity.assets.Category(entity.assets.Value>0));
+entity_ori = entity;
+
+timehorizon = [2015 2030 2050];
+EDS = []; 
+for t_i = 1:length(timehorizon);
+    for cat_i = length(asset_cat)+1%1:length(asset_cat)+1
+        
+        switch t_i
+            case 1
+                % risk today
+                entity.assets.Value = entity_ori.assets.Value;
+                titlestr = 'Risk today';
+            case 2
+                % risk 2030
+                entity.assets.Value = entity.assets.Value_2030;
+                titlestr = 'Socio-economic 2030 (scenario 1)';
+            case 3
+                % risk 2050
+                entity.assets.Value = entity.assets.Value_2050;
+                titlestr = 'Socio-economic 2050 (scenario 1)';
+        end
+    
+        % select only assets in specific category
+        if cat_i<=length(asset_cat)
+            %indx = strcmp(entity.assets.Category, asset_cat{cat_i});
+            indx = ismember(entity.assets.Category, asset_cat(1:cat_i));
+            annotation_name = asset_cat{cat_i};
+        else
+            indx = ones(size(entity.assets.Category));
+            annotation_name = 'All asset categories';
+        end
+
+        entity.assets.Value(~indx) = 0;
+        force_re_encode = 0;
+        if isempty(EDS)
+            EDS = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
+        else
+            %EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
+            %EDS(cat_i) = EDS_;
+            EDS(t_i) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
+        end
+    end %cat_i    
+end %t_i
+
+climada_waterfall_graph(EDS(1), EDS(2), EDS(3), 'AED')
+
+% at the end of calculations, overwrite with original entity again
+entity = entity_ori;
+
+
+
 %% damage calculations per time horizon
 asset_cat  = unique(entity.assets.Category(entity.assets.Value>0));
 entity_ori = entity;
@@ -148,6 +201,7 @@ for t_i = 1:length(timehorizon);
         else
             EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
             EDS(cat_i) = EDS_;
+            %EDS(t_i) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
         end
     end %cat_i
     
