@@ -4,8 +4,8 @@
 % - flood hazard: read asci-file from Ruud (Witteveen+Bos), load flood hazard
 
 % flood_depth    = 1; flood_duration = 0; cyclone_wind   = 0;
-% flood_duration = 1; flood_depth    = 0; cyclone_wind   = 0;
-cyclone_wind   = 1; flood_depth    = 0; flood_duration = 0; 
+flood_duration = 1; flood_depth    = 0; cyclone_wind   = 0;
+% cyclone_wind   = 1; flood_depth    = 0; flood_duration = 0; 
 
 
 %% hazard
@@ -22,8 +22,15 @@ elseif flood_duration == 1
     % asci_file = ;
     % hazard = climada_asci2hazard(asci_file);
     hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration'];
-    hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL'];
     load(hazard_set_file)
+    schematic_tag = 1;
+    climada_hazard2ge(hazard,[hazard_set_file '.kmz'],schematic_tag)
+    climada_hazard_plot(hazard,1)
+    for i = 1:5:30
+        figure
+        climada_plot_tc_footprint(hazard, i, '')
+    end
+    climada_plot_tc_footprint(hazard, tc_track, nametag)
 
 elseif cyclone_wind == 1 
     % hazard tc wind
