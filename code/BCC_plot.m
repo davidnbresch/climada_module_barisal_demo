@@ -47,6 +47,26 @@ BCC_file = 'City Corporation Area Poly BCC.shp';
 BCC      = climada_shaperead([GIS_dir filesep BCC_file],0,1,0,1); % 0 for no-save
 %transform local coordinates (GCS  Everest 1830) to WGS1984
 [BCC(1).lon,BCC(1).lat] = utm2ll_shift(BCC(1).X, BCC(1).Y);
+%save BCC
+BCC_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_border.mat'];
+save(BCC_savename,'BCC')
+
+% BCC Wards
+ward_file = 'Ward Boundary Poly BCC.shp';
+BCC_wards = climada_shaperead([GIS_dir filesep ward_file],0,1,0,1); % 0 for no-save
+%transform local coordinates (GCS  Everest 1830) to WGS1984
+for w_i = 1:length(BCC_wards)
+    [BCC_wards(w_i).lon,BCC_wards(w_i).lat] = utm2ll_shift(BCC_wards(w_i).X, BCC_wards(w_i).Y);
+end
+for w_i = 1:length(BCC_wards)
+    BCC_wards(w_i).lon(isnan(BCC_wards(w_i).lon)) = [];
+    BCC_wards(w_i).lat(isnan(BCC_wards(w_i).lat)) = [];
+end
+%save BCC_wards
+BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
+save(BCC_wards_savename,'BCC_wards')
+
+
 
 % admin 4 
 shp_file_ = 'BGD_adm'; i = 4;
@@ -72,11 +92,18 @@ hold on
 for shape_i=1:length(shapes)
     h(2)= plot(shapes(shape_i).X,shapes(shape_i).Y,'color',[191 191 191]/255);%grey
 end
+% ward
+for w_i=1:length(BCC_wards)
+    h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255);%sandybrown
+    %h(3)= fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,[244 164 96 ]/255);%sandybrown
+end
+
+
 climada_plot_world_borders(0.5)
 axis equal
 axis(axislim)
 title('Barisal')
-legend(h,'BCC boundaries','admin4')
+legend(h,'BCC boundaries','admin4','BCC wards')
 climada_plot_entity_assets(entity,'','','','',1);
 
 
