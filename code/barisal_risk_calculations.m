@@ -259,7 +259,7 @@ fprintf('\t - loaded BCC specifics: %s and %s\n', BCC_savename(indx(end)+1:end),
 %     end %cat_i    
 % end %t_i
 % 
-% climada_waterfall_graph(EDS(1), EDS(2), EDS(3), 'AED');
+% climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED');
 % 
 % % at the end of calculations, overwrite with original entity again
 % entity = entity_ori;
@@ -346,7 +346,7 @@ fprintf('\t - loaded BCC specifics: %s and %s\n', BCC_savename(indx(end)+1:end),
 %         end %cat_i  
 %     end %ward_i
 % end %t_i
-% % climada_waterfall_graph(EDS(1), EDS(2), EDS(3), 'AED')
+% % climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED')
 % 
 % % at the end of calculations, overwrite with original entity again
 % entity = entity_ori;
@@ -515,7 +515,7 @@ for t_i = 2%:length(timehorizon);
     figure
     climada_EDS_DFC(EDS);
     title(titlestr)
-    %climada_waterfall_graph(EDS(1), EDS(2), EDS(3), 'AED')
+    %climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED')
 end %t_i
 
 % at the end of calculations, overwrite with original entity again
@@ -568,7 +568,7 @@ for cat_i = 1:length(asset_cat)+1
         % at the end of calculations, overwrite with original entity again
         entity = entity_ori;
     end
-    %climada_waterfall_graph(EDS(1), EDS(2), EDS(3), 'AED')
+    %climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED')
 end
 
 
