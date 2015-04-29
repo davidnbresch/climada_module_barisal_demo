@@ -1,11 +1,60 @@
 function fig = climada_ED_plot_per_ward(EDS,entity, BCC_wards, timehorizon, hazard_name)
+% create figure to plot expected damage per ward in barisal
+% MODULE: 
+%   barisal_demo
+% NAME:
+%   climada_ED_plot_per_ward
+% PURPOSE:
+%   plot annual expected damage per ward on a map
+% CALLING SEQUENCE:
+%   fig = climada_ED_plot_per_ward(EDS,entity, BCC_wards, timehorizon, hazard_name)
+% EXAMPLE:
+%   fig = climada_ED_plot_per_ward(EDS,entity, BCC_wards, timehorizon, hazard_name)
+% INPUTS:
+%   EDS: event damage set, as e.g. returned by climada_EDS_calc or
+%       a file containing such a structure
+%       EDS can contain multiple EDS, however default is that first EDS
+%       will be used.
+%   entity: an entity (see climada_entity_read)
+%       > promted for if not given
+%   BCC_wards: structure with shape file (polygons for all 30 wards in
+%       Barisal)
+% OPTIONAL INPUT PARAMETERS:
+%   timehorizon: just for figure title, empty if not specified
+%   hazard_name: just for figure title, empty if not specified
+% OUTPUTS:
+%   figure with damage per ward on a map 
+% MODIFICATION HISTORY:
+% Lea Mueller, muellele@gmail.com, 20150429, init
+%-
 
 
+global climada_global
+if ~climada_init_vars, return; end
+
+% poor man's version to check arguments
+if ~exist('EDS'           ,'var'), EDS         = []; end
+if ~exist('entity'        ,'var'), entity      = []; end
+if ~exist('BCC_wards'     ,'var'), BCC_wards   = []; end
+if ~exist('timehorizon'   ,'var'), timehorizon = ''; end
+if ~exist('hazard_name'   ,'var'), hazard_name = ''; end
+
+fig = []; % init
+
+if isempty(EDS),return;end 
+if isempty(entity),return;end
+if isempty(BCC_wards),return;end
+
+
+% Set time horizon 
+% If EDS contains multiple entries, t_i defines the EDS to be selected. 
+% Default set to 1.
 t_i = 1;
 
+% assignt 
 ED_per_ward = zeros(length(BCC_wards),1);
 for w_i = 1:length(BCC_wards)
-    indx = entity.assets.Ward==w_i;
+    indx = entity.assets.Ward == w_i;
     ED_per_ward(w_i) = sum(EDS(t_i).ED_at_centroid(indx));
 end
 sum(ED_per_ward)
