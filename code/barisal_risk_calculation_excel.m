@@ -3,180 +3,217 @@
 % - tc wind hazard: use barisal_tc_hazard_prob.m to create wind hazard
 % - flood hazard: read asci-file from Ruud (Witteveen+Bos), load flood hazard
 
-%% set hazard type
+%% set scenario
+
+%hazard type
 hazard_names = {'flood_depth' 'flood_duration' 'cyclone_wind'}; 
+
+%climate change scenario
+cc_scenario = {'no change' 'moderate' 'extreme'}; 
+
+%timehorizon
+timehorizon = [2014 2030 2050];
 
 
 %% load barisal specifics
 BCC_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_border.mat'];
 load(BCC_savename)
-% load BCC ward boundaries (30 polygons)
-BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
+% load BCC ward boundaries (30 polygons, rough indication of polygons only!)
+% BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
+BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_Ward_no_added.mat'];
 load(BCC_wards_savename)
 indx = strfind(BCC_savename,filesep);
 indx2 = strfind(BCC_wards_savename,filesep);
 fprintf('\t - loaded BCC specifics: %s and %s\n', BCC_savename(indx(end)+1:end), BCC_wards_savename(indx2(end)+1:end))
 
 
-%%
+
+
+
+%% load hazard and entity
+counter = 0;
+EDS_all = '';
+% loop over hazards
 for h_i = 1:length(hazard_names)
-    
     hazard_name = hazard_names{h_i};
-
-    %% hazard
-    switch hazard_name
-        case 'flood_depth'
-            % hazard = climada_asci2hazard(asci_file);
-            hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL'];
-            flood_depth = 1; flood_duration = 0; cyclone_wind   = 0;
-
-        case 'flood_duration' % hazard duration (too be prepared!)
-            hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration'];
-            flood_duration = 1; flood_depth    = 0; cyclone_wind   = 0;
-
-        case 'cyclone_wind'
-            hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC_prob'];
-            cyclone_wind   = 1; flood_depth    = 0; flood_duration = 0; 
-            % wind centroids
-            %centroids_file  = [climada_global.data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
-            %load(centroids_file)   
-    end
-    load(hazard_set_file)
-    fprintf('\n-----------\nSELECTED HAZARD TYPE: %s\n-----------\n', hazard_name)
     
-    
-    %% next time only load entities
-    if flood_depth ==1
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_depth.mat'];
-
-    elseif flood_duration ==1
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_duration.mat'];
-
-    elseif cyclone_wind == 1
-        % tc wind
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_cyclones.mat'];
-    end
-    load(entity_filename)
-    % create copy
-    entity_ori = entity;
-    indx = strfind(entity_filename,filesep);
-    fprintf('\t - Loaded entity: %s\n', entity_filename(indx(end)+1:end))
-    
-    
-    %% waterfall graph for today, 2030, 2050
-    asset_cat  = unique(entity.assets.Category(entity.assets.Value>0));
-
-    timehorizon = [2015 2030 2050];
+    counter     = 0;
     EDS         = []; 
     silent_mode = 1;
-    for t_i = 1:length(timehorizon);
-        for cat_i = length(asset_cat)+1%1:length(asset_cat)+1
 
-            switch t_i
-                case 1
-                    % risk today
-                    entity.assets.Value = entity_ori.assets.Value;
-                    titlestr = 'Risk today';
-                case 2
-                    % risk 2030
-                    entity.assets.Value = entity.assets.Value_2030;
-                    titlestr = 'Socio-economic 2030 (scenario 1)';
-                case 3
-                    % risk 2050
-                    entity.assets.Value = entity.assets.Value_2050;
-                    titlestr = 'Socio-economic 2050 (scenario 1)';
-            end
+    % loop over time horizons
+    for t_i = 1:length(timehorizon)
+        
+        % loop over climate change scenarios
+        for cc_i = 1:length(cc_scenario)
+            if ~(t_i == 1 & cc_i >1)  
+                
+                %% load hazard and entity and create label
+                [hazard, entity, label] = barisal_hazard_entity_load(hazard_name, cc_scenario{cc_i}, timehorizon(t_i));
+                
+                
+                if ~isempty(hazard) 
+                    
+                    % loop over asset categories
+                    asset_cat = unique(entity.assets.Category(entity.assets.Value>0));
+                    for cat_i = length(asset_cat)+1%1:length(asset_cat)+1
 
-            % select only assets in specific category
-            if cat_i<=length(asset_cat)
-                %indx = strcmp(entity.assets.Category, asset_cat{cat_i});
-                indx = ismember(entity.assets.Category, asset_cat(1:cat_i));
-                annotation_name = asset_cat{cat_i};
-            else
-                indx = ones(size(entity.assets.Category));
-                annotation_name = 'All asset categories';
-            end
+                        %% the most inner loop, set counter
+                        counter = counter+1;
 
-            entity.assets.Value(~indx) = 0;
-            force_re_encode = 0;
-            if isempty(EDS)
-                EDS = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
-            else
-                %EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
-                %EDS(cat_i) = EDS_;
-                EDS(t_i) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
+                        % select only assets in specific category
+                        if cat_i<=length(asset_cat)
+                            %indx = strcmp(entity.assets.Category, asset_cat{cat_i});
+                            indx = ismember(entity.assets.Category, asset_cat(1:cat_i));
+                            annotation_name = asset_cat{cat_i};
+                        else
+                            indx = ones(size(entity.assets.Category));
+                            annotation_name = 'All asset categories';
+                        end
+                    
+                        %% calculate expected damage set (EDS)
+                        entity.assets.Value(~indx) = 0;
+                        force_re_encode = 0;
+                        titlestr = sprintf('%s, %s, %s',label.hazard_name, label.cc_scenario, label.titlestr);
+                        if isempty(EDS)
+                            EDS = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
+                            EDS.reference_year = timehorizon(t_i);
+                        else
+                            %EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
+                            %EDS(cat_i) = EDS_;
+                            EDS(counter) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
+                            EDS(counter).reference_year = timehorizon(t_i);
+                        end
+                    end %cat_i
+                end %~isempty(hazard)
             end
-        end %cat_i    
+        end %cc_i 
     end %t_i
-
-    climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED');
-
-    % at the end of calculations, overwrite with original entity again
-    entity = entity_ori;
     
-    
-    
-    %% write annual damage results to excel
-    buffer_hazard = 0;
-    if flood_depth == 1
-        indx = strfind(entity_filename,'_');
-        xls_filename = sprintf('%s.xls',entity_filename(1:indx(end-1)-1));
-        sheet_name = 'assets';
-        
-    elseif flood_duration == 1   
-        indx = strfind(entity_filename,'_');
-        xls_filename = sprintf('%s.xls',entity_filename(1:indx(end-1)-1));
-        sheet_name = 'assets';
-        buffer_hazard = 4;
-        
-    elseif cyclone_wind == 1
-        % tc wind
-        indx = strfind(entity_filename,'_');
-        xls_filename = sprintf('%s.xls',entity_filename(1:indx(end)-1));
-        sheet_name = 'assets cyclones';
-        buffer_hazard = 0;
-    end
-    filename_add = sprintf('_annual_damage_calculated_%s.xls',datestr(now,'YYYYmmDD'));
-    new_xls_filename = strrep(xls_filename,'.xls',filename_add);
-    new_xls_filename = strrep(new_xls_filename,'entities','results');
-    
-    if ~exist(new_xls_filename,'file')
-        % copy and rename xls-file
-        copyfile(xls_filename,new_xls_filename);
-    end
-    
-    % add annual damage column to existing xls-file 
-    existing_row_no = numel(fieldnames(entity.assets));
-    buffer_rows     = 3;
-    row_no          = existing_row_no+buffer_rows+buffer_hazard;
-    alphabet_no     = 26;
-    if row_no>=alphabet_no
-        multiple = row_no/alphabet_no;
-        row_no = rem(row_no, alphabet_no);
-        multiple = char('A'+multiple-1);
+    if isempty(EDS_all)
+        EDS_all = EDS;
     else
-        multiple = '';
+        EDS_all(end+1:end+counter) = EDS;
     end
-    xlRange         = sprintf('%s%s1',multiple,char('A'+row_no));
-    fprintf('\t - Results into xls: Write annual damages from %s to sheet "%s" (row %s)\n', strrep(hazard_name,'_',' '), sheet_name, xlRange(1:end-1))
-    matr     = cell(length(EDS(1).ED_at_centroid)+3,numel(EDS));
-    for e_i = 1:numel(EDS)
-        matr{1,e_i} = sprintf('Annual damage from %s, %d, %s', strrep(hazard_name,'_',' '), timehorizon(e_i), EDS(e_i).annotation_name);
-        matr(2:end-2,e_i) = num2cell(EDS(e_i).ED_at_centroid);
-        matr{end-1,e_i}   = sprintf('Total damage');
-        matr{end,e_i}     = sum(EDS(e_i).ED_at_centroid);
-    end
-    xlswrite(new_xls_filename, matr,sheet_name,xlRange)
-    
-    %% figure for damage per ward
-    t_i = 1;
-    fig = climada_ED_plot_per_ward(EDS(t_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
-    foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
-    print(fig,'-dpdf',[climada_global.data_dir foldername])
-    %close
-    
+    climada_waterfall_graph_barisal(EDS,'AED');
+    fprintf('%s: %d scenarios\n----------------\n----------------\n', upper(hazard_name), counter)
     
 end %h_i
+Percentage_Of_Value_Flag= 0;
+report_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios.csv'];
+climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
+    
+
+
+%%
+% EDS_2    = EDS(1);
+% EDS_2(2) = EDS(2);
+% EDS_2(3) = EDS(3);
+% climada_waterfall_graph_barisal(EDS_2,'AED');
+% climada_waterfall_graph_barisal(EDS  ,'AED');
+% res = climada_EDS_DFC_report(EDS,'','','ASK');
+    
+
+
+%% waterfall graph for today, 2030, 2050
+% asset_cat  = unique(entity.assets.Category(entity.assets.Value>0));
+% 
+% timehorizon = [2015 2030 2050];
+% EDS         = []; 
+% silent_mode = 1;
+% for t_i = 1:length(timehorizon);
+%     for cat_i = length(asset_cat)+1%1:length(asset_cat)+1
+% 
+%         % select only assets in specific category
+%         if cat_i<=length(asset_cat)
+%             %indx = strcmp(entity.assets.Category, asset_cat{cat_i});
+%             indx = ismember(entity.assets.Category, asset_cat(1:cat_i));
+%             annotation_name = asset_cat{cat_i};
+%         else
+%             indx = ones(size(entity.assets.Category));
+%             annotation_name = 'All asset categories';
+%         end
+% 
+%         entity.assets.Value(~indx) = 0;
+%         force_re_encode = 0;
+%         if isempty(EDS)
+%             EDS = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
+%         else
+%             %EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
+%             %EDS(cat_i) = EDS_;
+%             EDS(t_i) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
+%         end
+%     end %cat_i    
+% 
+% 
+% climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED');
+% 
+% % at the end of calculations, overwrite with original entity again
+% entity = entity_ori;
+    
+    
+    
+%     %% write annual damage results to excel
+%     buffer_hazard = 0;
+%     if flood_depth == 1
+%         indx = strfind(entity_filename,'_');
+%         xls_filename = sprintf('%s.xls',entity_filename(1:indx(end-1)-1));
+%         sheet_name = 'assets';
+%         
+%     elseif flood_duration == 1   
+%         indx = strfind(entity_filename,'_');
+%         xls_filename = sprintf('%s.xls',entity_filename(1:indx(end-1)-1));
+%         sheet_name = 'assets';
+%         buffer_hazard = 4;
+%         
+%     elseif cyclone_wind == 1
+%         % tc wind
+%         indx = strfind(entity_filename,'_');
+%         xls_filename = sprintf('%s.xls',entity_filename(1:indx(end)-1));
+%         sheet_name = 'assets cyclones';
+%         buffer_hazard = 0;
+%     end
+%     filename_add = sprintf('_annual_damage_calculated_%s.xls',datestr(now,'YYYYmmDD'));
+%     new_xls_filename = strrep(xls_filename,'.xls',filename_add);
+%     new_xls_filename = strrep(new_xls_filename,'entities','results');
+%     
+%     if ~exist(new_xls_filename,'file')
+%         % copy and rename xls-file
+%         copyfile(xls_filename,new_xls_filename);
+%     end
+%     
+%     % add annual damage column to existing xls-file 
+%     existing_row_no = numel(fieldnames(entity.assets));
+%     buffer_rows     = 3;
+%     row_no          = existing_row_no+buffer_rows+buffer_hazard;
+%     alphabet_no     = 26;
+%     if row_no>=alphabet_no
+%         multiple = row_no/alphabet_no;
+%         row_no = rem(row_no, alphabet_no);
+%         multiple = char('A'+multiple-1);
+%     else
+%         multiple = '';
+%     end
+%     xlRange         = sprintf('%s%s1',multiple,char('A'+row_no));
+%     fprintf('\t - Results into xls: Write annual damages from %s to sheet "%s" (row %s)\n', strrep(hazard_name,'_',' '), sheet_name, xlRange(1:end-1))
+%     matr     = cell(length(EDS(1).ED_at_centroid)+3,numel(EDS));
+%     for e_i = 1:numel(EDS)
+%         matr{1,e_i} = sprintf('Annual damage from %s, %d, %s', strrep(hazard_name,'_',' '), timehorizon(e_i), EDS(e_i).annotation_name);
+%         matr(2:end-2,e_i) = num2cell(EDS(e_i).ED_at_centroid);
+%         matr{end-1,e_i}   = sprintf('Total damage');
+%         matr{end,e_i}     = sum(EDS(e_i).ED_at_centroid);
+%     end
+%     xlswrite(new_xls_filename, matr,sheet_name,xlRange)
+%     
+%     %% figure for damage per ward
+%     t_i = 1;
+%     fig = climada_ED_plot_per_ward(EDS(t_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
+%     foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
+%     print(fig,'-dpdf',[climada_global.data_dir foldername])
+%     %close
+%     
+%     
+% end %h_i
 
 
 %% check hazard intensity and max hazard event

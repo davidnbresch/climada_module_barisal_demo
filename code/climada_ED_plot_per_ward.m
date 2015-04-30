@@ -51,13 +51,13 @@ if isempty(BCC_wards),return;end
 % Default set to 1.
 t_i = 1;
 
-% assignt 
+% assign values to wards
 ED_per_ward = zeros(length(BCC_wards),1);
 for w_i = 1:length(BCC_wards)
     indx = entity.assets.Ward == w_i;
     ED_per_ward(w_i) = sum(EDS(t_i).ED_at_centroid(indx));
 end
-sum(ED_per_ward)
+fprintf('\t - Total damage for %s in %d is BDT %2.0f''000\n',hazard_name,timehorizon, sum(ED_per_ward))
 
 
 fig = climada_figuresize(0.75,0.75);
@@ -76,8 +76,11 @@ for ward_i = 1:length(BCC_ward_no)
     indx_w = find(BCC_ward_no == ward_i);
     h      = fill(BCC_wards(indx_w).lon,BCC_wards(indx_w).lat,cbar(indx,:));
     hold on
-    text(entity.assets.lon(ward_i), entity.assets.lat(ward_i), sprintf('Ward %d', ward_i),...
+    ward_label = sprintf('Ward %d', BCC_wards(indx_w).WARDS_F_ID);
+    text(entity.assets.lon(ward_i), entity.assets.lat(ward_i), ward_label,...
             'Horizontalalignment','center','verticalalignment','bottom','color','k') %brighten(cbar(indx,:),-0.8)
+    %text(entity.assets.lon(ward_i), entity.assets.lat(ward_i), sprintf('Ward %d', ward_i),...
+    %        'Horizontalalignment','center','verticalalignment','bottom','color','k') %brighten(cbar(indx,:),-0.8)
     g = plot(entity.assets.lon(ward_i), entity.assets.lat(ward_i),'kx','markersize',8,'LineWidth',1.5);    
 end
 colormap(cbar)

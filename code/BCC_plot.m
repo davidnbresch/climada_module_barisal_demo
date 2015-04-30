@@ -53,6 +53,7 @@ save(BCC_savename,'BCC')
 
 % BCC Wards
 ward_file = 'Ward Boundary Poly BCC.shp';
+% ward_file = 'Ward Boundary Line BCC.shp';
 BCC_wards = climada_shaperead([GIS_dir filesep ward_file],0,1,0,1); % 0 for no-save
 %transform local coordinates (GCS  Everest 1830) to WGS1984
 for w_i = 1:length(BCC_wards)
@@ -66,6 +67,18 @@ end
 BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
 save(BCC_wards_savename,'BCC_wards')
 
+% % BCC Wards 2
+% ward_file   = ['Barisal_ATLAS - Excel and GIS' filesep 'Barisal' filesep 'All' filesep 'Ward_boundary.shp'];
+% folder_name = ['Vulnerability_Analysis_Barisal' filesep '2_data' filesep 'reports_and_GIS_files']; 
+% BCC_wards   = climada_shaperead([strrep(climada_global.data_dir,[filesep 'climada_data'],'') filesep folder_name filesep ward_file],0,1,0,1); % 0 for no-save
+% %transform local coordinates (GCS  Everest 1830) to WGS1984
+% for w_i = 1:length(BCC_wards)
+%     [BCC_wards(w_i).lon,BCC_wards(w_i).lat] = utm2ll_shift(BCC_wards(w_i).X, BCC_wards(w_i).Y);
+% end
+% for w_i = 1:length(BCC_wards)
+%     BCC_wards(w_i).lon(isnan(BCC_wards(w_i).lon)) = [];
+%     BCC_wards(w_i).lat(isnan(BCC_wards(w_i).lat)) = [];
+% end
 
 
 % admin 4 
@@ -92,9 +105,13 @@ hold on
 for shape_i=1:length(shapes)
     h(2)= plot(shapes(shape_i).X,shapes(shape_i).Y,'color',[191 191 191]/255);%grey
 end
-% ward
+% % ward
+% for w_i=1:length(BCC_wards2)
+%     h(3)= plot(BCC_wards2(w_i).lon,BCC_wards2(w_i).lat,'color',[244 164 96 ]/255,'linewidth',2);%sandybrown
+%     %h(3)= fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,[244 164 96 ]/255);%sandybrown
+% end
 for w_i=1:length(BCC_wards)
-    h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255);%sandybrown
+    h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255,'linewidth',2);%sandybrown
     %h(3)= fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,[244 164 96 ]/255);%sandybrown
 end
 
