@@ -105,115 +105,15 @@ climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
     
 
 
-%%
-% EDS_2    = EDS(1);
-% EDS_2(2) = EDS(2);
-% EDS_2(3) = EDS(3);
-% climada_waterfall_graph_barisal(EDS_2,'AED');
-% climada_waterfall_graph_barisal(EDS  ,'AED');
-% res = climada_EDS_DFC_report(EDS,'','','ASK');
-    
+  
+ 
+%% figure for damage per ward
+t_i = 1;
+fig = climada_ED_plot_per_ward(EDS_all(t_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
+foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
+print(fig,'-dpdf',[climada_global.data_dir foldername])
+close
 
-
-%% waterfall graph for today, 2030, 2050
-% asset_cat  = unique(entity.assets.Category(entity.assets.Value>0));
-% 
-% timehorizon = [2015 2030 2050];
-% EDS         = []; 
-% silent_mode = 1;
-% for t_i = 1:length(timehorizon);
-%     for cat_i = length(asset_cat)+1%1:length(asset_cat)+1
-% 
-%         % select only assets in specific category
-%         if cat_i<=length(asset_cat)
-%             %indx = strcmp(entity.assets.Category, asset_cat{cat_i});
-%             indx = ismember(entity.assets.Category, asset_cat(1:cat_i));
-%             annotation_name = asset_cat{cat_i};
-%         else
-%             indx = ones(size(entity.assets.Category));
-%             annotation_name = 'All asset categories';
-%         end
-% 
-%         entity.assets.Value(~indx) = 0;
-%         force_re_encode = 0;
-%         if isempty(EDS)
-%             EDS = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
-%         else
-%             %EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
-%             %EDS(cat_i) = EDS_;
-%             EDS(t_i) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
-%         end
-%     end %cat_i    
-% 
-% 
-% climada_waterfall_graph_barisal(EDS(1), EDS(2), EDS(3), 'AED');
-% 
-% % at the end of calculations, overwrite with original entity again
-% entity = entity_ori;
-    
-    
-    
-%     %% write annual damage results to excel
-%     buffer_hazard = 0;
-%     if flood_depth == 1
-%         indx = strfind(entity_filename,'_');
-%         xls_filename = sprintf('%s.xls',entity_filename(1:indx(end-1)-1));
-%         sheet_name = 'assets';
-%         
-%     elseif flood_duration == 1   
-%         indx = strfind(entity_filename,'_');
-%         xls_filename = sprintf('%s.xls',entity_filename(1:indx(end-1)-1));
-%         sheet_name = 'assets';
-%         buffer_hazard = 4;
-%         
-%     elseif cyclone_wind == 1
-%         % tc wind
-%         indx = strfind(entity_filename,'_');
-%         xls_filename = sprintf('%s.xls',entity_filename(1:indx(end)-1));
-%         sheet_name = 'assets cyclones';
-%         buffer_hazard = 0;
-%     end
-%     filename_add = sprintf('_annual_damage_calculated_%s.xls',datestr(now,'YYYYmmDD'));
-%     new_xls_filename = strrep(xls_filename,'.xls',filename_add);
-%     new_xls_filename = strrep(new_xls_filename,'entities','results');
-%     
-%     if ~exist(new_xls_filename,'file')
-%         % copy and rename xls-file
-%         copyfile(xls_filename,new_xls_filename);
-%     end
-%     
-%     % add annual damage column to existing xls-file 
-%     existing_row_no = numel(fieldnames(entity.assets));
-%     buffer_rows     = 3;
-%     row_no          = existing_row_no+buffer_rows+buffer_hazard;
-%     alphabet_no     = 26;
-%     if row_no>=alphabet_no
-%         multiple = row_no/alphabet_no;
-%         row_no = rem(row_no, alphabet_no);
-%         multiple = char('A'+multiple-1);
-%     else
-%         multiple = '';
-%     end
-%     xlRange         = sprintf('%s%s1',multiple,char('A'+row_no));
-%     fprintf('\t - Results into xls: Write annual damages from %s to sheet "%s" (row %s)\n', strrep(hazard_name,'_',' '), sheet_name, xlRange(1:end-1))
-%     matr     = cell(length(EDS(1).ED_at_centroid)+3,numel(EDS));
-%     for e_i = 1:numel(EDS)
-%         matr{1,e_i} = sprintf('Annual damage from %s, %d, %s', strrep(hazard_name,'_',' '), timehorizon(e_i), EDS(e_i).annotation_name);
-%         matr(2:end-2,e_i) = num2cell(EDS(e_i).ED_at_centroid);
-%         matr{end-1,e_i}   = sprintf('Total damage');
-%         matr{end,e_i}     = sum(EDS(e_i).ED_at_centroid);
-%     end
-%     xlswrite(new_xls_filename, matr,sheet_name,xlRange)
-%     
-%     %% figure for damage per ward
-%     t_i = 1;
-%     fig = climada_ED_plot_per_ward(EDS(t_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
-%     foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
-%     print(fig,'-dpdf',[climada_global.data_dir foldername])
-%     %close
-%     
-%     
-% end %h_i
 
 
 %% check hazard intensity and max hazard event
