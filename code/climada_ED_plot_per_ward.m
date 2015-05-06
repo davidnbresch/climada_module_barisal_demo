@@ -54,8 +54,9 @@ t_i = 1;
 % assign values to wards
 ED_per_ward = zeros(length(BCC_wards),1);
 for w_i = 1:length(BCC_wards)
-    indx = entity.assets.Ward == w_i;
+    indx = entity.assets.Ward_Nr == w_i;
     ED_per_ward(w_i) = sum(EDS(t_i).ED_at_centroid(indx));
+    lon_lat(w_i,:) = [mean(EDS(1).assets.lon(indx)) mean(EDS(1).assets.lat(indx))]; 
 end
 fprintf('\t - Total damage for %s in %d is BDT %2.0f''000\n',hazard_name,timehorizon, sum(ED_per_ward))
 
@@ -69,19 +70,35 @@ min_value    = min(values(pos_indx));
 max_value    = max(values);
 range_values = linspace(min_value,max_value,no_colors);
 
+% loop over all words to plot color according to flood damage
 BCC_ward_no  = [BCC_wards.Ward_no];
+for ward_i = 1:length(BCC_ward_no) 
+    indx_w = find(BCC_ward_no == ward_i);
+    if values(ward_i) > 0
+        indx   = find(values(ward_i)<=range_values);
+        indx   = indx(1);
+        h      = fill(BCC_wards(indx_w).lon,BCC_wards(indx_w).lat,cbar(indx,:));
+    else
+        h      = fill(BCC_wards(indx_w).lon,BCC_wards(indx_w).lat,[232 232 232 ]/255); %grey
+    end
+    hold on 
+end
+
+% loop over all words to label ward name
 for ward_i = 1:length(BCC_ward_no) 
     indx   = find(values(ward_i)<=range_values);
     indx   = indx(1);
     indx_w = find(BCC_ward_no == ward_i);
-    h      = fill(BCC_wards(indx_w).lon,BCC_wards(indx_w).lat,cbar(indx,:));
-    hold on
-    ward_label = sprintf('Ward %d', BCC_wards(indx_w).WARDS_F_ID);
-    text(entity.assets.lon(ward_i), entity.assets.lat(ward_i), ward_label,...
+    ward_label = BCC_wards(indx_w).UNION_NAME;
+    
+    text(lon_lat(ward_i,1), lon_lat(ward_i,2), ward_label,...
             'Horizontalalignment','center','verticalalignment','bottom','color','k') %brighten(cbar(indx,:),-0.8)
+    %ward_label = sprintf('Ward %d', BCC_wards(indx_w).WARDS_F_ID);    
+    %text(entity.assets.lon(ward_i), entity.assets.lat(ward_i), ward_label,...
+    %        'Horizontalalignment','center','verticalalignment','bottom','color','k') %brighten(cbar(indx,:),-0.8)
     %text(entity.assets.lon(ward_i), entity.assets.lat(ward_i), sprintf('Ward %d', ward_i),...
     %        'Horizontalalignment','center','verticalalignment','bottom','color','k') %brighten(cbar(indx,:),-0.8)
-    g = plot(entity.assets.lon(ward_i), entity.assets.lat(ward_i),'kx','markersize',8,'LineWidth',1.5);    
+    %g = plot(entity.assets.lon(ward_i), entity.assets.lat(ward_i),'kx','markersize',8,'LineWidth',1.5);    
 end
 colormap(cbar)
 t = colorbar;
@@ -91,12 +108,12 @@ caxis([min_value max_value])
 %axislim = [min(EDS(1).assets.lon) max(EDS(1).assets.lon)*1 min(EDS(1).assets.lat) max(EDS(1).assets.lat)*1];
 %axislim = [min(hazard.lon) max(hazard.lon)*1 min(hazard.lat) max(hazard.lat)*1];
 %axislim = [90.25 90.45 22.6 22.8]; %barisal close up BCC 
-axislim = [90.297 90.3957 22.64 22.752]; %barisal close up BCC 
+axislim = [90.285 90.3957 22.64 22.752]; %barisal close up BCC 
 axis(axislim)
 axis equal
 %titlestr = sprintf('%d, Annual damage, %s - %s', timehorizon(t_i), EDS(1).annotation_name, EDS(end).annotation_name);
-titlestr = sprintf('%d: Annual damage from %s', timehorizon, strrep(hazard_name,'_',' '));
+titlestr = sprintf('%d: Annual damage from %s: BDT %2.0f''000\n', timehorizon, strrep(hazard_name,'_',' '), sum(ED_per_ward));
 title({titlestr})
-legend(g,'Lat/lon coordinates for assets')
+% legend(g,'Lat/lon coordinates for assets')
 
 

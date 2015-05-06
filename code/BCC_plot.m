@@ -52,8 +52,9 @@ BCC_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_border.m
 save(BCC_savename,'BCC')
 
 % BCC Wards
-ward_file = 'Ward Boundary Poly BCC.shp';
+% ward_file = 'Ward Boundary Poly BCC.shp';
 % ward_file = 'Ward Boundary Line BCC.shp';
+ward_file = 'Wards_popdens.shp';
 BCC_wards = climada_shaperead([GIS_dir filesep ward_file],0,1,0,1); % 0 for no-save
 %transform local coordinates (GCS  Everest 1830) to WGS1984
 for w_i = 1:length(BCC_wards)
@@ -66,6 +67,7 @@ end
 %save BCC_wards
 BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
 save(BCC_wards_savename,'BCC_wards')
+
 
 % % BCC Wards 2
 % ward_file   = ['Barisal_ATLAS - Excel and GIS' filesep 'Barisal' filesep 'All' filesep 'Ward_boundary.shp'];
@@ -110,10 +112,21 @@ end
 %     h(3)= plot(BCC_wards2(w_i).lon,BCC_wards2(w_i).lat,'color',[244 164 96 ]/255,'linewidth',2);%sandybrown
 %     %h(3)= fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,[244 164 96 ]/255);%sandybrown
 % end
+color_ = jet(length(BCC_wards));
 for w_i=1:length(BCC_wards)
-    h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255,'linewidth',2);%sandybrown
-    %h(3)= fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,[244 164 96 ]/255);%sandybrown
+    %h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255,'linewidth',2);%sandybrown
+    h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color','k','linewidth',1);%sandybrown
+    fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,color_(w_i,:));%sandybrown
 end
+for w_i=1:length(BCC_wards)
+    text(mean(BCC_wards(w_i).lon), mean(BCC_wards(w_i).lat), BCC_wards(w_i).UNION_NAME)
+end
+
+% figure
+% w_i= 1;
+% h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color','b','linewidth',2);%sandybrown
+% hold on
+% fill(BCC_wards(w_i).X,BCC_wards(w_i).Y,[244 164 96 ]/255);%sandybrown
 
 
 climada_plot_world_borders(0.5)
@@ -121,7 +134,7 @@ axis equal
 axis(axislim)
 title('Barisal')
 legend(h,'BCC boundaries','admin4','BCC wards')
-climada_plot_entity_assets(entity,'','','','',1);
+% climada_plot_entity_assets(entity,'','','','',1);
 
 
 printname = '';

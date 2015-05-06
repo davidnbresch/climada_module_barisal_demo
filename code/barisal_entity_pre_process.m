@@ -3,7 +3,7 @@ function entity_out = barisal_entity_pre_process(entity_in)
 % entity_in = entity;
 entity_out = entity_in;
 
-entity_out.assets.category = [];
+entity_out.assets.Category = [];
 
 % find fields with asset information (for all the different asset categories)
 names = fieldnames(entity_in.assets);
@@ -53,17 +53,17 @@ for value_i = 1:length(indx_asset_fields)
     % rewrite total to DamageFunID field
     entity_out.assets = setfield(entity_out.assets,'DamageFunID',DamageFunID);
     
-    % add category field
+    % add Category field
     category_names = {strrep(names{indx_asset_fields(value_i)},'_ASSETS','')};
-    category_names = repmat(category_names,length(entity_in.assets.lon),1);
+    category_names = repmat(category_names,length(entity_in.assets.X),1);
     % copy existing categories
-    category_part = getfield(entity_out.assets, 'category');
+    category_part = getfield(entity_out.assets, 'Category');
     if isempty(category_part)
         category      = category_names;
     else
         category      = {category_part{:} category_names{:}};
     end
-    entity_out.assets = setfield(entity_out.assets,'category',category');
+    entity_out.assets = setfield(entity_out.assets,'Category',category');
 
     fprintf('\t - added %s\n', names{indx_asset_fields(value_i)})
 end
@@ -77,11 +77,11 @@ invalid_field_2 = ~cellfun(@isempty,invalid_field_2);
 invalid_fields = logical(invalid_field_1+invalid_field_2);
 
 % special cases for fieldnames that do not need to be multiplied
-indx_to_be_multiplied_fields = ~(invalid_fields+strcmp(names,'filename')+strcmp(names,'hazard')+strcmp(names,'Value'));
+indx_to_be_multiplied_fields = ~(invalid_fields+strcmp(names,'filename')+strcmp(names,'hazard')+strcmp(names,'Value')+strcmp(names,'DamageFunID')+strcmp(names,'Category'));
 indx_to_be_multiplied_fields = find(indx_to_be_multiplied_fields);
 
 for field_i = 1:length(indx_to_be_multiplied_fields)
-    val_temp = getfield(entity_in.assets, names{indx_to_be_multiplied_fields(field_i)});
+    val_temp  = getfield(entity_in.assets, names{indx_to_be_multiplied_fields(field_i)});
     val_total = repmat(val_temp,length(indx_asset_fields),1);
     entity_out.assets = setfield(entity_out.assets,names{indx_to_be_multiplied_fields(field_i)},val_total);
 end

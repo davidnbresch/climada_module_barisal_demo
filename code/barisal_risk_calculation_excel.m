@@ -2,11 +2,14 @@
 
 % - tc wind hazard: use barisal_tc_hazard_prob.m to create wind hazard
 % - flood hazard: read asci-file from Ruud (Witteveen+Bos), load flood hazard
+% prepare entity with 
+% barisal_entity_prepare_100m_cells.m
+
 
 %% set scenario
 
 %hazard type
-hazard_names = {'flood_depth' 'flood_duration' 'cyclone_wind'}; 
+hazard_names = {'flood_depth_monsoon' 'flood_depth_cyclone' 'flood_duration_monsoon' 'flood_duration_cyclone' 'cyclone_wind'}; 
 
 %climate change scenario
 cc_scenario = {'no change' 'moderate' 'extreme'}; 
@@ -20,7 +23,8 @@ BCC_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_border.m
 load(BCC_savename)
 % load BCC ward boundaries (30 polygons, rough indication of polygons only!)
 % BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
-BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_Ward_no_added.mat'];
+% BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_Ward_no_added.mat'];
+BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_no_added.mat'];
 load(BCC_wards_savename)
 indx = strfind(BCC_savename,filesep);
 indx2 = strfind(BCC_wards_savename,filesep);
@@ -31,8 +35,10 @@ fprintf('\t - loaded BCC specifics: %s and %s\n', BCC_savename(indx(end)+1:end),
 
 
 %% load hazard and entity
-counter = 0;
-EDS_all = '';
+counter    = 0;
+EDS_all    = '';
+entity_all = '';
+
 % loop over hazards
 for h_i = 1:length(hazard_names)
     hazard_name = hazard_names{h_i};
@@ -52,7 +58,7 @@ for h_i = 1:length(hazard_names)
                 [hazard, entity, label] = barisal_hazard_entity_load(hazard_name, cc_scenario{cc_i}, timehorizon(t_i));
                 
                 
-                if ~isempty(hazard) 
+                if ~isempty(hazard) & ~isempty(entity) 
                     
                     % loop over asset categories
                     asset_cat = unique(entity.assets.Category(entity.assets.Value>0));
@@ -91,29 +97,68 @@ for h_i = 1:length(hazard_names)
     end %t_i
     
     if isempty(EDS_all)
-        EDS_all = EDS;
+        EDS_all    = EDS;
+        %entity_all = entity;
     else
-        EDS_all(end+1:end+counter) = EDS;
+        EDS_all(end+1:end+counter)    = EDS;
+        %entity_all(end+1) = entity;
     end
     climada_waterfall_graph_barisal(EDS,'AED');
     fprintf('%s: %d scenarios\n----------------\n----------------\n', upper(hazard_name), counter)
+    foldername = sprintf('%sresults%sED_waterfall_from_%s.pdf', filesep,filesep,hazard_name);
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
     
 end %h_i
-Percentage_Of_Value_Flag= 0;
-report_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios.csv'];
-climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
+
+% % Percentage_Of_Value_Flag= 0;
+% xls_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios.xlsx'];
+% % climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
+% climada_EDS_ED_at_centroid_report_xls(EDS_all,entity,xls_file)
     
 
 
+% for e_i = 1:lenght(hazard_names)
   
  
 %% figure for damage per ward
-t_i = 1;
-fig = climada_ED_plot_per_ward(EDS_all(t_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
-foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
-print(fig,'-dpdf',[climada_global.data_dir foldername])
-close
 
+event_selection = [1 7 13 19 25];
+t_i = 1;
+for e_i = event_selection
+    switch e_i
+        case 1
+            hazard_name = 'flood depth monsoon';
+        case 7
+            hazard_name = 'flood depth cyclone';
+        case 13
+            hazard_name = 'flood duration monsoon';
+        case 19
+            hazard_name = 'flood duration cyclone';
+        case 25
+            hazard_name = 'cyclone windspeed';
+    end
+    fig = climada_ED_plot_per_ward(EDS_all(e_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    
+    fig = climada_ED_plot_per_point(EDS_all(e_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    foldername = sprintf('%sresults%sDamage_per_point_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    
+    fig = climada_assets_plot_per_point(EDS_all(e_i),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    foldername = sprintf('%sresults%sValue_per_point_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    %close
+end
+
+
+% [hazard, entity, label] = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{cc_i}, timehorizon(t_i));
+% % climada_hazard_plot(hazard, 8)
+% for i= 1:3
+%     figure
+%     climada_hazard_plot_hr(hazard, i);
+% end
+% close all
 
 
 %% check hazard intensity and max hazard event
@@ -174,32 +219,6 @@ close
 % % end
 
 
-%% read ecorys entities (flood depth, flood duration and cyclone wind)
-% barisal_entity_prepare
-
-
-
-
-
-
-
-%% calculate damage today
-% if flood_depth ==1
-%     annotation_name = 'Flood today (depth)';
-%     
-% elseif flood_duration == 1
-%     annotation_name = 'Flood today (duration)';
-%     
-% elseif cyclone_wind == 1
-%     % tc wind
-%     annotation_name = 'Cyclones today';
-% end
-% 
-% force_re_encode = 1;
-% silent_mode     = 0;
-% EDS = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
-% climada_EDS_DFC(EDS);
-
 
 
 %% see damage functions for different asset categories
@@ -237,38 +256,6 @@ close
 %     end
 % end
 % legend(h,asset_cat)
-
-
-
-%% figure BCC wards and numbers
-% climada_figuresize(0.7,0.5)
-% for w_i=1:length(BCC_wards)
-%     hold on
-%     h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255);%sandybrown;
-%     %text(mean(BCC_wards(w_i).lon), mean(BCC_wards(w_i).lat), int2str(BCC_wards(w_i).WARDS_F_ID))
-%     text(mean(BCC_wards(w_i).lon), mean(BCC_wards(w_i).lat), int2str(BCC_wards(w_i).Ward_no))
-% end
-% plot(entity.assets.lon(1:30),entity.assets.lat(1:30), 'x')
-% for a_i = 1:30
-%     text(entity.assets.lon(a_i),entity.assets.lat(a_i), int2str(entity.assets.Ward(a_i)))
-% end
-
-
-%% assign ward numbers to ward shapefile
-% ward_points = [entity.assets.lon(1:30) entity.assets.lat(1:30)];
-% for w_i=1:length(BCC_wards)
-%     polygon_nodes = [BCC_wards(w_i).lon' BCC_wards(w_i).lat'];
-%     [cn,on] = inpoly(ward_points,polygon_nodes);
-%     BCC_wards(w_i).Ward_no = find(cn);
-% end
-% % hand corrections
-% BCC_wards(2).Ward_no = 6;
-% BCC_wards(3).Ward_no = 5;
-% BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
-% save(BCC_wards_savename,'BCC_wards')
-
-
-
 
 
 
