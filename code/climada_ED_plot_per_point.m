@@ -85,7 +85,8 @@ set(gca,'layer','top')
 set(get(cbar,'ylabel'),'string','Damage per point','fontsize',12)
 climada_plot_world_borders(0.7);
 axis equal
-axislim = [90.285 90.3957 22.64 22.752]; %barisal close up BCC 
+% axislim = [90.285 90.3957 22.64 22.752]; %barisal close up BCC 
+axislim = [90.28 90.41 22.64 22.775]; %barisal close up BCC
 axis(axislim)
 %titlestr = sprintf('%d, Annual damage, %s - %s', timehorizon(t_i), EDS(1).annotation_name, EDS(end).annotation_name);
 titlestr = sprintf('%d: Annual damage from %s: BDT %2.0f''000\n', timehorizon, strrep(hazard_name,'_',' '), sum(ED_per_point));

@@ -108,7 +108,8 @@ caxis([min_value max_value])
 %axislim = [min(EDS(1).assets.lon) max(EDS(1).assets.lon)*1 min(EDS(1).assets.lat) max(EDS(1).assets.lat)*1];
 %axislim = [min(hazard.lon) max(hazard.lon)*1 min(hazard.lat) max(hazard.lat)*1];
 %axislim = [90.25 90.45 22.6 22.8]; %barisal close up BCC 
-axislim = [90.285 90.3957 22.64 22.752]; %barisal close up BCC 
+%axislim = [90.285 90.3957 22.64 22.752]; %barisal close up BCC 
+axislim = [90.28 90.41 22.64 22.775]; %barisal close up BCC
 axis(axislim)
 axis equal
 %titlestr = sprintf('%d, Annual damage, %s - %s', timehorizon(t_i), EDS(1).annotation_name, EDS(end).annotation_name);
