@@ -55,7 +55,12 @@ for value_i = 1:length(indx_asset_fields)
     
     % add Category field
     category_names = {strrep(names{indx_asset_fields(value_i)},'_ASSETS','')};
-    category_names = repmat(category_names,length(entity_in.assets.X),1);
+    if isfield(entity_in.assets,'X')
+        category_names = repmat(category_names,length(entity_in.assets.X),1);
+    else
+        category_names = repmat(category_names,length(entity_in.assets.lon),1);
+    end
+    
     % copy existing categories
     category_part = getfield(entity_out.assets, 'Category');
     if isempty(category_part)

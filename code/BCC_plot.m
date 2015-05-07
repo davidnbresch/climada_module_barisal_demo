@@ -71,6 +71,17 @@ end
 %save BCC_wards
 BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
 save(BCC_wards_savename,'BCC_wards')
+BCC_wards_temp = BCC_wards;
+
+% % add ward numbers from previous file - not possible, the ordering is different!
+% BCC_wards_savename2 = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_number_added.mat'];
+% load(BCC_wards_savename2)
+% for w_i = 1:length(BCC_wards_temp)
+%     BCC_wards_temp(w_i).Ward_no = BCC_wards(w_i).Ward_no;
+% end
+% BCC_wards = BCC_wards_temp;
+% save(BCC_wards_savename,'BCC_wards')
+
 
 
 %% BCC Wards 2
@@ -88,7 +99,7 @@ save(BCC_wards_savename,'BCC_wards')
 
 
 %% admin 4, open GIS data
-shp_file_ = 'BGD_adm'; i = 4;
+shp_file_= 'BGD_adm'; i = 4;
 shp_file = sprintf('%s%d.shp',shp_file_,i);
 shapes   = climada_shaperead([GIS_open_dat_dir filesep shp_file],0,1,0,1); % 0 for no-save
     
@@ -118,7 +129,7 @@ color_ = jet(length(BCC_wards));
 for w_i=1:length(BCC_wards)
     %h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color',[244 164 96 ]/255,'linewidth',2);%sandybrown
     h(3)= plot(BCC_wards(w_i).lon,BCC_wards(w_i).lat,'color','k','linewidth',1);%sandybrown
-    fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,color_(w_i,:));%sandybrown
+    %fill(BCC_wards(w_i).lon,BCC_wards(w_i).lat,color_(w_i,:));%sandybrown
 end
 % add labels (ward names)
 for w_i=1:length(BCC_wards)
@@ -141,7 +152,7 @@ if check_printplot
         foldername = [pathname filename];
         if pathname <= 0; return;end
     else
-        foldername = [climada_global.data_dir filesep 'results' filesep 'BCC_plot.pdf'];
+        foldername = [climada_global.data_dir filesep 'results' filesep 'BCC_ward_plot.pdf'];
     end
     print(fig,'-dpdf',foldername)
     cprintf([255 127 36 ]/255,'\t\t saved 1 FIGURE in folder ..%s \n', foldername);

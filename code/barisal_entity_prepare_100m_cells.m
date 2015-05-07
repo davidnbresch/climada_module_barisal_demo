@@ -18,12 +18,14 @@ for h_i = 1:length(hazard_names)
             hazard_name = 'Floods';
             % entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal.xls'];
             % entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150504_values_Barisal_100m_Flooding.xls'];
-            entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515.xls'];
+            % entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515.xls'];
+            entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515.xls'];
             
         case 'cyclone_wind'
             hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC_2014'];
             hazard_name = 'Cyclones';
-            entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 040515.xls'];
+            % entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 040515.xls'];
+            entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 060515.xls'];
     end
     load(hazard_set_file)
 
@@ -63,8 +65,13 @@ for h_i = 1:length(hazard_names)
             % convert local coordinates to lat lon and reencode
             %fprintf('\t- Convert to lat lon and reencode\n')
             %[entity_temp.assets.lon, entity_temp.assets.lat] = utm2ll_shift(entity_temp.assets.X, entity_temp.assets.Y);
-            entity_temp.assets.Value       = nan(size(entity_temp.assets.X));
-            entity_temp.assets.DamageFunID = nan(size(entity_temp.assets.X));
+            if isfield(entity_temp.assets,'X')
+                entity_temp.assets.Value       = nan(size(entity_temp.assets.X));
+                entity_temp.assets.DamageFunID = nan(size(entity_temp.assets.X));
+            else
+                entity_temp.assets.Value       = nan(size(entity_temp.assets.lon));
+                entity_temp.assets.DamageFunID = nan(size(entity_temp.assets.lon));
+            end
             %entity_temp = climada_assets_encode(entity_temp,hazard);
 
             % pre-process entity in the special Barisal case (Ecorys formatting)
@@ -105,15 +112,18 @@ for h_i = 1:length(hazard_names)
      
     switch hazard_names{h_i}
         case 'flood_depth'
-            entity_filename     = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515.mat'];
+            %entity_filename     = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515.mat'];
+            entity_filename     = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515.mat'];
             entity_filename_new = strrep(entity_filename,'.mat', '_flood_depth.mat');
             comment             = 'Flood depth (m)';
         case 'flood_duration'
-            entity_filename     = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515.mat'];
+            %entity_filename     = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515.mat'];
+            entity_filename     = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515.mat'];
             entity_filename_new = strrep(entity_filename,'.mat', '_flood_duration.mat');
             comment             = 'Flood duration (days)';
         case 'cyclone_wind'
-             entity_filename    = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 040515.mat'];
+            %entity_filename    = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 040515.mat'];
+            entity_filename    = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 060515.mat'];
             entity_filename_new = strrep(entity_filename,'.mat', '_cyclone_windspeed.mat');
             comment             = 'Cyclone wind speed (m/s)';           
     end

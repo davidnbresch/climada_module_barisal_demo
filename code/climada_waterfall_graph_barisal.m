@@ -105,6 +105,7 @@ for EDS_i = 1:length(EDS)
     % check if annual expected damage is requested
     if return_period == 9999
         damage(EDS_i) = EDS(EDS_i).ED;
+        value (EDS_i) = EDS(EDS_i).Value;
     else
         % find index for requested return period
         r_index = EDS(EDS_i).R_fit == return_period;
@@ -137,10 +138,16 @@ end % EDS_i
 %% reorder damage for ascending order and add last entry again
 % damage = permute(damage,[1 3 2]);
 % today, eco, cc, future damage
-[damage index]        = sort(damage,'ascend');
+% [damage index]        = sort(damage,'ascend');
 damage(length(EDS)+1) = damage(length(EDS));
 damage_count          = length(damage);
 damage                = [0 damage];
+
+% reorder values
+% value        = value(index);
+value(end+1) = value(end);
+value        = [0 value];
+
 
 
 %% define figure parameters
@@ -192,23 +199,30 @@ cmap = climada_colormap('waterfall', length(EDS));
 
 
 %% create figure
-fig        = climada_figuresize(0.57,0.7);
+% fig        = climada_figuresize(0.57,0.7);
+fig        = climada_figuresize(0.57,0.9);
 hold on
 area([damage_count-stretch damage_count+stretch], damage(end-1)*ones(1,2),'facecolor',cmap(end-1,:),'edgecolor','none')
 for i = 1:length(damage)-2
+    %if i>2 & value(i)<value(i+1)
+    %    indx = find(value(i)>value);
+    %    indx = indx(end)+1;
+    %else
+        indx = i;
+    %end
     h(i) = patch( [i-stretch i+stretch i+stretch i-stretch],...
-                  [damage(i) damage(i) damage(i+1) damage(i+1)],...
-                  cmap(i,:),'edgecolor','none');
-    %     if i==1
-    %           plot([i+stretch 4+stretch],[damage(i+1) damage(i+1)],':','color',color_(5,:))
-    %     else
-    %           plot([i+stretch 4-stretch],[damage(i+1) damage(i+1)],':','color',color_(5,:))
-    %     end
+          [damage(indx) damage(indx) damage(i+1) damage(i+1)],...
+          cmap(i,:),'edgecolor','none');
 end
 for i = 1:length(damage)-2
     if i==1
         plot([i+stretch damage_count+stretch],[damage(i+1) damage(i+1)],':','color',cmap(end,:))
     else
+%         if i>2 & value(i)<value(i+1)
+%             
+%         else
+%             lkjd
+%         end
         plot([i+stretch damage_count-stretch],[damage(i+1) damage(i+1)],':','color',cmap(end,:))
     end
 end
@@ -252,7 +266,11 @@ set(gca,'xticklabel',[],'FontSize',10,'XTick',zeros(1,0),'layer','top');
 %axis range and ylabel
 xlim([0.5 damage_count+1-0.5])
 ylim([0   max(damage)*1.25])
-ylabel(['Damage amount \cdot 10^{', int2str(dig) '}'],'fontsize',fontsize_+2)
+if dig == 0
+    ylabel('Damage (1000 BDT)','fontsize',fontsize_+2)
+else
+    ylabel(['Damage amount \cdot 10^{', int2str(dig) '}'],'fontsize',fontsize_+2)
+end
 
 
 %% display arrows
@@ -305,7 +323,17 @@ if return_period == 9999
 else
     textstr = ['Expected damage with a return period of ' int2str(return_period) ' years'];
 end
-textstr_TIV = sprintf('Total assets: %d, %d 10^%d USD', TIV_nr, digits);
+if dig == 0
+    textstr_TIV_2 = sprintf('%4.0f, ', TIV_nr);
+    textstr_TIV_3 = ' (1000 BDT)';
+else
+    textstr_TIV_2 = sprintf('%d, ', TIV_nr);
+    textstr_TIV_3 = sprintf('10^%d USD', digits);
+end
+textstr_TIV_1 = 'Total assets: ';
+textstr_TIV_2(end-1:end) = [];
+textstr_TIV = [textstr_TIV_1 textstr_TIV_2 textstr_TIV_3];
+
 text(1-stretch, max(damage)*1.20,textstr, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','FontWeight','bold','fontsize',fontsize_);
 text(1-stretch, max(damage)*1.15,textstr_TIV, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','FontWeight','normal','fontsize',fontsize_2);
 
@@ -315,11 +343,17 @@ text(1-stretch, max(damage)*1.15,textstr_TIV, 'color','k','HorizontalAlignment',
 for d_i = 2:damage_count-1
     % economic growth (same hazard, no climate change)
     if strcmp(EDS(d_i).hazard.filename,EDS(d_i-1).hazard.filename) & EDS(d_i).Value ~= EDS(d_i-1).Value
-        textstr = {'Increase'; 'from econ.'; sprintf('growth; %d',EDS(d_i).reference_year)};
+        textstr = {'Increase'; 'from econ.'; 'growth'; sprintf('%d',EDS(d_i).reference_year)};
     
     % climate change (different hazard, same asset value, no economic growth)    
     elseif ~strcmp(EDS(d_i).hazard.filename,EDS(d_i-1).hazard.filename) & EDS(d_i).Value == EDS(d_i-1).Value
-        textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
+        %textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
+        textstr = {'Increase'; 'from mod.'; 'climate change';sprintf('%d',EDS(d_i).reference_year)};
+    
+    % climate change (same hazard, same asset value, no economic growth)    
+    elseif strcmp(EDS(d_i).hazard.filename,EDS(d_i-1).hazard.filename) & EDS(d_i).Value == EDS(d_i-1).Value
+        %textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
+        textstr = {'Increase'; 'from extr.'; 'climate change';sprintf('%d',EDS(d_i).reference_year)};    
     
     % just any other incremental increase    
     else
@@ -330,7 +364,7 @@ for d_i = 2:damage_count-1
 end
 % first and last xlabel
 text(1-stretch, damage(1)-max(damage)*0.02, {[num2str(climada_global.present_reference_year) ' today''s'];'expected damage'}, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-textstr = {sprintf('%d total',EDS(d_i).reference_year);'expected damage'};
+textstr = {sprintf('%d total',EDS(d_i).reference_year);'expected';'damage'};
 text(damage_count-stretch, damage(1)-max(damage)*0.02,textstr,...
      'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 

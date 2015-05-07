@@ -9,7 +9,7 @@ indx2 = strfind(BCC_wards_savename,filesep);
 fprintf('\t - loaded BCC specifics: %s\n', BCC_wards_savename(indx2(end)+1:end))
 
 % load entity
-[hazard, entity, label] = barisal_hazard_entity_load('flood_depth', 'no change', 2010);
+[hazard, entity, label] = barisal_hazard_entity_load('flood_depth_monsoon', 'no change', 2010);
 
 ward_no = unique(entity.assets.Ward_Nr);
 for w_i=1:length(ward_no)
@@ -37,11 +37,16 @@ end
 % BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
 % save(BCC_wards_savename,'BCC_wards')
 
+% BCC_wards( 2).Ward_no = 31;
+% BCC_wards(13).Ward_no =  7;
+% BCC_wards( 3).Ward_no = 34;
+% BCC_wards( 6).Ward_no = 32;
+
+BCC_wards( 5).Ward_no = 32;
+BCC_wards(35).Ward_no = 34;
 BCC_wards( 2).Ward_no = 31;
-BCC_wards(13).Ward_no =  7;
-BCC_wards( 3).Ward_no = 34;
-BCC_wards( 6).Ward_no = 32;
-BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_no_added.mat'];
+BCC_wards(12).Ward_no =  7;
+BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_number_added.mat'];
 save(BCC_wards_savename,'BCC_wards')
 
 
