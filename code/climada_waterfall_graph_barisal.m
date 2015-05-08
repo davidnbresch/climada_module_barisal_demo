@@ -204,12 +204,12 @@ fig        = climada_figuresize(0.57,0.9);
 hold on
 area([damage_count-stretch damage_count+stretch], damage(end-1)*ones(1,2),'facecolor',cmap(end-1,:),'edgecolor','none')
 for i = 1:length(damage)-2
-    %if i>2 & value(i)<value(i+1)
-    %    indx = find(value(i)>value);
-    %    indx = indx(end)+1;
-    %else
+    if i>2 & value(i)<value(i+1)
+       indx = find(value(i)>value);
+       indx = indx(end)+1;
+    else
         indx = i;
-    %end
+    end
     h(i) = patch( [i-stretch i+stretch i+stretch i-stretch],...
           [damage(indx) damage(indx) damage(i+1) damage(i+1)],...
           cmap(i,:),'edgecolor','none');
@@ -217,7 +217,7 @@ end
 for i = 1:length(damage)-2
     if i==1
         plot([i+stretch damage_count+stretch],[damage(i+1) damage(i+1)],':','color',cmap(end,:))
-    else
+    else    
 %         if i>2 & value(i)<value(i+1)
 %             
 %         else
@@ -246,8 +246,15 @@ damage_disp(end) = damage(end);
 strfmt = ['%2.' int2str(N) 'f'];
 dED    = 0.0;
 for d_i = 2:damage_count-1
-    text(d_i-dED, damage(d_i)+ (damage(d_i+1)-damage(d_i))/2, ...
-         num2str(damage_disp(d_i),strfmt), 'color','w', 'HorizontalAlignment','center',...
+    if d_i>2 & value(d_i)<value(d_i+1)
+       indx = find(value(d_i)>value);
+       indx = indx(end)+1;
+    else
+        indx = d_i;
+    end
+    textstr = num2str(damage(d_i+1)-damage(indx),strfmt);
+    text(d_i-dED, damage(indx)+ (damage(d_i+1)-damage(indx))/2, ...
+         textstr, 'color','w', 'HorizontalAlignment','center',...
          'VerticalAlignment','middle','FontWeight','bold','fontsize',fontsize_);
 end
 text(1, damage(2)             , num2str(damage_disp(1)  ,strfmt), 'color','k', 'HorizontalAlignment','center', 'VerticalAlignment','bottom','FontWeight','bold','fontsize',fontsize_);
@@ -279,12 +286,21 @@ dED2 = stretch+0.05;
 dED3 = stretch+0.07;
 for d_i=2:damage_count-1
     try
-        climada_arrow ([d_i+dED2 damage(d_i)], [d_i+dED2 damage(d_i+1)],...
+        if d_i>2 & value(d_i)<value(d_i+1)
+           indx = find(value(d_i)>value);
+           indx = indx(end)+1;
+        else
+            indx = d_i;
+        end
+        climada_arrow ([d_i+dED2 damage(indx)], [d_i+dED2 damage(d_i+1)],...
                        40, 10, 30,'width',1.5,'Length',10, 'BaseAngle',90, 'EdgeColor','none', 'FaceColor',[0.5 0.5 0.5]);
+        %climada_arrow ([d_i+dED2 damage(d_i)], [d_i+dED2 damage(d_i+1)],...
+        %               40, 10, 30,'width',1.5,'Length',10, 'BaseAngle',90, 'EdgeColor','none', 'FaceColor',[0.5 0.5 0.5]);
+        textstr = ['+' int2str((damage(d_i+1)-damage(indx))/damage(indx)*100) '%'];
     catch
         fprintf('Warning: arrow printing failed in %s (1)\n',mfilename);
     end
-    text (d_i+dED3, damage(d_i)+diff(damage(d_i:d_i+1))*0.5, ['+' int2str((damage(d_i+1)-damage(d_i))/damage(d_i)*100) '%'], ...
+    text(d_i+dED3, damage(indx)+(damage(d_i+1)-damage(indx))*0.5,textstr, ...
           'color',[0. 0. 0.],'HorizontalAlignment','left','VerticalAlignment','middle','fontsize',fontsize_-1);
 end
 %arrow for total damage

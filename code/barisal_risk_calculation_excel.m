@@ -112,11 +112,11 @@ for h_i = 1:length(hazard_names)
 end %h_i
 
 
-
+%% write out xls
 % % Percentage_Of_Value_Flag= 0;
-% xls_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios.xlsx'];
-% % climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
-% climada_EDS_ED_at_centroid_report_xls(EDS_all,entity,xls_file)
+xls_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios.xlsx'];
+% climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
+climada_EDS_ED_at_centroid_report_xls(EDS_all,entity,xls_file)
     
 
  
@@ -125,6 +125,7 @@ end %h_i
 
 event_selection = [1 6 11 16 21];
 t_i = 1;
+% t_i = 3;
 for e_i = 1:length(event_selection);
     switch e_i
         case 1
@@ -156,12 +157,14 @@ for e_i = 1:length(event_selection);
     %foldername = sprintf('%sresults%sdamage_plots%sDamage_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
     %print(fig,'-dpdf',[climada_global.data_dir foldername])
     
-    %fig = climada_assets_plot_per_point(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    %%--ASSETS--
+    %fig = climada_assets_plot_per_point(EDS_all(event_selection(e_i)+0),entity,BCC_wards, timehorizon(t_i), hazard_name);
     %foldername = sprintf('%sresults%sdamage_plots%sValue_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
     %print(fig,'-dpdf',[climada_global.data_dir foldername])
     %%close
 end
 
+%%
 
 % [hazard, entity, label] = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{cc_i}, timehorizon(t_i));
 % % climada_hazard_plot(hazard, 8)
