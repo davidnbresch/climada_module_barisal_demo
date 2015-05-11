@@ -14,7 +14,7 @@ for h_i = 1:length(hazard_names)
     % set some input files
     switch hazard_names{h_i}
         case 'flood'
-            hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_2014'];
+            hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_monsoon_2014'];
             hazard_name = 'Floods';
             % entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal.xls'];
             % entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150504_values_Barisal_100m_Flooding.xls'];

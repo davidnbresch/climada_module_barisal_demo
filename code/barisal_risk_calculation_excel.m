@@ -2,6 +2,7 @@
 
 % - tc wind hazard: use barisal_tc_hazard_prob.m to create wind hazard
 % - flood hazard: read asci-file from Ruud (Witteveen+Bos), load flood hazard
+% barisal_hazard_read.m
 % prepare entity with 
 % barisal_entity_prepare_100m_cells.m
 
@@ -16,6 +17,10 @@ cc_scenario = {'no change' 'moderate' 'extreme'};
 
 %timehorizon
 timehorizon = [2014 2030 2050];
+
+% centroid_index = entity.assets.centroid_index;
+% [hazard, entity, label] = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{cc_i}, timehorizon(t_i));
+% dif = sum(entity.assets.centroid_index-centroid_index);
 
 
 %% load barisal specifics
@@ -35,7 +40,7 @@ fprintf('\t - loaded BCC specifics: %s and %s\n', BCC_savename(indx(end)+1:end),
 
 
 %% load hazard and entity
-counter    = 0;
+% counter    = 0;
 EDS_all    = '';
 entity_all = '';
 
@@ -57,8 +62,22 @@ for h_i = 1:length(hazard_names)
                 %% load hazard and entity and create label
                 [hazard, entity, label] = barisal_hazard_entity_load(hazard_name, cc_scenario{cc_i}, timehorizon(t_i));
                 
-                
                 if ~isempty(hazard) & ~isempty(entity) 
+                    
+                    % reencode assets to hazard
+                    if h_i==1 & t_i==1 & cc_i==1
+                        entity = climada_assets_encode(entity,hazard);
+                        centroid_index = entity.assets.centroid_index;
+                    else
+                        encode_checksum = sum(centroid_index-entity.assets.centroid_index);
+                        fprintf('\t - centroid_index difference is %2.2f\n',encode_checksum);
+                        if encode_checksum == 0
+                            entity.assets.centroid_index = centroid_index;
+                        else
+                            entity = climada_assets_encode(entity,hazard);
+                            centroid_index = entity.assets.centroid_index;
+                        end
+                    end
                     
                     % loop over asset categories
                     asset_cat = unique(entity.assets.Category(entity.assets.Value>0));
@@ -84,11 +103,13 @@ for h_i = 1:length(hazard_names)
                         if isempty(EDS)
                             EDS = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
                             EDS.reference_year = timehorizon(t_i);
+                            %EDS.label = label;
                         else
                             %EDS_ = climada_EDS_calc(entity,hazard,annotation_name,force_re_encode,silent_mode);
                             %EDS(cat_i) = EDS_;
                             EDS(counter) = climada_EDS_calc(entity,hazard,titlestr,force_re_encode,silent_mode);
                             EDS(counter).reference_year = timehorizon(t_i);
+                            %EDS(counter).label = label;
                         end
                     end %cat_i
                 end %~isempty(hazard)
@@ -111,16 +132,23 @@ for h_i = 1:length(hazard_names)
     
 end %h_i
 
+EDS_all_filename = [climada_global.data_dir filesep 'results' filesep 'EDS_all'];
+save(EDS_all_filename,'EDS_all')
+
 
 %% write out xls
 % % Percentage_Of_Value_Flag= 0;
-xls_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios.xlsx'];
+xls_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios_new.xlsx'];
 % climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
 climada_EDS_ED_at_centroid_report_xls(EDS_all,entity,xls_file)
     
 
+%% load EDS all
+EDS_all_filename = [climada_global.data_dir filesep 'results' filesep 'EDS_all'];
+load(EDS_all_filename)
  
- 
+
+
 %% figure for damage per ward
 
 event_selection = [1 6 11 16 21];
@@ -149,30 +177,63 @@ for e_i = 1:length(event_selection);
     foldername = sprintf('%sresults%sdamage_plots%sED_waterfall_from_%s.pdf', filesep,filesep,filesep,hazard_name);
     print(fig,'-dpdf',[climada_global.data_dir foldername])
     
-    %fig = climada_ED_plot_per_ward(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
-    %foldername = sprintf('%sresults%sdamage_plots%sDamage_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
-    %print(fig,'-dpdf',[climada_global.data_dir foldername])
+    fig = climada_ED_plot_per_ward(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    foldername = sprintf('%sresults%sdamage_plots%sDamage_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
     
-    %fig = climada_ED_plot_per_point(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
-    %foldername = sprintf('%sresults%sdamage_plots%sDamage_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
-    %print(fig,'-dpdf',[climada_global.data_dir foldername])
+    fig = climada_ED_plot_per_point(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    foldername = sprintf('%sresults%sdamage_plots%sDamage_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
     
-    %%--ASSETS--
-    %fig = climada_assets_plot_per_point(EDS_all(event_selection(e_i)+0),entity,BCC_wards, timehorizon(t_i), hazard_name);
-    %foldername = sprintf('%sresults%sdamage_plots%sValue_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
-    %print(fig,'-dpdf',[climada_global.data_dir foldername])
-    %%close
+    %--ASSETS--
+    fig = climada_assets_plot_per_point(EDS_all(event_selection(e_i)+0),entity,BCC_wards, timehorizon(t_i), hazard_name);
+    foldername = sprintf('%sresults%sdamage_plots%sValue_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
+    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    %close
 end
 
-%%
 
-% [hazard, entity, label] = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{cc_i}, timehorizon(t_i));
-% % climada_hazard_plot(hazard, 8)
-% for i= 1:3
-%     figure
-%     climada_hazard_plot_hr(hazard, i);
-% end
-% close all
+%% create combined waterfall graph for all hazard types
+% EDS_all_filename = [climada_global.data_dir filesep 'results' filesep 'EDS_all'];
+% load(EDS_all_filename)
+
+t_i = 2;
+fig = climada_waterfall_graph_barisal_combined(EDS_all);
+foldername = sprintf('%sresults%sdamage_plots%sED_all_hazard_types_%d.pdf', filesep,filesep,filesep,timehorizon(t_i));
+print(fig,'-dpdf',[climada_global.data_dir foldername])
+
+
+
+%% create hazard plots
+t_i  = 1;
+cc_i = 1;
+% hazard_name = 'flood_duration_monsoon';
+hazard_name = 'flood_depth_monsoon';
+[hazard, entity, label] = barisal_hazard_entity_load(hazard_name, cc_scenario{cc_i}, timehorizon(t_i));
+%datestr(hazard.datenum)
+%[hazard.yyyy(1) hazard.mm(1) hazard.dd(1)]
+% climada_hazard_plot(hazard, sorted_i(i))
+event_sum = sum(full(hazard.intensity),2);
+[a,sorted_i] =sort(event_sum,'descend');
+for i = 1%:3
+    figure
+    climada_hazard_plot_hr(hazard, sorted_i(i));
+    
+    hold on
+    % loop over all words to plot color according to flood damage
+    BCC_ward_no  = [BCC_wards.Ward_no];
+    for ward_i = 1:length(BCC_ward_no) 
+        %indx   = find(values(ward_i)<=range_values);
+        %indx   = indx(1);
+        %indx_w = find(BCC_ward_no == ward_i);
+        plot(BCC_wards(ward_i).lon,BCC_wards(ward_i).lat,'color',[ 205 193 197 ]/255,'linewidth',2); %dark red
+        text(mean(BCC_wards(ward_i).lon),mean(BCC_wards(ward_i).lat),BCC_wards(ward_i).UNION_NAME,...
+            'Horizontalalignment','center','verticalalignment','bottom'); %grey
+    end
+end
+
+foldername = sprintf('%sresults%sdamage_plots%sHazard_Flood_duration_monsoon_event_%d.pdf', filesep,filesep,filesep,sorted_i(i));
+print(gcf,'-dpdf',[climada_global.data_dir foldername])
 
 
 %% check hazard intensity and max hazard event
