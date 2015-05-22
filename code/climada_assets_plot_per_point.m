@@ -62,7 +62,7 @@ for p_i = 1:length(asset_val_per_point)
     indx3 = find(indx2 == p_i);
     asset_val_per_point(p_i) = sum(EDS(t_i).assets.Value(indx3));
 end
-fprintf('\t - Total value at %d lon/lat-points %s in %d is BDT %2.0f''000\n',length(lon_lat),hazard_name,timehorizon, sum(asset_val_per_point))
+fprintf('\t - Total value at %d lon/lat-points %s in %d is BDT %2.0f mn\n',length(lon_lat),hazard_name,timehorizon, sum(asset_val_per_point))
 
 % cmap = climada_colormap('damage');
 fig = climada_figuresize(0.75,0.75);
@@ -89,7 +89,7 @@ axis equal
 axislim = [90.28 90.41 22.64 22.775]; %barisal close up BCC
 axis(axislim)
 %titlestr = sprintf('%d, Annual damage, %s - %s', timehorizon(t_i), EDS(1).annotation_name, EDS(end).annotation_name);
-titlestr = sprintf('%d: Asset values from %s: BDT %2.0f''000\n', timehorizon, strrep(hazard_name,'_',' '), sum(asset_val_per_point));
+titlestr = sprintf('%d: Asset values from %s: BDT %2.0f mn \n', timehorizon, strrep(hazard_name,'_',' '), sum(asset_val_per_point));
 title({titlestr})
 box on
 % legend(g,'Lat/lon coordinates for assets')

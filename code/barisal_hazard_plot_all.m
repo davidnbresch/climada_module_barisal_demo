@@ -21,17 +21,17 @@ load(BCC_wards_savename)
 
 
 %% find max flood depth (monsoon and cyclone)
-% hazard = barisal_hazard_entity_load('flood_depth_monsoon', cc_scenario{3}, timehorizon(2));
+% hazard = barisal_hazard_entity_load('flood_depth_monsoon', cc_scenario{3}, timehorizon(3));
 % event_max1 = max(full(hazard.intensity(:)));
-% hazard = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{3}, timehorizon(2));
+% hazard = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{3}, timehorizon(3));
 % event_max2 = max(full(hazard.intensity(:)));
 % fprintf('\n\t - Maximum flood depth from monsoon is %2.2fm.\n', event_max1)
 % fprintf('\t - Maximum flood depth from cyclone is %2.2fm.\n', event_max2)
-% 
+
 % % find max flood duration (monsoon and cyclone)
-% hazard = barisal_hazard_entity_load('flood_duration_monsoon', cc_scenario{3}, timehorizon(2));
+% hazard = barisal_hazard_entity_load('flood_duration_monsoon', cc_scenario{3}, timehorizon(3));
 % event_max1 = max(full(hazard.intensity(:)));
-% hazard = barisal_hazard_entity_load('flood_duration_cyclone', cc_scenario{3}, timehorizon(2));
+% hazard = barisal_hazard_entity_load('flood_duration_cyclone', cc_scenario{3}, timehorizon(3));
 % event_max2 = max(full(hazard.intensity(:)));
 % fprintf('\n\t - Maximum flood duration from monsoon is %2.2f days.\n', event_max1)
 % fprintf('\t - Maximum flood duration from cyclone is %2.2f days.\n', event_max2)
@@ -44,7 +44,7 @@ for h_i = 1:length(hazard_names)
 
     switch hazard_name
         case {'flood_depth_monsoon','flood_depth_cyclone'}
-            caxis_range = [0 2.3];
+            caxis_range = [0 2.7];
         case {'flood_duration_monsoon','flood_duration_cyclone'}
             caxis_range = [0 50]; %[0 120];
     end

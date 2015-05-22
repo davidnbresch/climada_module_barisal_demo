@@ -274,7 +274,7 @@ set(gca,'xticklabel',[],'FontSize',10,'XTick',zeros(1,0),'layer','top');
 xlim([0.5 damage_count+1-0.5])
 ylim([0   max(damage)*1.25])
 if dig == 0
-    ylabel('Damage (1000 BDT)','fontsize',fontsize_+2)
+    ylabel('Damage (mn BDT)','fontsize',fontsize_+2)
 else
     ylabel(['Damage amount \cdot 10^{', int2str(dig) '}'],'fontsize',fontsize_+2)
 end

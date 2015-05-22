@@ -58,7 +58,7 @@ for w_i = 1:length(BCC_wards)
     ED_per_ward(w_i) = sum(EDS(t_i).ED_at_centroid(indx));
     lon_lat(w_i,:) = [mean(EDS(1).assets.lon(indx)) mean(EDS(1).assets.lat(indx))]; 
 end
-fprintf('\t - Total damage for %s in %d is BDT %2.0f''000\n',hazard_name,timehorizon, sum(ED_per_ward))
+fprintf('\t - Total damage for %s in %d is BDT %2.0f mn\n',hazard_name,timehorizon, sum(ED_per_ward))
 
 
 fig = climada_figuresize(0.75,0.75);
@@ -103,7 +103,7 @@ end
 colormap(cbar)
 t = colorbar;
 %cbar_label = sprintf('Intensity %s (%s)', hazard.peril_ID, hazard.units);
-set(get(t,'ylabel'),'String', ('1000 BDT'),'fontsize',12);
+set(get(t,'ylabel'),'String', ('mn BDT'),'fontsize',12);
 caxis([min_value max_value])
 %axislim = [min(EDS(1).assets.lon) max(EDS(1).assets.lon)*1 min(EDS(1).assets.lat) max(EDS(1).assets.lat)*1];
 %axislim = [min(hazard.lon) max(hazard.lon)*1 min(hazard.lat) max(hazard.lat)*1];
@@ -113,7 +113,7 @@ axislim = [90.28 90.41 22.64 22.775]; %barisal close up BCC
 axis(axislim)
 axis equal
 %titlestr = sprintf('%d, Annual damage, %s - %s', timehorizon(t_i), EDS(1).annotation_name, EDS(end).annotation_name);
-titlestr = sprintf('%d: Annual damage from %s: BDT %2.0f''000\n', timehorizon, strrep(hazard_name,'_',' '), sum(ED_per_ward));
+titlestr = sprintf('%d: Annual damage from %s: BDT %2.0f mn\n', timehorizon, strrep(hazard_name,'_',' '), sum(ED_per_ward));
 title({titlestr})
 % legend(g,'Lat/lon coordinates for assets')
 

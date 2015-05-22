@@ -81,9 +81,11 @@ cc_scenario = {'no change' 'moderate' 'extreme'};
 
 %timehorizon
 % timehorizon = [2014 2030 2050];
-timehorizon = [2014 2030];
+% timehorizon = [2014 2030];
+timehorizon = [2014 2050];
 years       = [EDS.reference_year];
-event_selection = [1 11 6 16 21];
+% event_selection = [1 11 6 16 21];
+event_selection = [1 15 8 22 29];
     
 
 %% get EDS name into legend_str
@@ -112,7 +114,7 @@ damage        = zeros(length(hazard_names), num_scenarios);
 
 for h_i = 1:length(hazard_names)
     %event_selection(h_i):event_selection(h_i)+num_scenarios-1
-    damage(h_i,:) =  ED_list(event_selection(h_i):event_selection(h_i)+num_scenarios-1);
+    damage(h_i,:) =  ED_list([event_selection(h_i) event_selection(h_i)+4 event_selection(h_i)+5 event_selection(h_i)+6]);
 end
 
 damage_prepared  = damage;
@@ -239,7 +241,7 @@ set(gca,'xticklabel',[],'FontSize',10,'XTick',zeros(1,0),'layer','top');
 xlim([0.5 damage_count+1-0.5])
 ylim([0   max(damage_prepared(:))*1.25])
 if dig == 0
-    ylabel('Damage (1000 BDT)','fontsize',fontsize_+2)
+    ylabel('Damage (mn BDT)','fontsize',fontsize_+2)
 else
     ylabel(['Damage amount \cdot 10^{', int2str(dig) '}'],'fontsize',fontsize_+2)
 end
@@ -274,7 +276,7 @@ catch
     fprintf('Warning: arrow printing failed in %s (3)\n',mfilename);
 end
 text(damage_count, damage_prepared(end,1)-max(damage_prepared(:))*0.02, ...
-    ['+' int2str((damage_prepared(end,end)-damage_prepared(end,1))/damage_prepared(end,1)*100) '%'],...
+    ['s+' int2str((damage_prepared(end,end)-damage_prepared(end,1))/damage_prepared(end,1)*100) '%'],...
     'color','w','HorizontalAlignment','center','VerticalAlignment','top','fontsize',fontsize_);
 
 
@@ -283,7 +285,7 @@ text(damage_count, damage_prepared(end,1)-max(damage_prepared(:))*0.02, ...
 textstr = 'Annual Expected Damage (AED)';
 if dig == 0
     textstr_TIV_2 = sprintf('%4.0f, ', TIV_nr);
-    textstr_TIV_3 = ' (1000 BDT)';
+    textstr_TIV_3 = ' (mn BDT)';
 else
     textstr_TIV_2 = sprintf('%d, ', TIV_nr);
     textstr_TIV_3 = sprintf('10^%d USD', digits);
@@ -298,9 +300,11 @@ text(1-stretch, max(damage_prepared(:))*1.15,textstr_TIV, 'color','k','Horizonta
 
 
 %% set xlabel
+e_ = [1 5 6 7];
 for d_i = 2:num_scenarios
     
-    e_i = event_selection(1)+d_i-1;
+    %e_i = event_selection(1)+d_i-1;
+    e_i = e_(d_i);
     % economic growth (same hazard, no climate change)
     if strcmp(EDS(e_i).hazard.filename,EDS(e_i-1).hazard.filename) & EDS(e_i).Value ~= EDS(e_i-1).Value
         textstr = {'Increase'; 'from economic'; 'growth'; sprintf('(%d)',EDS(e_i).reference_year)};
@@ -326,7 +330,7 @@ end
 % first and last xlabel
 textstr = {'Today''s';'expected damage';sprintf('(%d)',climada_global.present_reference_year)};
 text(1-stretch, damage_prepared(1,1)-max(damage_prepared(:))*0.02, textstr, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-textstr = {'Total';'expected damage';sprintf('(%d)',EDS(d_i).reference_year)};
+textstr = {'Total';'expected damage';sprintf('(%d)',EDS(e_(end)).reference_year)};
 text(damage_count-stretch, damage_prepared(1,1)-max(damage_prepared(:))*0.02,textstr,...
      'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 

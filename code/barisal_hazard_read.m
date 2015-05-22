@@ -9,7 +9,8 @@ cc_scenario = {'no change' 'moderate' 'extreme'};
 timehorizon = [2014 2030 2050];
 
 % set foldername
-foldername = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBangladesh\risk_modelling\flood\';
+% foldername = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBangladesh\risk_modelling\flood\';
+foldername = [climada_global.data_dir filesep 'hazards' filesep 'Flood_Barisal\'];
 
 
 %% loop over hazards
@@ -44,20 +45,25 @@ for h_i = 1:length(hazard_names)
             case 'no change'
                 folder_ = 'Floods_current_scenario\';
                 reference_year = 2014;
-                hazard_set_file_ = sprintf('%s_%d.mat',hazard_set_file,2014);
+                hazard_set_file_ = sprintf('%s_%d.mat',hazard_set_file,reference_year);
                 
             case 'moderate'
                 folder_ = 'Floods_2030_CCMod\';
                 reference_year = 2030;
+                %folder_ = 'Floods_2050_CCMod\';
+                %reference_year = 2050;
                 hazard_set_file_ = sprintf('%s_cc_%d_%s.mat',hazard_set_file,reference_year,cc_scenario{cc_i});
                  
             case 'extreme'
                 folder_ = 'Floods_2030_CCHigh\';
                 reference_year = 2030;
+                %folder_ = 'Floods_2050_CCHigh\';
+                %reference_year = 2050;
                 hazard_set_file_ = sprintf('%s_cc_%d_%s.mat',hazard_set_file,reference_year,cc_scenario{cc_i});
         end
         
-        hazard = climada_asci2hazard([foldername folder_ filename]);
+        fprintf('%s\n',[foldername folder_ filename])
+        hazard = climada_asci2hazard([foldername folder_ filename],6);
         hazard.comment = sprintf('Modelled by W+B, %s, %s', hazard_name, cc_scenario{cc_i});
         hazard.reference_year = reference_year;
         hazard.peril_ID = 'FL';

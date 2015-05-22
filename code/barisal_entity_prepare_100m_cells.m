@@ -1,4 +1,5 @@
 %% prepare barisal entity, for 100 m cells basis
+% entity values are in 1'000'000 BDT (Bangladesh Taka)
 
 %hazard type
 hazard_names = {'flood' 'cyclone_wind'}; 
