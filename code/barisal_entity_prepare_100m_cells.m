@@ -31,7 +31,7 @@ for h_i = 1:length(hazard_names)
     load(hazard_set_file)
 
 
-    %% read ecorys entityies
+    %% read ecorys entities
     % entity floods 2014, 2030 and 2050
     % entity cyclones 2014, 2030 and 2050
     entity       = [];

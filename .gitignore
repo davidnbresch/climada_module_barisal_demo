@@ -52,3 +52,6 @@ data/system/srtm_55_07/srtm_55_07.tif
 
 
 *.asv
+data/entities/old/
+data/entities/old_2/
+data/hazards/old/
