@@ -1,4 +1,4 @@
-function fig = climada_ED_plot_per_point(EDS,entity, BCC_wards, timehorizon, hazard_name)
+function fig = climada_ED_plot_per_point(EDS, BCC_wards, timehorizon, hazard_name)
 % create figure to plot expected damage per ward in barisal
 % MODULE: 
 %   barisal_demo
@@ -34,7 +34,6 @@ if ~climada_init_vars, return; end
 
 % poor man's version to check arguments
 if ~exist('EDS'           ,'var'), EDS         = []; end
-if ~exist('entity'        ,'var'), entity      = []; end
 if ~exist('BCC_wards'     ,'var'), BCC_wards   = []; end
 if ~exist('timehorizon'   ,'var'), timehorizon = ''; end
 if ~exist('hazard_name'   ,'var'), hazard_name = ''; end
@@ -42,9 +41,15 @@ if ~exist('hazard_name'   ,'var'), hazard_name = ''; end
 fig = []; % init
 
 if isempty(EDS),return;end 
-if isempty(entity),return;end
 if isempty(BCC_wards),return;end
-
+if isempty(timehorizon)
+    if isfield(EDS,'reference_year')
+        timehorizon = EDS.reference_year;
+    end
+end
+if isempty(hazard_name)
+    hazard_name = strrep(EDS.hazard.comment,'.mat','');
+end
 
 % Set time horizon 
 % If EDS contains multiple entries, t_i defines the EDS to be selected. 
@@ -67,14 +72,15 @@ fprintf('\t - Total damage at %d lon/lat-points %s in %d is BDT %2.0f mn\n',leng
 % cmap = climada_colormap('damage');
 fig = climada_figuresize(0.75,0.75);
 no_colors    = 10;
-cmap         = jet(no_colors);
+% cmap         = jet(no_colors);
+cmap         = climada_colormap('schematic',no_colors);
 values       = ED_per_point;
 pos_indx     = values>0;
 min_value    = min(values(pos_indx));
 max_value    = max(values);
 % range_values = linspace(min_value,max_value,no_colors);
 mav = max_value*1.0;
-markersize = 5;
+markersize = 2;
 % [h h_points] = plotclr(x,y,v, marker, markersize, colorbar_on, miv, mav, map, zero_off, v_exp)
 [cbar,asset_handle]= plotclr(lon_lat(:,1), lon_lat(:,2), ED_per_point, 's',markersize, 1,min_value,max_value,cmap,0,0);
 hold on
@@ -83,7 +89,7 @@ xlabel('Longitude')
 ylabel('Latitude')
 set(gca,'layer','top')
 set(get(cbar,'ylabel'),'string','Damage per point','fontsize',12)
-climada_plot_world_borders(0.7);
+% climada_plot_world_borders(0.7);
 axis equal
 % axislim = [90.285 90.3957 22.64 22.752]; %barisal close up BCC 
 axislim = [90.28 90.41 22.64 22.775]; %barisal close up BCC

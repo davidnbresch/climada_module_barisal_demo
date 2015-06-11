@@ -106,11 +106,11 @@ D0 = 180/pi;	% conversion rad to deg
 maxiter = 100;	% maximum iteration for latitude computation
 eps = 1e-11;	% minimum residue for latitude computation
 
-K0 = 0.9996;					% BTM scale factor
-X0 = 500000;					% BTM false East (m)
+K0 = 0.9996;				% BTM scale factor
+X0 = 500000;				% BTM false East (m)
 Y0 = -2000000;				% BTM false North (m)
 P0 = 0;						% BTM origin latitude (rad)
-L0 = 90/D0;			% UTM origin longitude (rad)
+L0 = 90/D0;                 % BTM origin longitude (rad)
 E1 = sqrt((A1^2 - (A1*(1 - 1/F1))^2)/A1^2);	% ellpsoid excentricity
 N = K0*A1;
 

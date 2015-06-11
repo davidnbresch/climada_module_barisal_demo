@@ -1,4 +1,4 @@
-function fig=climada_EDS_plot_3d(hazard,EDS,event_i)
+function fig=climada_EDS_plot_3d(hazard,EDS,event_i,check_labels,varargin)
 % climada visualise event damage
 % NAME:
 %   climada_plot_EDS_3d
@@ -24,17 +24,17 @@ function fig=climada_EDS_plot_3d(hazard,EDS,event_i)
 % Gilles Stassen, gillesstassen@hotmail.com 20141204
 % David N. Bresch, david.bresch@gmail.com, 20141215, cleanup
 % Gilles Stassen, 20150114 fixed conversion issues + cleanup
+% Gilles Stassen, 20150517 added varargin for plotting extra features, fixed issue with axis labeling
 %-
 fig = []; % init output
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
-if ~exist('hazard'  ,   'var'), return;         end
-if ~exist('EDS'     ,   'var'), return;         end
-if ~exist('event_i' ,   'var'), event_i = -1;   end % Default: pick largest event
-
-
+if ~exist('hazard'  ,       'var'), return;         end
+if ~exist('EDS'     ,       'var'), return;         end
+if ~exist('event_i' ,       'var'), event_i = -1;   end % Default: pick largest event
+if ~exist('check_labels',   'var'), check_labels=1; end
 % Prepare data
 if event_i<0
     % search for i-th largest event
@@ -74,6 +74,9 @@ end
 tmp_lon = unique(EDS.assets.lon);
 tmp_lat = unique(EDS.assets.lat);
 
+% tmp_lon = [min(EDS.assets.lon):abs(min(diff(EDS.assets.lon))):max(EDS.assets.lon)];
+% tmp_lat = [min(EDS.assets.lat):abs(min(diff(EDS.assets.lat))):max(EDS.assets.lat)];
+
 % Conversion factors
 dx_dlon = numel(tmp_lon)/(max(tmp_lon) - min(tmp_lon));
 dy_dlat = numel(tmp_lat)/(max(tmp_lat) - min(tmp_lat));
@@ -82,8 +85,11 @@ lon_c =  min(tmp_lon);  lat_c = min(tmp_lat);
 
 % Construct matrix
 loss_plot = zeros(numel(tmp_lat),numel(tmp_lon));
-tmp_d_a_c = full(EDS.damage_at_centroid(:,event_i));
-
+if event_i == 0
+    tmp_d_a_c = EDS.ED_at_centroid;
+else
+    tmp_d_a_c = full(EDS.damage_at_centroid(:,event_i));
+end
 x = zeros(size(EDS.assets.Value));
 y = zeros(size(EDS.assets.Value));
 
@@ -97,7 +103,11 @@ end
 fig = figure('Name',title_str,'Color',[1 1 1]);
 set(fig,'name', title_str);
 hold on
-title(['Total damage: USD'  num2str(round(sum(EDS.damage_at_centroid(:,event_ii))/1e6)) 'm'],'fontsize',12)
+if event_i == 0
+    title(['Annual expected damage ' num2str(EDS.reference_year) ': USD '  num2str(round(EDS.ED/1e3)) 'k'],'fontsize',12)
+else
+    title(['Total damage for event ' num2str(event_i) ': USD '  num2str(round(sum(EDS.damage_at_centroid(:,event_i))/1e3)) 'k'],'fontsize',12)
+end
 %title(title_str)
 h = bar3(loss_plot);
 for i = 1:size(loss_plot,2)
@@ -126,7 +136,7 @@ B = linspace(1,0,100);
 
 map = [R' G' B'];
 
-colormap(map);
+colormap(climada_colormap('schematic'));
 
 hold on;
 
@@ -157,13 +167,65 @@ y_b = dy_dlat.*(whole_world_borders.lat - lat_c);
 
 plot(x_b,y_b,'color',[81 81 81]/256);
 
+if ~isempty(varargin),      shape_file_i = 0;   s = [];      end
+for arg_i = 1:4:length(varargin)
+    err_msg = sprintf('ERROR: invalid argument\n');
+    if ~ischar(varargin{arg_i}),        cprintf([1 0 0],err_msg);  return;     end
+    if length(varargin{arg_i+1}) ~= 1,  cprintf([1 0 0],err_msg);  return;     end
+    if length(varargin{arg_i+2}) ~= 3,  cprintf([1 0 0],err_msg);  return;     end
+    if ~ischar(varargin{arg_i+3}),      cprintf([1 0 0],err_msg);  return;     end
+
+    [fP,fN,fE] = fileparts(varargin{arg_i});
+    if strcmp(fE,'.shp')
+        shapes = shaperead([fP filesep fN fE]);
+    elseif strcmp(fE,'.mat')
+        if exist('shapes','var'),   clear shapes;   end
+        load([fP filesep fN fE])
+        if ~exist('shapes','var')
+            cprintf([1 0 0], 'ERROR: data in .mat file must have variable name ''shapes''\n');
+            return
+        end
+    else
+        cprintf([1 0 0],err_msg); return
+    end
+    
+    shape_file_i = shape_file_i +1;
+    
+    for i = 1:length(shapes)
+        % crop shapes
+%         min_lon = min(hazard.lon);  max_lon = max(hazard.lon);
+%         min_lat = min(hazard.lat);  max_lat = max(hazard.lat);        
+        min_lon = min(tmp_lon);  max_lon = max(tmp_lon);
+        min_lat = min(tmp_lat);  max_lat = max(tmp_lat);
+
+        lon_ndx = shapes(i).X <= max_lon & shapes(i).X >= min_lon;
+        lat_ndx = shapes(i).Y <= max_lat & shapes(i).Y >= min_lat;
+        
+        shapes(i).X = shapes(i).X(lon_ndx & lat_ndx);
+        shapes(i).Y = shapes(i).Y(lon_ndx & lat_ndx);
+        
+        x_b = dx_dlon.*(shapes(i).X - lon_c);
+        y_b = dy_dlat.*(shapes(i).Y - lat_c);
+        if isempty(x_b) || isempty(y_b), continue; end
+        try
+            s(shape_file_i) = plot(x_b,y_b,'color',varargin{arg_i+2},'linewidth',varargin{arg_i+1});
+        catch
+            cprintf([1 0 0],err_msg); return
+        end
+    end
+end
+if ~isempty(varargin), legend(s,varargin(4:4:length(varargin)),'location','NorthWest'); legend boxoff; end
+
+
 % Set axes tick labels and extent
 axis([0 numel(tmp_lon) 0 numel(tmp_lat)]);
 
 view(300,30);
 
-set(gca,'XTickLabel', round(linspace(min(tmp_lon),max(tmp_lon),5).*10)./10);
-set(gca,'YTickLabel', round(linspace(min(tmp_lat),max(tmp_lat),5).*10)./10);
+set(gca,'XTick', linspace(0,numel(tmp_lon),5));
+set(gca,'YTick', linspace(0,numel(tmp_lat),5));
+set(gca,'XTickLabel', round(linspace(min(tmp_lon),max(tmp_lon),5).*1000)./1000);
+set(gca,'YTickLabel', round(linspace(min(tmp_lat),max(tmp_lat),5).*1000)./1000);
 set(gca,'ztick',[], 'zcolor', 'w');
 
 xlabel('Longitude'); ylabel('Latitude');
@@ -177,7 +239,8 @@ box off
 x_h = dx_dlon.*(hazard.lon - lon_c);
 y_h = dy_dlat.*(hazard.lat - lat_c);
 
-[x_q, y_q] = meshgrid(linspace(min(x_h),max(x_h),400),linspace(min(y_h),max(y_h),400));
+% [x_q, y_q] = meshgrid(linspace(min(x_h),max(x_h),400),linspace(min(y_h),max(y_h),400));
+[x_q, y_q] = meshgrid(linspace(0,numel(tmp_lon),400),linspace(0,numel(tmp_lat),400));
 
 hazard_Z = griddata(x_h,y_h,hazard_intensity,x_q,y_q);
 
@@ -193,7 +256,7 @@ else
     G = linspace(1,0.2,100);
     B = linspace(1,0.2,100);
     map = [R' G' B'];
-    colormap(map);
+    colormap(climada_colormap(hazard.peril_ID));
     caxis([min(hazard_intensity) max(hazard_intensity)]);
     [~,c_h] = contourf(x_q,y_q,hazard_Z);
     set(c_h,'Linestyle','none');
@@ -201,26 +264,26 @@ end
 hold on
 
 % Extras
-% Plot text labels for three largest losses
-[sort_vals, sort_ndx] = sort(tmp_d_a_c,'descend');
-num_lbl = 3; % specify the number of text labels
-txt_x = ones(1,num_lbl).*(0.8*numel(tmp_lon)); % the decimal factors are arbitrary label location adjustment parameters
-txt_y = ones(1,num_lbl).*(0.2*numel(tmp_lat));
-txt_v = sort_vals(1:num_lbl);
-txt_z = max(txt_v).*linspace(1.2,0.6,num_lbl);
-%Make sure factors of 10 are correct w.r.t (*)
-
-for i = 1:num_lbl
+if check_labels
+    % Plot text labels for three largest losses
+    [sort_vals, sort_ndx] = sort(tmp_d_a_c,'descend');
+    num_lbl = 3; % specify the number of text labels
+    txt_x = ones(1,num_lbl).*(0.8*numel(tmp_lon)); % the decimal factors are arbitrary label location adjustment parameters
+    txt_y = ones(1,num_lbl).*(0.2*numel(tmp_lat));
+    txt_v = sort_vals(1:num_lbl);
+    txt_z = max(txt_v).*linspace(1.2,0.6,num_lbl);
+    %Make sure factors of 10 are correct w.r.t (*)
     
-    [J, I] = find(loss_plot == loss_plot(sort_ndx(i)));
-    loss_plot(sort_ndx(i)) = 0;
-    lbl_y = [J(1) txt_y(i)];
-    lbl_x = [I(1) txt_x(i)];
-    lbl_z = [txt_v(i) txt_z(i)];
-    plot3(lbl_x,lbl_y,lbl_z,'color',[0. 0.1 0.1])
+    for i = 1:num_lbl
+        [J, I] = find(loss_plot == sort_vals(i));
+        loss_plot(sort_ndx(i)) = 0;
+        lbl_y = [J(1) txt_y(i)];
+        lbl_x = [I(1) txt_x(i)];
+        lbl_z = [txt_v(i) txt_z(i)];
+        plot3(lbl_x,lbl_y,lbl_z,'color',[0. 0.1 0.1])
+    end
+    text(txt_x,txt_y,txt_z,strcat(' USD ',num2str(round(txt_v./100).*100)),'fontsize',12);
 end
-text(txt_x,txt_y,txt_z,strcat(' USD ',num2str(round(txt_v./100000)./10),'m'),'fontsize',12);
-
 axis tight
-
+axis([0 numel(tmp_lon) 0 numel(tmp_lat)]);
 hold off

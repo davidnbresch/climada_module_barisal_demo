@@ -11,12 +11,15 @@
 
 %hazard type
 hazard_names = {'flood_depth_monsoon' 'flood_depth_cyclone' 'flood_duration_monsoon' 'flood_duration_cyclone' 'cyclone_wind'}; 
+hazard_names = {'flood_depth_monsoon_rain_only' 'flood_depth_cyclone_rain_only' 'flood_duration_monsoon_rain_only' 'flood_duration_cyclone_rain_only'}; 
 
 %climate change scenario
 cc_scenario = {'no change' 'moderate' 'extreme'}; 
+cc_scenario = {'moderate'}; 
 
 %timehorizon
 timehorizon = [2014 2030 2050];
+timehorizon = [2030];
 
 % centroid_index = entity.assets.centroid_index;
 % [hazard, entity, label] = barisal_hazard_entity_load('flood_depth_cyclone', cc_scenario{cc_i}, timehorizon(t_i));
@@ -24,12 +27,12 @@ timehorizon = [2014 2030 2050];
 
 
 %% load barisal specifics
-BCC_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_border.mat'];
+BCC_savename = [module_data_dir filesep 'entities' filesep 'BCC_border.mat'];
 load(BCC_savename)
 % load BCC ward boundaries (35 polygons)
-% BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards.mat'];
-% BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_Ward_no_added.mat'];
-BCC_wards_savename = [climada_global.data_dir filesep 'entities' filesep 'BCC_wards_number_added.mat'];
+% BCC_wards_savename = [module_data_dir filesep 'entities' filesep 'BCC_wards.mat'];
+% BCC_wards_savename = [module_data_dir filesep 'entities' filesep 'BCC_wards_Ward_no_added.mat'];
+BCC_wards_savename = [module_data_dir filesep 'entities' filesep 'BCC_wards_number_added.mat'];
 load(BCC_wards_savename)
 indx = strfind(BCC_savename,filesep);
 indx2 = strfind(BCC_wards_savename,filesep);
@@ -128,23 +131,23 @@ for h_i = 1:length(hazard_names)
     %title(sprintf('Hazard type: %s',strrep(hazard_name,'_',' ')))
     %fprintf('%s: %d scenarios\n----------------\n----------------\n', upper(hazard_name), counter)
     %foldername = sprintf('%sresults%sED_waterfall_from_%s.pdf', filesep,filesep,hazard_name);
-    %print(fig,'-dpdf',[climada_global.data_dir foldername])
+    %print(fig,'-dpdf',[module_data_dir foldername])
     
 end %h_i
 
-EDS_all_filename = [climada_global.data_dir filesep 'results' filesep 'EDS_all'];
+EDS_all_filename = [module_data_dir filesep 'results' filesep 'EDS_all'];
 save(EDS_all_filename,'EDS_all')
 
 
 %% write out xls
 % % Percentage_Of_Value_Flag= 0;
-xls_file = [climada_global.data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios_new.xlsx'];
+xls_file = [module_data_dir filesep 'results' filesep datestr(now,'YYYYmmDD') '_calc_ED_at_centroid_' int2str(length(EDS_all)) '_scenarios_new.xlsx'];
 % climada_EDS_ED_at_centroid_report(EDS_all,Percentage_Of_Value_Flag,report_file)
 climada_EDS_ED_at_centroid_report_xls(EDS_all,entity,xls_file)
     
 
 %% load EDS all
-EDS_all_filename = [climada_global.data_dir filesep 'results' filesep 'EDS_all'];
+EDS_all_filename = [module_data_dir filesep 'results' filesep 'EDS_all'];
 load(EDS_all_filename)
  
 
@@ -176,32 +179,32 @@ for e_i = 1:length(event_selection);
     end
     title(sprintf('Hazard type: %s',strrep(hazard_name,'_',' ')))
     foldername = sprintf('%sresults%sdamage_plots%sED_waterfall_from_%s.pdf', filesep,filesep,filesep,hazard_name);
-    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    print(fig,'-dpdf',[module_data_dir foldername])
     
     fig = climada_ED_plot_per_ward(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
     foldername = sprintf('%sresults%sdamage_plots%sDamage_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
-    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    print(fig,'-dpdf',[module_data_dir foldername])
     
     fig = climada_ED_plot_per_point(EDS_all(event_selection(e_i)),entity,BCC_wards, timehorizon(t_i), hazard_name);
     foldername = sprintf('%sresults%sdamage_plots%sDamage_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
-    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    print(fig,'-dpdf',[module_data_dir foldername])
     
     %--ASSETS--
     fig = climada_assets_plot_per_point(EDS_all(event_selection(e_i)+0),entity,BCC_wards, timehorizon(t_i), hazard_name);
     foldername = sprintf('%sresults%sdamage_plots%sValue_per_point_from_%s_%d.pdf', filesep,filesep,filesep,hazard_name,timehorizon(t_i));
-    print(fig,'-dpdf',[climada_global.data_dir foldername])
+    print(fig,'-dpdf',[module_data_dir foldername])
     %close
 end
 
 
 %% create combined waterfall graph for all hazard types
-% EDS_all_filename = [climada_global.data_dir filesep 'results' filesep 'EDS_all'];
+% EDS_all_filename = [module_data_dir filesep 'results' filesep 'EDS_all'];
 % load(EDS_all_filename)
 
 t_i = 2;
 fig = climada_waterfall_graph_barisal_combined(EDS_all);
 foldername = sprintf('%sresults%sdamage_plots%sED_all_hazard_types_%d.pdf', filesep,filesep,filesep,timehorizon(t_i));
-print(fig,'-dpdf',[climada_global.data_dir foldername])
+print(fig,'-dpdf',[module_data_dir foldername])
 
 
 
@@ -234,7 +237,7 @@ print(fig,'-dpdf',[climada_global.data_dir foldername])
 % end
 % 
 % foldername = sprintf('%sresults%sdamage_plots%sHazard_Flood_duration_monsoon_event_%d.pdf', filesep,filesep,filesep,sorted_i(i));
-% print(gcf,'-dpdf',[climada_global.data_dir foldername])
+% print(gcf,'-dpdf',[module_data_dir foldername])
 
 
 %% check hazard intensity and max hazard event
@@ -264,7 +267,7 @@ print(fig,'-dpdf',[climada_global.data_dir foldername])
 %     legend([h g], 'Ward boundaries', 'Lat/lon coordinates for assets')
 %     xlabel('Longitude'); ylabel('Latitude')
 %     foldername = sprintf('%sresults%sHazard_%s_event_%d.pdf',filesep, filesep,hazard_name,e_i);
-%     print(fig,'-dpdf',[climada_global.data_dir foldername])
+%     print(fig,'-dpdf',[module_data_dir foldername])
 %     close
 % % end
 
@@ -289,7 +292,7 @@ print(fig,'-dpdf',[climada_global.data_dir foldername])
 % % end
 % 
 % % % load entity (asset portfolio)
-% % entity_file = [climada_global.data_dir filesep 'entities' filesep 'Barisal_BCC_1km_100.mat'];
+% % entity_file = [module_data_dir filesep 'entities' filesep 'Barisal_BCC_1km_100.mat'];
 % % if exist(entity_file,'file')
 % %     load(entity_file)
 % % end
@@ -483,7 +486,7 @@ print(fig,'-dpdf',[climada_global.data_dir foldername])
 %         title({titlestr; annotation_name})
 %         legend(g,'Lat/lon coordinates for assets')
 %         foldername = sprintf('%sresults%sDamage_from_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
-%         print(fig,'-dpdf',[climada_global.data_dir foldername])
+%         print(fig,'-dpdf',[module_data_dir foldername])
 %         %close
 % 
 %         %-------
@@ -524,7 +527,7 @@ print(fig,'-dpdf',[climada_global.data_dir foldername])
 % %         title({titlestr; annotation_name})
 % %         legend(g,'Lat/lon coordinates for assets')
 % %         foldername = sprintf('%sresults%sValues_for_%s_%d.pdf', filesep,filesep,hazard_name,timehorizon(t_i));
-% %         print(fig,'-dpdf',[climada_global.data_dir foldername])
+% %         print(fig,'-dpdf',[module_data_dir foldername])
 % %         close
 %     end %cat_i
 % end %t_i

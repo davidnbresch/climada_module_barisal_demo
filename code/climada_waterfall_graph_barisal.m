@@ -26,7 +26,7 @@ function  fig = climada_waterfall_graph_barisal(EDS, return_period, check_printp
 % OUTPUTS:
 %   waterfall graph
 % MODIFICATION HISTORY:
-% Lea MuEDler, 20110622
+% Lea Mueller, 20110622
 % Martin Heynen, 20120329
 % David N. Bresch, david.bresch@gmail.com, 20130316 EDS->EDS
 % David N. Bresch, david.bresch@gmail.com, 20150419 try-catch for arrow plotting

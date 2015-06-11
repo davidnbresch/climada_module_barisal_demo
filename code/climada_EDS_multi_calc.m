@@ -1,4 +1,4 @@
-function [EDS, hazards, entities] = climada_EDS_multi_calc(entities,hazards,EDS_save_file,sync_check,token,check_plots)
+function [EDS, hazards, entities] = climada_EDS_multi_calc(entities,hazards,EDS_save_file,sync_check,check_plots)
 
 % damage calc for combination of hazards and entities
 
@@ -171,10 +171,7 @@ for e_i = 1: length(entities)
     for h_i = 1: length(hazards)
         hazard_i = hazards{h_i};
         
-        if sync_check && ...
-                ((hazard_i.reference_year ~= entities(e_i).assets.reference_year) || ...
-                isempty(strfind(hazard_i.comment,token)) || ... 
-                isempty(strfind(entities(e_i).assets.comment,token)))
+        if sync_check && (hazard_i.reference_year ~= entities(e_i).assets.reference_year)
             continue;
         end
         
@@ -195,6 +192,13 @@ for e_i = 1: length(entities)
 %         annotation  = sprintf('%s | %s (%d)',h_str,e_str,entities(e_i).assets.reference_year);
         annotation  = sprintf(h_str);
         EDS(ed_i)   = climada_EDS_calc(entities(e_i),hazard_i,annotation);
+        if EDS(ed_i).ED == 0
+            msg = sprintf('WARNING: expected damage equals zero for entity %s and hazard %s, removing from EDS structure\n',...
+                e_str,h_str);
+            cprintf([1 0.5 0],msg)
+            EDS(ed_i) = [];
+            ed_i = ed_i - 1;
+        end
     end
 end
 

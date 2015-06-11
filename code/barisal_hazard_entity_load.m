@@ -41,6 +41,7 @@ label.timehorizon = timehorizon;
 label.cc_scenario  = cc_scenario;
 label.titlestr     = '';
 
+module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
 fprintf('\n-----------\nSELECTED SCENARIO: %s, %d, %s\n-----------\n', hazard_name, timehorizon, cc_scenario)
 
@@ -48,38 +49,45 @@ fprintf('\n-----------\nSELECTED SCENARIO: %s, %d, %s\n-----------\n', hazard_na
 switch hazard_name
     case 'flood_depth_monsoon'
         % hazard = climada_asci2hazard(asci_file);
-        hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_monsoon'];
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_depth.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515_flood_depth.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_depth.mat'];
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_monsoon'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_depth.mat'];
+        %entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515_flood_depth.mat'];
+        %entity_filename = [module_data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_depth.mat'];
         
     case 'flood_depth_cyclone'
         % hazard = climada_asci2hazard(asci_file);
-        hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_cyclone'];
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_depth.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515_flood_depth.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_depth.mat'];
-
-    case 'flood_duration_monsoon' % hazard duration (too be prepared!)
-        hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_monsoon'];
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_duration.mat']
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515_flood_duration.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_duration.mat'];
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_cyclone'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_depth.mat'];
+    case 'flood_duration_monsoon' % hazard duration
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_monsoon'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_duration.mat'];
             
-    case 'flood_duration_cyclone' % hazard duration (too be prepared!)
-        hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_cyclone'];
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_duration.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 040515_flood_duration.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_flood_duration.mat'];
+    case 'flood_duration_cyclone' % hazard duration
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_cyclone'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_duration.mat'];
+    case 'flood_depth_monsoon_rain_only'
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_monsoon_rain_only'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_depth.mat'];
+        
+    case 'flood_depth_cyclone_rain_only'
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_depth_cyclone_rain_only'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_depth.mat'];
+
+    case 'flood_duration_monsoon_rain_only' % hazard duration
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_monsoon_rain_only'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_duration.mat'];
+            
+    case 'flood_duration_cyclone_rain_only' % hazard duration
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_cyclone_rain_only'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Flooding 060515_flood_duration.mat'];
 
     case 'cyclone_wind'
-        hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC'];
-        entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 060515_cyclone_windspeed.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 040515_cyclone_windspeed.mat'];
-        %entity_filename = [climada_global.data_dir filesep 'entities' filesep '20150416_values_Barisal_cyclones.mat'];
+        hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC'];
+        entity_filename = [module_data_dir filesep 'entities' filesep 'Spreadsheet 100x100 Assets at risk Cyclones 060515_cyclone_windspeed.mat'];
+
         %cyclone_wind   = 1; flood_depth    = 0; flood_duration = 0; 
         % wind centroids
-        %centroids_file  = [climada_global.data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
+        %centroids_file  = [module_data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
         %load(centroids_file)   
 end
 
