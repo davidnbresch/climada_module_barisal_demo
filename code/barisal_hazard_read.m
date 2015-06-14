@@ -2,7 +2,7 @@
 module_data_dir=[climada_modules_dir filesep 'climada_module_barisal_demo' filesep 'data'];
 spec = '_rain_only';
 
-hazard_names = {'flood_depth_monsoon' 'flood_depth_cyclone' 'flood_duration_monsoon' 'flood_duration_cyclone' 'cyclone_wind'}; 
+hazard_names = {'flood_depth_monsoon' 'flood_depth_cyclone' 'flood_duration_monsoon' 'flood_duration_cyclone'};% 'cyclone_wind'}; 
 
 %climate change scenario
 cc_scenario = {'no change' 'moderate' 'extreme'}; 
@@ -41,6 +41,7 @@ for h_i = 1:length(hazard_names)
             filename = 'CycloneMaxInundationDurations10-11-2007.asc';
             units = 'days';
             hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_cyclone' ];
+    
     end   
     
     % loop over climate change scenarios

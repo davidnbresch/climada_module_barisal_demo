@@ -171,7 +171,9 @@ for e_i = 1: length(entities)
     for h_i = 1: length(hazards)
         hazard_i = hazards{h_i};
         
-        if sync_check && (hazard_i.reference_year ~= entities(e_i).assets.reference_year)
+        if sync_check && (hazard_i.reference_year ~= entities(e_i).assets.reference_year) ...
+                && (~(~isempty(strfind(entities(e_i).assets.comment,'Flood')) && strcmp(hazard_i.peril_ID,'FL')) ...
+                || ~(~isempty(strfind(entities(e_i).assets.comment,'Cyclone')) && strcmp(hazard_i.peril_ID,'TC')))
             continue;
         end
         
