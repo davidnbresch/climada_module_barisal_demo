@@ -46,6 +46,9 @@ for cc = CCSCEN
                 if ~isempty(strfind(hazard_file,'duration'))
                     hazard.peril_ID = 'FL_';
                 end
+                if strcmp(hazard.peril_ID,'TC')
+                    hazard.comment = strrep(strrep(hazard_file,'_',' '),'.mat','');
+                end
                 hazard.filename = hazard_files{file_i};
                 save(hazard.filename,'hazard')
             end
@@ -63,7 +66,7 @@ entity_temp_xls = [climada_global.data_dir filesep 'entities' filesep 'entity_te
 sheets          = {'Floods_2014' 'Floods_2030' 'Floods_2050' 'Cyclones_2014' 'Cyclones_2030' 'Cyclones_2050'};
 
 force_assets_re_read   = 0;
-force_damfun_re_read   = 1;
+force_damfun_re_read   = 0;
 
 for s_i = 1:length(sheets)
     clear entity
@@ -118,31 +121,13 @@ for s_i = 1:length(sheets)
 end
 clear entity_file_xls sheets ul_loc s_i tc_ndx damfun_file_xls
 
-%% entity filename
-% entity_file_tmp = 'Spreadsheet 100x100 Assets at risk PID1 060515PID2.mat';
-%
-% PID1 = {'Cyclones' 'Flooding'};
-% PID2 = {'_cyclone_windspeed' '_flood_duration' '_flood_depth'};
-%
-% file_i = 0; entity_files = {};
-% for pid1 = PID1
-%     for pid2 = PID2
-%         entity_file = entity_file_tmp;
-%         entity_file = strrep(entity_file,'PID1',char(pid1));
-%         entity_file = strrep(entity_file,'PID2',char(pid2));
-%         if exist([entities_dir filesep entity_file],'file')
-%             file_i = file_i+1;
-%             entity_files{file_i} = [entities_dir filesep entity_file];
-%         end
-%     end
-% end
-% clear pid1 PID1 pid2 PID2 file_i entity_file_tmp entity_file
-
-
 %% damage calc
 EDS_save_file = [results_dir filesep 'BCC_EDS_' datestr(now,'ddmmyy') '.mat'];
 EDS_load_file = [results_dir filesep 'BCC_EDS_090615.mat'];
-if exist(EDS_load_file,'file')
+
+EDS_force_recalc = 0;
+
+if exist(EDS_load_file,'file') && ~EDS_force_recalc
     load(EDS_load_file)
 else
     EDS        = climada_EDS_multi_calc(entity_files,hazard_files,EDS_save_file,1,0);
@@ -157,55 +142,30 @@ for ed_i = 1:length(EDS)
     
     EDS(ed_i).Value_total = sum(max_val);
 end
-clear max_val ndx
+clear max_val ndx EDS_force_recalc
+
 %% plotter
-for ed_i = 1:length(EDS)
-    % %     climada_ED_plot_per_point(EDS_(ed_i),BCC_wards);
-    %     climada_ED_plot(EDS(ed_i), 0,'BDT',0,0)
-    %     shape_plotter(BCC_wards_ll,'UNION_NAME','color',[81 81 81]/255,'linewidth',1.5)
-    %     fN = [results_dir filesep 'damage_plots' filesep ...
-    %         strrep(strrep(EDS(ed_i).annotation_name,' ','_'),'hazard','ED')];
-    %     print(gcf,'-dpng',[fN '.png'])
-    % %     save([fN '.asc'],,'-ascii','-double'
-    %     close
-    
-    load(EDS(ed_i).hazard.filename)
-    figure
-    climada_hazard_plot_hr(hazard,0,[],[],0,0);
-    shape_plotter(BCC_wards_ll,'UNION_NAME','color',[81 81 81]/255,'linewidth',1.2)
-    print(gcf,'-dpng',[results_dir filesep 'hazard_plots' filesep ...
-        strrep(EDS(ed_i).annotation_name,' ','_') '.png'])
-    close
-end
-
-clear ed_i
-
-%% hazard - entity pairs
-%
-% hazard_entity   = {};
-% flood_type      = {'duration' 'depth'};
-%
-% for h_i =1:length(hazard_files)
-%     [h_fP,h_fN,h_fE] = fileparts(hazard_files{h_i});
-%     load(hazard_files{h_i})
-%     for e_i =1:length(entity_files)
-%         [e_fP,e_fN,e_fE] = fileparts(entity_files{e_i});
-%         load(entity_files{e_i})
-%         if hazard.reference_year==entity.assets.reference_year
-%             && ~isempty(strfind(h_fN,'FL'))
-%             && ~isempty(strfind(e_fN,'floods'))
-%             for ft_i = 1:length(flood_type)
-%                 if ~isempty(strfind(hazard_files{h_i},flood_type{ft_i}))
-%
-%         end
-%     end
+% for ed_i = 1:length(EDS)
+%     %     climada_ED_plot_per_point(EDS_(ed_i),BCC_wards);
+%     climada_ED_plot(EDS(ed_i), 0,'BDT',0,0)
+%     shape_plotter(BCC_wards_ll,'UNION_NAME','color',[81 81 81]/255,'linewidth',1.5)
+%     fN = [results_dir filesep 'damage_plots' filesep ...
+%         strrep(strrep(EDS(ed_i).annotation_name,' ','_'),'hazard','ED')];
+%     print(gcf,'-dpng',[fN '.png'])
+%     close
+%     
+%     load(EDS(ed_i).hazard.filename)
+%     figure
+%     climada_hazard_plot_hr(hazard,0,[],[],0,0);
+%     shape_plotter(BCC_wards_ll,'UNION_NAME','color',[81 81 81]/255,'linewidth',1.2)
+%     print(gcf,'-dpng',[results_dir filesep 'hazard_plots' filesep ...
+%         strrep(EDS(ed_i).annotation_name,' ','_') '.png'])
+%     close
 % end
+% 
+% clear ed_i
 
-
-
-
-
-%% measures impact
+%% measures construction
 e_dir_ = dir(entities_dir);
 
 %init
@@ -263,38 +223,82 @@ for e_i = 1:length(entity_files)
     if isempty(strfind(entity_files{1},'floods')),continue;end
     load(entity_files{e_i})
     
-    % discount
-    entity.discount          = climada_xlsread(0,entity_temp_xls,'discount',1);
-    
     if isfield(entity,'measures'),entity = rmfield(entity,'measures'); end
     entity.measures = measures;
     save(entity.assets.filename,'entity')
 end
 
-% for h_i = 1:length(hazard_files)
-%     if isempty(strfind(entity_files{1},'FL')),continue;end
-%     load(hazard_files{h_i})
+%%
+
+hazard_ref_year = 2030;
+entity_ref_year = 2030;
+peril_ID        = 'FL_depth';
+peril           = 'floods';
+cc_scen         = 'extreme';
+
+[hazard,h_i] = barisal_get_hazard(hazard_ref_year,cc_scen,peril_ID,hazard_files);
+[entity,e_i] = barisal_get_entity(entity_ref_year,peril,entity_files);
+
+[~,hazard_name] = fileparts(hazard_files{h_i});
+[~,entity_name] = fileparts(entity_files{e_i});
+
+fprintf('%s | %s | %d\n',entity.assets.comment,hazard.comment,hazard.reference_year)
+measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
+figure
+climada_adaptation_cost_curve(measures_impact)
+figure
+barisal_adaptation_cost_curve(measures_impact,[],[],[],0,0,0,0)
+print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png'])
+
+clear hazard_ref_year entity_ref_year peril_ID peril cc_scen
+
+%%
+peril_ID    = 'TC';
+peril       = 'cyclone';
+year_i      = 2014;
+year_f      = 2050;
+
+hazard = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+entity = barisal_get_entity(year_i,peril,entity_files);
+EDS1 = climada_EDS_calc(entity,hazard);
+
+hazard = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+entity = barisal_get_entity(year_f,peril,entity_files);
+EDS2 = climada_EDS_calc(entity,hazard);
+
+hazard = barisal_get_hazard(year_f,'',peril_ID,hazard_files);
+entity = barisal_get_entity(year_f,peril,entity_files);
+EDS3 = climada_EDS_calc(entity,hazard);
+
+climada_waterfall_graph(EDS1,EDS2,EDS3,'AED');
+clear peril_ID peril year_i year_f
+%% stats for Gerbrand v Bork
+ward_ndx = [32 34 27 28 33 29 30]; %shape index for wards 1-7
+for ward_i = ward_ndx
+    [POI.lon(find(ward_ndx == ward_i)),POI.lat(find(ward_ndx == ward_i))] ...
+        = utm2ll_shift(mean(BCC_wards(ward_i).BoundingBox(:,1)),...
+        mean(BCC_wards(ward_i).BoundingBox(:,2)));
+    POI.name{find(ward_ndx == ward_i)}= BCC_wards(ward_i).UNION_NAME;
+end
+hazard = barisal_get_hazard(2030,'extreme','FL_duration',hazard_files);
+IFC = climada_hazard2IFC(hazard,POI,1);
+clear POI ward_i ward_ndx
+%% entity filename
+% entity_file_tmp = 'Spreadsheet 100x100 Assets at risk PID1 060515PID2.mat';
 %
-%     for e_i = 1:length(entity_files)
-%         if isempty(strfind(entity_files{1},'floods')),continue;end
-%         load(entity_files{e_i})
-%         if isfield(entity,'measures'),entity = rmfield(entity,'measures'); end
-%         entity.measures = measures;
-%         for m_i = 1:length(measures.name)
-%             if isempty(strfind(entity_files{1},'FL')),continue;end
+% PID1 = {'Cyclones' 'Flooding'};
+% PID2 = {'_cyclone_windspeed' '_flood_duration' '_flood_depth'};
 %
-%             hazard_mod_file = strrep(hazard_files{h_i},'.mat',['_' strrep(lower(measures.name),'.asc','') '.mat']);
-%             climada_distributed_measures(measures(m_i).asci_file,hazard,hazard_mod_file)
-%             measures.hazard_event_set{m_i} = hazard_mod_file;
+% file_i = 0; entity_files = {};
+% for pid1 = PID1
+%     for pid2 = PID2
+%         entity_file = entity_file_tmp;
+%         entity_file = strrep(entity_file,'PID1',char(pid1));
+%         entity_file = strrep(entity_file,'PID2',char(pid2));
+%         if exist([entities_dir filesep entity_file],'file')
+%             file_i = file_i+1;
+%             entity_files{file_i} = [entities_dir filesep entity_file];
 %         end
 %     end
 % end
-%
-% hazard_w_measures = climada_distributed_measures(
-
-
-
-
-
-
-
+% clear pid1 PID1 pid2 PID2 file_i entity_file_tmp entity_file

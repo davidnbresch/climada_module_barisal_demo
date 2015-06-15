@@ -291,6 +291,10 @@ for measure_i = 1:n_measures+1 % last with no measures
                     % orig_hazard = hazard; % backup
                     fprintf('NOTE: measure %i, modified hazard according to %s\n',measure_i,measures_hazard_file);
                     %load(measures_hazard_file);
+                    if strcmp(measures.name(measure_i),'Embankments')
+                        pause(1)
+                    end
+                    
                     hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,@plus);
                     
                     hazard_switched = 1;

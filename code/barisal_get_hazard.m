@@ -6,8 +6,8 @@ for h_i = 1:length(hazard_files)
     if ~isempty(cc) && isempty(strfind(hazard_files{h_i},cc))
         continue
     end
-    load(hazard_files{h_i})
-    if strcmp(hazard.peril_ID,peril_ID)
+    if ~isempty(strfind(hazard_files{h_i},peril_ID))
+        load(hazard_files{h_i})
         return;
     end
 end

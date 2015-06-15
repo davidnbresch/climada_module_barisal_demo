@@ -71,9 +71,14 @@ for h_i = 1:length(hazard_names)
 %         hazard = climada_asci2hazard([foldername folder_ filename],6);
         hazard = climada_asci2hazard([foldername folder_ filename]);
 
-        hazard.comment = sprintf('Modelled by W+B, %s, %s', hazard_name, cc_scenario{cc_i});
+        hazard.comment = sprintf('%s %s, modelled by W+B', strrep(hazard_name,'_',' '), cc_scenario{cc_i});
         hazard.reference_year = reference_year;
-        hazard.peril_ID = 'FL';
+        if ~isempty(strfind(upper(hazard_name), 'DURATION'))
+            hazard.peril_ID = 'FL_';
+        else
+            hazard.peril_ID = 'FL';
+        end
+        
         hazard.units    = units;
         if strfind(hazard_name,'cyclone')
             hazard.frequency    = [0.05 0.05 0.02 0.03]*1.2;
