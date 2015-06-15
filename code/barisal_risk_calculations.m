@@ -62,7 +62,6 @@ entity_file_xls = [entities_dir filesep 'BCC_entity_030615_se_1.xls'];
 damfun_file_xls = [entities_dir filesep 'BCC_dmg_functions_030615.xls'];
 entity_temp_xls = [climada_global.data_dir filesep 'entities' filesep 'entity_template.xls'];
 
-
 sheets          = {'Floods_2014' 'Floods_2030' 'Floods_2050' 'Cyclones_2014' 'Cyclones_2030' 'Cyclones_2050'};
 
 force_assets_re_read   = 0;
@@ -77,6 +76,8 @@ for s_i = 1:length(sheets)
         fprintf('entity %s .mat file already exists, skipping\n',lower(sheets{s_i}))
         entity_files{s_i} = entity_file_mat;
         load(entity_file_mat)
+        entity.assets.filename = entity_file_mat;
+        save(entity.assets.filename,'entity')
         %continue
     else
         
@@ -144,7 +145,7 @@ for ed_i = 1:length(EDS)
 end
 clear max_val ndx EDS_force_recalc
 
-%% plotter
+%% damage & hazard plotter
 % for ed_i = 1:length(EDS)
 %     %     climada_ED_plot_per_point(EDS_(ed_i),BCC_wards);
 %     climada_ED_plot(EDS(ed_i), 0,'BDT',0,0)
@@ -283,22 +284,3 @@ end
 hazard = barisal_get_hazard(2030,'extreme','FL_duration',hazard_files);
 IFC = climada_hazard2IFC(hazard,POI,1);
 clear POI ward_i ward_ndx
-%% entity filename
-% entity_file_tmp = 'Spreadsheet 100x100 Assets at risk PID1 060515PID2.mat';
-%
-% PID1 = {'Cyclones' 'Flooding'};
-% PID2 = {'_cyclone_windspeed' '_flood_duration' '_flood_depth'};
-%
-% file_i = 0; entity_files = {};
-% for pid1 = PID1
-%     for pid2 = PID2
-%         entity_file = entity_file_tmp;
-%         entity_file = strrep(entity_file,'PID1',char(pid1));
-%         entity_file = strrep(entity_file,'PID2',char(pid2));
-%         if exist([entities_dir filesep entity_file],'file')
-%             file_i = file_i+1;
-%             entity_files{file_i} = [entities_dir filesep entity_file];
-%         end
-%     end
-% end
-% clear pid1 PID1 pid2 PID2 file_i entity_file_tmp entity_file
