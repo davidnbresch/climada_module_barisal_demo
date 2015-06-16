@@ -1,4 +1,7 @@
 function [hazard, h_i] = barisal_get_hazard(reference_year,cc,peril_ID,hazard_files)
+
+if iscell(peril_ID), peril_ID = char(peril_ID); end
+if iscell(cc),       cc       = char(cc);       end
 for h_i = 1:length(hazard_files)
     if isempty(strfind(hazard_files{h_i},num2str(reference_year)))
         continue

@@ -195,6 +195,30 @@ if ~isstruct(measures)
     end
 end
 
+% reduce measures struct to contain only those with the right peril ID
+if isfield(measures,'peril_ID') && isfield(measures,'peril_ID')
+    measures_ori = measures; % backup copy
+    m_flds = fieldnames(measures);
+    rm_ndx = [];
+    for measure_i = 1:length(measures.cost)
+        if ~strcmp(measures.peril_ID(measure_i),hazard.peril_ID)
+            rm_ndx = [rm_ndx 1];
+        else
+            rm_ndx = [rm_ndx 0];
+        end
+    end
+    measures.color_RGB = measures.color_RGB(~rm_ndx,:);
+    for m_fld_i = 1:length(m_flds)
+        if length(measures.(m_flds{m_fld_i})) == length(measures_ori.cost)
+            measures.(m_flds{m_fld_i}) = measures.(m_flds{m_fld_i})(~rm_ndx);
+        end
+    end
+end
+if all(rm_ndx)
+    cprintf([1 0.5 0],'WARNING: no measures found with peril ID %s\n',hazard.peril_ID);
+    return;
+end
+
 % check for correct encoding to the hazard
 if ~isfield(entity.assets,'hazard')
     force_re_encode=1; % entity not encoded yet
@@ -234,26 +258,6 @@ if isfield(measures,'damagefunctions') % append measure's vulnerabilities
     %entity.damagefunctions.PAA         = [entity.damagefunctions.PAA,measures.damagefunctions.PAA];
 end
 
-% reduce measures struct to contain only those with the right peril ID
-if isfield(measures,'peril_ID') && isfield(measures,'peril_ID')
-    measures_ori = measures; % backup copy
-    m_flds = fieldnames(measures);
-    rm_ndx = [];
-    for measure_i = 1:length(measures.cost)
-        if ~strcmp(measures.peril_ID(measure_i),hazard.peril_ID)
-            rm_ndx = [rm_ndx 1];
-        else
-            rm_ndx = [rm_ndx 0];
-        end
-    end
-    measures.color_RGB = measures.color_RGB(~rm_ndx,:);
-    for m_fld_i = 1:length(m_flds)
-        if length(measures.(m_flds{m_fld_i})) == length(measures_ori.cost)
-            measures.(m_flds{m_fld_i}) = measures.(m_flds{m_fld_i})(~rm_ndx); 
-        end
-    end
-end
-
 orig_damagefunctions = entity.damagefunctions; % copy of this table for speedup
 n_measures           = length(measures.cost);
 
@@ -287,7 +291,7 @@ for measure_i = 1:n_measures+1 % last with no measures
                 end
                 [fP,fN,fE] = fileparts(measures_hazard_file);
                 if isempty(fE),measures_hazard_file = [fP filesep fN '.mat'];end % append .mat
-                if exist(measures_hazard_file,'file')                   
+                if exist(measures_hazard_file,'file')
                     % orig_hazard = hazard; % backup
                     fprintf('NOTE: measure %i, modified hazard according to %s\n',measure_i,measures_hazard_file);
                     %load(measures_hazard_file);
@@ -295,7 +299,24 @@ for measure_i = 1:n_measures+1 % last with no measures
                         pause(1)
                     end
                     
-                    hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,@plus);
+                    if isfield(measures,'hazard_event_set_operator')
+                        switch char(measures.hazard_event_set_operator(1))
+                            case 'p',  	op = @plus;
+                            case 'm', 	op = @minus;
+                            case 't', 	op = @times;
+                            case 'd',   op = @divide;
+                            otherwise
+                                cprintf([1 0.5 0],'WARNING: operator ''%s'' not recognised\n')
+                                op = [];
+                        end
+                        if ~strcmp(measures.hazard_event_set_operator,'nil')
+                            hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,op);
+                        else
+                            load(measures_hazard_file);
+                        end
+                    else
+                        load(measures_hazard_file);
+                    end
                     
                     hazard_switched = 1;
                     % some basic consistency checks to make sure switched
@@ -371,7 +392,7 @@ for measure_i = 1:n_measures+1 % last with no measures
         end % apply risk transfer
         
     end % all except last run
-
+    
     if hazard_switched
         % always switch back, to avoid troubles if hazard passed as struct
         hazard = orig_hazard; % restore
@@ -379,7 +400,7 @@ for measure_i = 1:n_measures+1 % last with no measures
         if measure_i < n_measures
             orig_hazard=[]; % free up memory
         end
-    end    
+    end
 end % measure_i
 
 measures_impact.EDS = EDS; % store for output
@@ -495,7 +516,10 @@ save_filename = strrep(measures_impact.title_str,' ',''); % for filename
 save_filename = strrep(save_filename,'_',''); % for filename
 save_filename = strrep(save_filename,'@','_'); % for filename
 save_filename = strrep(save_filename,'|','_'); % for filename
-save_filename = [climada_global.data_dir filesep 'results' filesep save_filename];
+
+module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+
+save_filename = [module_data_dir filesep 'results' filesep save_filename];
 
 measures_impact.filename = save_filename;
 

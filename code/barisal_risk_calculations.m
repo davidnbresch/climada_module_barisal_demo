@@ -154,7 +154,7 @@ clear max_val ndx EDS_force_recalc
 %         strrep(strrep(EDS(ed_i).annotation_name,' ','_'),'hazard','ED')];
 %     print(gcf,'-dpng',[fN '.png'])
 %     close
-%     
+%
 %     load(EDS(ed_i).hazard.filename)
 %     figure
 %     climada_hazard_plot_hr(hazard,0,[],[],0,0);
@@ -163,7 +163,7 @@ clear max_val ndx EDS_force_recalc
 %         strrep(EDS(ed_i).annotation_name,' ','_') '.png'])
 %     close
 % end
-% 
+%
 % clear ed_i
 
 %% measures construction
@@ -176,7 +176,7 @@ measures.hazard_high_frequency_cutoff=[];measures.hazard_event_set={};
 measures.MDD_impact_a= [];measures.MDD_impact_b= [];measures.PAA_impact_a= [];
 measures.PAA_impact_b= [];measures.damagefunctions_map={};
 measures.risk_transfer_attachement = [];measures.risk_transfer_cover = [];
-measures.peril_ID={};
+measures.peril_ID={}; measures.hazard_event_set_operator={};
 
 for e_dir_i = 1:length(e_dir_)
     if e_dir_(e_dir_i).isdir && ...
@@ -208,8 +208,10 @@ for e_dir_i = 1:length(e_dir_)
             measures.risk_transfer_cover(end+1)             = [0];
             if ~isempty(strfind(e_subdir_(m_i).name,'Duration'))
                 measures.peril_ID{end+1} = 'FL_';
+                measures.hazard_event_set_operator{end+1} = 't';
             else
                 measures.peril_ID{end+1} = 'FL';
+                measures.hazard_event_set_operator{end+1} = 'p';
             end
             fprintf('%s \t%s\n',name,measures.peril_ID{end})
         end
@@ -231,47 +233,99 @@ end
 
 %%
 
-hazard_ref_year = 2030;
-entity_ref_year = 2030;
-peril_ID        = 'FL_depth';
-peril           = 'floods';
-cc_scen         = 'extreme';
-
-[hazard,h_i] = barisal_get_hazard(hazard_ref_year,cc_scen,peril_ID,hazard_files);
-[entity,e_i] = barisal_get_entity(entity_ref_year,peril,entity_files);
-
-[~,hazard_name] = fileparts(hazard_files{h_i});
-[~,entity_name] = fileparts(entity_files{e_i});
-
-fprintf('%s | %s | %d\n',entity.assets.comment,hazard.comment,hazard.reference_year)
-measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
-figure
-climada_adaptation_cost_curve(measures_impact)
-figure
-barisal_adaptation_cost_curve(measures_impact,[],[],[],0,0,0,0)
-print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png'])
-
-clear hazard_ref_year entity_ref_year peril_ID peril cc_scen
+% hazard_ref_year = 2030;
+% entity_ref_year = 2030;
+% peril_ID        = 'FL_depth_cyclone';
+% peril           = 'floods';
+% cc_scen         = 'moderate';
+%
+% [hazard,h_i] = barisal_get_hazard(hazard_ref_year,cc_scen,peril_ID,hazard_files);
+% [entity,e_i] = barisal_get_entity(entity_ref_year,peril,entity_files);
+%
+% [~,hazard_name] = fileparts(hazard_files{h_i});
+% [~,entity_name] = fileparts(entity_files{e_i});
+%
+% fprintf('%s | %s | %d\n',entity.assets.comment,hazard.comment,hazard.reference_year)
+% measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
+% figure
+% climada_adaptation_cost_curve(measures_impact)
+% figure
+% barisal_adaptation_cost_curve(measures_impact,[],[],[],0,0,0,0)
+% print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png'])
+%
+% clear hazard_ref_year entity_ref_year peril_ID peril cc_scen
 
 %%
-peril_ID    = 'TC';
-peril       = 'cyclone';
+peril_IDs   = {'FL_depth_cyclone' 'FL_depth_monsoon' 'FL_duration_cyclone' 'FL_duration_monsoon','TC'};
+cc_scen     = 'moderate'; %{'moderate' 'extreme'};
 year_i      = 2014;
-year_f      = 2050;
+year_f      = 2030;
 
-hazard = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-entity = barisal_get_entity(year_i,peril,entity_files);
-EDS1 = climada_EDS_calc(entity,hazard);
+for cc_scen = {'moderate' 'extreme'}
+    for year_f = [2030 2050]
+        ed_i = 0;
+        for peril_ID = peril_IDs
+            if strcmp(peril_ID,'TC')
+                peril = 'cyclone';
+            else
+                peril = 'flood';
+            end
+            ed_i = ed_i+1;
+            [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+            [entity,e_i] = barisal_get_entity(year_i,peril,entity_files);
+            %EDS1    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+            fprintf('***** EDS1 for %s | %s %d *****\n',entity.assets.comment,strtok(hazard.comment,','),hazard.reference_year)
+            EDS1(ed_i)    = climada_EDS_calc(entity,hazard);
+            if ~strcmp(peril_ID,'TC')
+                measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
+                measures_impact.filename = strrep(measures_impact.filename,'measures','measuresimpact');
+                save(measures_impact.filename,'measures_impact')
+                barisal_adaptation_cost_curve(measures_impact, [],[],[],[],0)
+                plot_save_name =strrep(strrep(measures_impact.title_str,' ','_'),'|','-');
+                print(gcf,'-dpng',[results_dir filesep plot_save_name  '.png'])
+                close
+            end
+            
+            [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+            [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
+            %EDS2    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+            fprintf('***** EDS2 for %s | %s *****\n',entity.assets.comment,hazard.comment)
+            EDS2(ed_i)    = climada_EDS_calc(entity,hazard);
+            if ~strcmp(peril_ID,'TC')
+                measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
+                measures_impact.filename = strrep(measures_impact.filename,'measures','measuresimpact');
+                save(measures_impact.filename,'measures_impact')
+                barisal_adaptation_cost_curve(measures_impact, [],[],[],[],0)
+                plot_save_name =strrep(strrep(measures_impact.title_str,' ','_'),'|','-');
+                print(gcf,'-dpng',[results_dir filesep plot_save_name  '.png'])
+                close
+            end
+            
+            [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
+            [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
+            %EDS3    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+            fprintf('***** EDS3 for %s | %s *****\n',entity.assets.comment,hazard.comment)
+            EDS3(ed_i)    = climada_EDS_calc(entity,hazard);
+            if ~strcmp(peril_ID,'TC')
+                measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
+                measures_impact.filename = strrep(measures_impact.filename,'measures','measuresimpact');
+                save(measures_impact.filename,'measures_impact')
+                barisal_adaptation_cost_curve(measures_impact, [],[],[],[],0)
+                plot_save_name =strrep(strrep(measures_impact.title_str,' ','_'),'|','-');
+                print(gcf,'-dpng',[results_dir filesep plot_save_name  '.png'])
+                close
+            end            %                 climada_waterfall_graph(EDS1,EDS2,EDS3,'AED');
+            %                 print(gcf,'-dpng',[results_dir filesep 'BCC_CBA_' ...
+            %                     peril_ID '_' num2str(year_f) '_' cc_scen '.png'])
+            %                 close
+        end
+        
+        climada_waterfall_graph_multi_peril(0,'BDT',EDS1,EDS2,EDS3)
+        print(gcf,'-dpng',[results_dir filesep 'BCC_CBA_multi_peril_' num2str(year_f) '_' cc_scen '.png'])
+        close
+    end
+end
 
-hazard = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-entity = barisal_get_entity(year_f,peril,entity_files);
-EDS2 = climada_EDS_calc(entity,hazard);
-
-hazard = barisal_get_hazard(year_f,'',peril_ID,hazard_files);
-entity = barisal_get_entity(year_f,peril,entity_files);
-EDS3 = climada_EDS_calc(entity,hazard);
-
-climada_waterfall_graph(EDS1,EDS2,EDS3,'AED');
 clear peril_ID peril year_i year_f
 %% stats for Gerbrand v Bork
 ward_ndx = [32 34 27 28 33 29 30]; %shape index for wards 1-7
@@ -281,6 +335,6 @@ for ward_i = ward_ndx
         mean(BCC_wards(ward_i).BoundingBox(:,2)));
     POI.name{find(ward_ndx == ward_i)}= BCC_wards(ward_i).UNION_NAME;
 end
-hazard = barisal_get_hazard(2030,'extreme','FL_duration',hazard_files);
+hazard = barisal_get_hazard(2030,'extreme','FL_duration_monsoon',hazard_files);
 IFC = climada_hazard2IFC(hazard,POI,1);
 clear POI ward_i ward_ndx
