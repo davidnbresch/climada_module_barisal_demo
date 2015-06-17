@@ -1,7 +1,7 @@
 %% Barisal Risk Calculations
 clc
 climada_global.waitbar = 0;
-climada_global.EDS_at_centroid = 1;
+climada_global.EDS_at_centroid = 0;
 
 %% Directories
 barisal_data_dir= [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
@@ -323,7 +323,7 @@ clear measures e_i e_dir_i e_dir_ e_subdir_ e_subdir_
 
 hazard_ref_year = 2030;
 entity_ref_year = 2030;
-peril_ID        = 'FL_depth_cyclone'; % Should be found in hazard filename
+peril_ID        = 'FL_depth_monsoon'; % Should be found in hazard filename
 peril           = 'floods';           % Should be found in entity filename
 cc_scen         = 'moderate';         % Should be found in hazard filename
 
@@ -338,15 +338,67 @@ cc_scen         = 'moderate';         % Should be found in hazard filename
 
 % calculate impact
 fprintf('%s | %s | %d\n',entity.assets.comment,hazard.comment,hazard.reference_year) % to monitor
+entity.measures.cost = (entity.measures.cost)*0 + 10^4;
 measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
 
 % plot cost curve (barisal_adaptation_cost_curve is identical to climada_adaptation_cost_curve
 % but sets currency to BDT)
+% measures_impact.measures.cost = zeros(size(measures_impact.measures.cost))+10^4;
 figure
-barisal_adaptation_cost_curve(measures_impact,[],[],[],0,0,0,0)
+barisal_adaptation_cost_curve(measures_impact,[],[],[],0,0,1,0)
 print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png']) % save as png
 
 clear hazard_ref_year entity_ref_year peril_ID peril cc_scen hazard_name entity_name
+
+
+
+
+%% multi peril adaptation cost curve
+
+% set parameters to key scenario 2030, moderate climate change, so far
+% measures for flood only (TC wind excluded)
+hazard_ref_year = 2030;
+entity_ref_year = 2030;
+CC_SCEN         = 'moderate'; %{'moderate' 'extreme'};
+peril_IDs       = {'FL_depth_monsoon' 'FL_duration_monsoon' 'FL_depth_cyclone' 'FL_duration_cyclone'};
+
+% init
+measures_impact = [];
+
+% load flood entity, is always the same and does not need to be reloaded in
+% the loop
+entity = barisal_get_entity(entity_ref_year,'flood',entity_files);
+entity.measures.cost = (entity.measures.cost)*0 + 10^4;
+
+% loop over the four different flood perils
+for peril_i = 1:length(peril_IDs)
+    
+    % load hazard
+    hazard = barisal_get_hazard(hazard_ref_year,cc_scen,peril_IDs(peril_i),hazard_files);
+    
+    % calculate measures impact
+    measures_impact_peril = climada_measures_impact_advanced(entity,hazard,'no');
+    
+    % combine measures_impact with measures_impact, that will contain the
+    % added up benefits and cost_benefit_ratio
+    if isempty(measures_impact)
+        fprintf('\t-Start with measures impact from %s. \n', peril_IDs{peril_i})
+        measures_impact = measures_impact_peril;
+    else
+        fprintf('\t-Add measures impact from %s. \n', peril_IDs{peril_i})
+        measures_impact = climada_measures_impact_combine(measures_impact,measures_impact_peril);
+    end
+end
+% finally create figure (multi peril adaptation cost curve)
+figure
+barisal_adaptation_cost_curve(measures_impact,[],[],[],0,0,1,0)
+titlestr = sprintf('Barisal, %d, %s climate change', hazard_ref_year, CC_SCEN);
+title({titlestr;'All perils combined (FL depth, duration, monsoon and cyclone, except TC wind)'})
+hazard_name = 'all_perils';
+entity_name = '2030_moderate_cc';
+print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png']) % save as png
+
+
 
 %% multi scenario EDS calc for waterfall
 
@@ -366,7 +418,7 @@ for cc_scen = CC_SCEN
     for year_f = YEAR_F
         climada_global.future_reference_year = year_f;
         ed_i = 0;
-        for peril_ID = peril_IDs
+        for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
             if strcmp(peril_ID,'TC')
                 peril = 'cyclone';
             else
@@ -379,7 +431,7 @@ for cc_scen = CC_SCEN
             [entity,e_i] = barisal_get_entity(year_i,peril,entity_files);
             %EDS1    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
             fprintf('***** EDS1 for %s | %s %d *****\n',entity.assets.comment,strtok(hazard.comment,','),hazard.reference_year)
-            EDS1(ed_i)    = climada_EDS_calc(entity,hazard);
+            EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
             if ~strcmp(peril_ID,'TC') && ~EDS_only
                 measures_impact = climada_measures_impact_advanced(entity,hazard,'no');
                 measures_impact.filename = strrep(measures_impact.filename,'measures','measuresimpact');
@@ -407,7 +459,7 @@ for cc_scen = CC_SCEN
                 close
             end
             
-            % EDS1 for climate change scenario: future entity, future hazard
+            % EDS3 for climate change scenario: future entity, future hazard
             [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
             [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
             %EDS3    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
@@ -431,7 +483,7 @@ for cc_scen = CC_SCEN
     end
 end
 
-% baseline EDS for ED report for Ecorys
+%% baseline EDS for ED report for Ecorys
 EDS_baseline = [EDS1 EDS2 EDS3]; save([results_dir filesep 'EDS_baseline.mat'],'EDS_baseline')
 EDS_report_xls = [results_dir filesep 'BCC_ED_report.xls'];
 % convert back to UTM
