@@ -18,6 +18,7 @@ foldername = [module_data_dir filesep 'hazards' filesep 'Flood_Barisal' filesep]
 foldername = '\\CHRB1048.CORP.GWPNET.COM\homes\E\S1T2EN\Documents\climada_GIT\vulnerability_analysis_barisal\3_results\';
 
 %% loop over hazards
+for y_i = future_reference_year
 for h_i = 1:length(hazard_names)
     hazard_name = hazard_names{h_i};
     
@@ -53,15 +54,15 @@ for h_i = 1:length(hazard_names)
                 hazard_set_file_ = sprintf('%s_%d.mat',hazard_set_file,reference_year);
                 
             case 'moderate'
-                folder_ = ['Floods_' num2str(future_reference_year) '_CCMod' filesep];
-                reference_year = future_reference_year;
+                folder_ = ['Floods_' num2str(y_i) '_CCMod' filesep];
+                reference_year = y_i;
                 %folder_ = 'Floods_2050_CCMod\';
                 %reference_year = 2050;
                 hazard_set_file_ = sprintf('%s_cc_%d_%s.mat',hazard_set_file,reference_year,cc_scenario{cc_i});
                  
             case 'extreme'
-                folder_ = ['Floods_' num2str(future_reference_year) '_CCHigh' filesep];
-                reference_year = future_reference_year;
+                folder_ = ['Floods_' num2str(y_i) '_CCHigh' filesep];
+                reference_year = y_i;
                 %folder_ = 'Floods_2050_CCHigh\';
                 %reference_year = 2050;
                 hazard_set_file_ = sprintf('%s_cc_%d_%s.mat',hazard_set_file,reference_year,cc_scenario{cc_i});
@@ -90,7 +91,7 @@ for h_i = 1:length(hazard_names)
         
         save(hazard_set_file_, 'hazard');        
     end
-
+end
 end
 
 %%

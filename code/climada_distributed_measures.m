@@ -21,7 +21,9 @@ function [hazard,measure]= climada_distributed_measures(measure_file, hazard,bsx
 %   none
 % MODIFICATION HISTORY:
 % Jacob Anz, j.anz@gmx.net, 20150609
-%-mea
+% Gilles Stassen, gillesstassen@hotmail.com, 20150610, clean up, bsx_fun_op
+%                   added
+%-
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
@@ -34,6 +36,8 @@ if ~exist('bsxfun_op',          'var'), bsxfun_op = [];         end
 
 %open the grid measure (ascii) file
 [fP, fN, fE] = fileparts(measure_file);
+[~,fN_]      = fileparts(fP);
+
 if strcmp(fE,'.asc') || isempty(fE)
     measure=climada_ascii_read(measure_file);
 elseif strcmp(fE,'.mat')
@@ -123,27 +127,27 @@ hazard.intensity = bsxfun(bsxfun_op,hazard_ori.intensity,measure.value_at_centro
 % end
 
 
-
 %check for negative intensities and set them to 0
 hazard.intensity(hazard.intensity <0) = 0;
 % [find1,find2]=find(full(hazard_w_measures.intensity<0));
 % hazard_w_measures.intensity(find1,find2)=0;
 
-hazard.comment= measure.comment;
+measure.comment = strrep([fN_],'_',' ');
+hazard.comment= strrep([fN_ ' ' fN],'_',' ');
 if ~isempty(save_file)
     hazard.filename = save_file;
-    
 end
 
 %plot the difference of the hazard sets without and with measures
 
 hazard_diff=hazard_ori;
-hazard_diff.intensity=hazard_ori.intensity-hazard.intensity;
+hazard_diff.intensity=hazard.intensity-hazard_ori.intensity;
 if check_plot
-    figure(1)
+    figure('color','w')
     climada_hazard_plot_hr(hazard_diff);
-    title('Area affected by the measures')
-    figure(2,'color','w'); hold on
-    scatter3(measure.lon,measure.lat,measure.value)
-    climada_plot_world_borders
+    title(sprintf('Impact of %s on %s hazard %d',measure.comment,hazard.peril_ID,hazard.reference_year))
+    figure('color','w'); hold on
+    s = scatter(measure.lon,measure.lat,'filled');
+    set(s,'cdata',measure.value,'marker','s')
+    climada_plot_world_borders(1.5)
 end

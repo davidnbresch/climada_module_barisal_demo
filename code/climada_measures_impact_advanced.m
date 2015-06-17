@@ -71,6 +71,10 @@ function measures_impact=climada_measures_impact_advanced(entity,hazard,measures
 % David N. Bresch, david.bresch@gmail.com, 20140510, risk premium map added
 % David N. Bresch, david.bresch@gmail.com, 20141220, re-encoding check added
 % David N. Bresch, david.bresch@gmail.com, 20150101, cleanup
+% Gilles Stassen, gillesstassen@hotmail.com, 20150611, created from
+%               original climada_measures_impact; added functionality for
+%               hazard_event_set_operator & measures_distributed
+% Gilles Stassen, gillesstassen@hotmail.com, 20150616, entity switch added
 %-
 
 global climada_global
@@ -195,6 +199,9 @@ if ~isstruct(measures)
     end
 end
 
+% encode measures
+measures = climada_measures_encode(measures);
+
 % reduce measures struct to contain only those with the right peril ID
 if isfield(measures,'peril_ID') && isfield(measures,'peril_ID')
     measures_ori = measures; % backup copy
@@ -265,7 +272,7 @@ n_measures           = length(measures.cost);
 
 ED_risk_transfer = zeros(1,n_measures+1); % allocate
 hazard_switched  = 0; % indicated whether a special hazard set for a given measure is used
-
+entity_switched  = 0; % indicated whether a special entity for a given measure is used
 for measure_i = 1:n_measures+1 % last with no measures
     
     if measure_i <= n_measures
@@ -295,7 +302,8 @@ for measure_i = 1:n_measures+1 % last with no measures
                     % orig_hazard = hazard; % backup
                     fprintf('NOTE: measure %i, modified hazard according to %s\n',measure_i,measures_hazard_file);
                     %load(measures_hazard_file);
-                    if strcmp(measures.name(measure_i),'Embankments')
+                    
+                    if strcmp(measures.name{measure_i},'Embankments')
                         pause(1)
                     end
                     
@@ -344,15 +352,47 @@ for measure_i = 1:n_measures+1 % last with no measures
             end % measures_hazard_set_name
         end % isfield(measures,'hazard_event_set')
         
+        % special treatment if an alternate entity is given
+        if isfield(measures,'entity_file')
+            measures_entity_name = measures.entity_file{measure_i};
+            if ~strcmp(measures_entity_name,'nil')
+                orig_entity = entity;
+                if ~exist(measures_entity_name,'file')
+                    % only filename given in measures tab, add path:
+                    if exist(entity_file,'var')
+                        [entity_dir] = fileparts(entity_file);
+                    else
+                        entity_dir = [climada_global.data_dir filesep 'entities']; % default
+                    end
+                    measures_entity_file = [entity_dir filesep measures_entity_name];
+                else
+                    % contains path already
+                    measures_entity_file = measures_entity_name;
+                end
+                [fP,fN,fE] = fileparts(measures_entity_file);
+                if isempty(fE),measures_entity_file = [fP filesep fN '.mat'];end % append .mat
+                if exist(measures_entity_file,'file')
+                    fprintf('NOTE: measure %i, modified entity according to %s\n',measure_i,measures_entity_file);
+                    load(measures_entity_file);
+                    entity = climada_assets_encode(entity,hazard);
+                    entity_switched = 1;
+                else
+                    fprintf('ERROR: measure %i, entity NOT switched, entity %s not found\n',measure_i,measures_entity_file);
+                end
+            else
+                entity_switched = 0; % no entity switched
+            end % measures_entity_name
+        end % isfield(measures,'entity_file')
         
-        %         for map_i = 1:length(measures.damagefunctions_mapping(measure_i).map_from)
-        %             % damagefunctions mapping
-        %             pos = orig_assets_DamageFunID==measures.damagefunctions_mapping(measure_i).map_from(map_i);
-        %             entity.assets.DamageFunID(pos) = measures.damagefunctions_mapping(measure_i).map_to(map_i);
-        %             %fprintf('mapping DamageFunID %i to %i ',...
-        %             %    measures.damagefunctions_mapping(measure_i).map_from(map_i),...
-        %             %    measures.damagefunctions_mapping(measure_i).map_to(map_i));
-        %         end % map_i
+        
+        for map_i = 1:length(measures.damagefunctions_mapping(measure_i).map_from)
+            % damagefunctions mapping
+            pos = orig_assets_DamageFunID==measures.damagefunctions_mapping(measure_i).map_from(map_i);
+            entity.assets.DamageFunID(pos) = measures.damagefunctions_mapping(measure_i).map_to(map_i);
+            %fprintf('mapping DamageFunID %i to %i ',...
+            %    measures.damagefunctions_mapping(measure_i).map_from(map_i),...
+            %    measures.damagefunctions_mapping(measure_i).map_to(map_i));
+        end % map_i
         
         entity.damagefunctions.Intensity = max(orig_damagefunctions.Intensity - measures.hazard_intensity_impact(measure_i),0);
         entity.damagefunctions.MDD       = max(orig_damagefunctions.MDD*measures.MDD_impact_a(measure_i)+measures.MDD_impact_b(measure_i),0);
@@ -397,6 +437,14 @@ for measure_i = 1:n_measures+1 % last with no measures
         % always switch back, to avoid troubles if hazard passed as struct
         hazard = orig_hazard; % restore
         fprintf('NOTE: switched hazard back\n');
+        if measure_i < n_measures
+            orig_hazard=[]; % free up memory
+        end
+    end
+    if entity_switched
+        % always switch back, to avoid troubles if entity passed as struct
+        entity = orig_entity; % restore
+        fprintf('NOTE: switched entity back\n');
         if measure_i < n_measures
             orig_hazard=[]; % free up memory
         end
