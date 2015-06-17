@@ -42,7 +42,6 @@ for h_i = 1:length(hazard_names)
             filename = 'CycloneMaxInundationDurations10-11-2007.asc';
             units = 'days';
             hazard_set_file = [module_data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_FL_duration_cyclone' ];
-    
     end   
     
     % loop over climate change scenarios
@@ -93,7 +92,9 @@ for h_i = 1:length(hazard_names)
     end
 end
 end
-
+clear hazard_set_file_ reference_year folder_ filename units hazard_set_file 
+clear cc_scenario cc_i hazard_name h_i y_i future_reference_year hazard_names 
+clear foldername timehorizon spec module_data_dir
 %%
 
 

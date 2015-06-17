@@ -1,4 +1,5 @@
 %% Barisal Risk Calculations
+clc
 climada_global.waitbar = 0;
 climada_global.EDS_at_centroid = 1;
 
@@ -33,7 +34,10 @@ clear BCC_border_file BCC_wards_file
 % Step 1: call barisal_hazard_read to read Witteveen & Bos hazard asci
 % files and save resulting hazard structs as .mat files in the climada_GIT
 % barisal_demo module data directory.
-barisal_hazard_read
+force_hazard_asci_read = 0;
+if force_hazard_asci_read
+    barisal_hazard_read
+end
 
 % Step 2: construct a cell array with all the hazard file names
 hazard_file_tmp = 'Barisal_BCC_hazard_PIDSPEC_CCSCEN.mat';
@@ -115,6 +119,15 @@ for s_i = 1:length(sheets)
                 entity.assets.(flds{fld_i})(nan_ndx) = [];
             end
         end
+        
+        if ~isfield(entity.assets,'centroid_index')
+            if ~isempty(strfind(sheets{s_i},'Floods'))
+                entity = climada_assets_encode(entity,barisal_get_hazard(2014,'','FL',hazard_files));
+            elseif ~isempty(strfind(sheets{s_i},'Cyclones'))
+                entity = climada_assets_encode(entity,barisal_get_hazard(2014,'','TC',hazard_files));
+            end
+        end
+        
         % save corrected entity
         save(entity.assets.filename,'entity')
     else
