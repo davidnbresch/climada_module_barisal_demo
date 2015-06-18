@@ -359,7 +359,7 @@ clear hazard_ref_year entity_ref_year peril_ID peril cc_scen hazard_name entity_
 % measures for flood only (TC wind excluded)
 hazard_ref_year = 2030;
 entity_ref_year = 2030;
-CC_SCEN         = 'moderate'; %{'moderate' 'extreme'};
+cc_scen         = 'moderate'; %{'moderate' 'extreme'};
 peril_IDs       = {'FL_depth_monsoon' 'FL_duration_monsoon' 'FL_depth_cyclone' 'FL_duration_cyclone'};
 
 % init
@@ -396,7 +396,7 @@ titlestr = sprintf('Barisal, %d, %s climate change', hazard_ref_year, CC_SCEN);
 title({titlestr;'All perils combined (FL depth, duration, monsoon and cyclone, except TC wind)'})
 hazard_name = 'all_perils';
 entity_name = '2030_moderate_cc';
-print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png']) % save as png
+print(gcf,'-dpng',[results_dir filesep 'CBA_Barisal_BCC_' hazard_name '_' entity_name '.png']) % save as png
 
 
 
@@ -408,7 +408,7 @@ print(gcf,'-dpng',[results_dir filesep 'CBA_' hazard_name '_' entity_name '.png'
 % measure impact is also calculated, unless EDS_only is set to 1
 
 peril_IDs   = {'FL_depth_cyclone' 'FL_duration_cyclone' 'FL_depth_monsoon' 'FL_duration_monsoon','TC'};
-CC_SCEN     = 'moderate'; %{'moderate' 'extreme'};
+cc_scen     = 'moderate'; %{'moderate' 'extreme'};
 year_i      = 2014;
 YEAR_F      = 2030;
 
@@ -482,6 +482,8 @@ for cc_scen = CC_SCEN
         close
     end
 end
+
+
 
 %% baseline EDS for ED report for Ecorys
 EDS_baseline = [EDS1 EDS2 EDS3]; save([results_dir filesep 'EDS_baseline.mat'],'EDS_baseline')
