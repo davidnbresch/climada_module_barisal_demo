@@ -281,8 +281,6 @@ text(1-stretch, max(max(damage_))*1.11,textstr_TAV_future, 'color','k','Horizont
 clear textstr
 %% set xlabel
 for d_i = 2:n_scenarios
-    
-    
     fld_i = ['fld_' num2str(d_i)];
     
     % economic growth (same hazard, no climate change)

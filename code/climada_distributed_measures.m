@@ -128,7 +128,9 @@ hazard.intensity = bsxfun(bsxfun_op,hazard_ori.intensity,measure.value_at_centro
 
 
 %check for negative intensities and set them to 0
-hazard.intensity(hazard.intensity <0) = 0;
+if ~strcmp(hazard.peril_ID,'MS') % MS only peril with negative intensities
+    hazard.intensity(hazard.intensity <0) = 0;
+end
 % [find1,find2]=find(full(hazard_w_measures.intensity<0));
 % hazard_w_measures.intensity(find1,find2)=0;
 
@@ -147,7 +149,8 @@ if check_plot
     climada_hazard_plot_hr(hazard_diff);
     title(sprintf('Impact of %s on %s hazard %d',measure.comment,hazard.peril_ID,hazard.reference_year))
     figure('color','w'); hold on
-    s = scatter(measure.lon,measure.lat,'filled');
-    set(s,'cdata',measure.value,'marker','s')
+    s = scatter(measure.lon(measure.value>0),measure.lat(measure.value>0),'filled');
+    set(s,'cdata',measure.value(measure.value>0),'marker','s')
     climada_plot_world_borders(1.5)
+    axis([min(measure.lon) max(measure.lon) min(measure.lat) max(measure.lat)]);
 end

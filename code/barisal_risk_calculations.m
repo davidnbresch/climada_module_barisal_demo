@@ -76,7 +76,7 @@ for cc = CCSCEN
         end
     end
 end
-clear cc CCSCEN pid PID spec SPEC file_i hazard_file_tmp hazard_file
+clear cc CCSCEN pid PID spec SPEC file_i hazard_file_tmp hazard_file force_hazard_asci_read
 
 %% entity
 
@@ -183,7 +183,8 @@ for s_i = 1:length(sheets)
         entity_files{s_i} = entity.assets.filename;
     end
 end
-clear entity_file_xls sheets ul_loc s_i tc_ndx damfun_file_xls entity_temp_xls fld_i flds nan_ndx entity_file_mat
+clear entity_file_xls sheets ul_loc s_i tc_ndx damfun_file_xls entity_temp_xls 
+clear fld_i flds nan_ndx entity_file_mat force_damfun_re_read force_assets_re_read
 
 %% damage calc
 
@@ -211,7 +212,7 @@ for ed_i = 1:length(EDS)
     
     EDS(ed_i).Value_total = sum(max_val);
 end
-clear max_val ndx EDS_force_recalc ed_i EDS_load_file EDS_save_file
+clear max_val ndx EDS_force_recalc ed_i EDS_load_file EDS_save_file ndx_i
 
 %% damage & hazard plotter
 % % plot expected damages and hazards, save as png files in the barisal
@@ -315,7 +316,7 @@ for e_i = 1:length(entity_files)
     entity.measures = measures;
     save(entity.assets.filename,'entity')
 end
-clear measures e_i e_dir_i e_dir_ e_subdir_ e_subdir_
+clear measures e_i e_dir_i e_dir_ e_subdir_ e_subdir_ m_i R G B
 
 %% measures impact for specific scenario
 
@@ -323,7 +324,7 @@ clear measures e_i e_dir_i e_dir_ e_subdir_ e_subdir_
 
 hazard_ref_year = 2030;
 entity_ref_year = 2030;
-peril_ID        = 'FL_depth_cyclone'; % Should be found in hazard filename
+peril_ID        = 'FL_depth_monsoon'; % Should be found in hazard filename
 peril           = 'floods';           % Should be found in entity filename
 cc_scen         = 'moderate';         % Should be found in hazard filename
 
@@ -444,6 +445,7 @@ end
 climada_EDS_ED_at_centroid_report_xls(EDS_baseline,barisal_get_entity(2014,'floods',entity_files),EDS_report_xls);
 
 clear peril_ID peril year_i year_f EDS_only EDS_report_xls h_i e_i peril_IDs CC_SCEN YEAR_F
+
 %% stats for Gerbrand v Bork
 ward_ndx = [32 34 27 28 33 29 30]; %shape index for wards 1-7
 for ward_i = ward_ndx
