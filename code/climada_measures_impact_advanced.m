@@ -57,7 +57,7 @@ function measures_impact=climada_measures_impact_advanced(entity,hazard,measures
 %       ED(measure_i): the annual expected damage to the assets under measure_i,
 %           last one ED(end) for no measures
 %       benefit(measure_i): the benefit of measure_i
-%       b_ratio(measure_i): the cost/benefit ratio of measure_i
+%       cb_ratio(measure_i): the cost/benefit ratio of measure_i
 %       measures: just a copy of measures, so we have all we need together
 %       title_str: a meaningful title, of the format: measures @ assets | hazard
 %       NOTE: currently measures_impact is also stored (with a lengthy filename)
