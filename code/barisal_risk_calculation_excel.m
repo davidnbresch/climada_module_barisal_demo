@@ -202,7 +202,11 @@ event_selection = [2 5 8 10 12];
 fig = climada_waterfall_graph_barisal(EDS(event_selection),'AED');
 % EDS_ori = EDS;
 EDS = EDS(event_selection);
-fig = climada_waterfall_graph_2timehorizon(EDS,'AED');
+fig = climada_waterfall_graph_2timehorizons(EDS,'AED');
+title(sprintf('Hazard type: %s','Monsoon'))
+foldername = sprintf('%sresults%sdamage_plots%sED_waterfall_from_%s.pdf', filesep,filesep,filesep,'Monsoon_2030_2050');
+print(fig,'-dpdf',[module_data_dir foldername])
+        
 
 %% create combined waterfall graph for all hazard types
 % EDS_all_filename = [module_data_dir filesep 'results' filesep 'EDS_all'];
