@@ -59,36 +59,22 @@ if isempty(varargin) % local GUI
     end
 end
 
-EDS = varargin{1};
-for v_i = 2:length(varargin)
-    EDS = [EDS varargin{v_i}];
+%% parse varargin & get all expected annual damages
+if ~isstruct(varargin{1})
+    cprintf([1 0 0],'ERROR: first argument after ''currency'' must be an EDS struct\n')
+    return
 end
-%% get EDS name into legend_str
-for EDS_i = 1:length(EDS)
-    % identification of EDS_i
-    hazard_name       = strtok(EDS(EDS_i).hazard.comment,',');
-    hazard_name       = horzcat(hazard_name, ' ', int2str(EDS(EDS_i).reference_year));
-    [fP, assets_name] = fileparts(EDS(EDS_i).assets.filename);
-    str               = sprintf('%s | %s',assets_name, hazard_name);
-    str               = strrep(str,'_',' '); % since title is LaTEX format
-    str               = strrep(str,'|','\otimes'); % LaTEX format
-    legend_str{EDS_i} = str;
-end % EDS_i
 
-
-%% reorder damage for ascending order and add last entry again
-% damage = permute(damage,[1 3 2]);
-% today, eco, cc, future damage
-% [damage index]        = sort(damage,'ascend');
-
-
-%% get all expected annual damages
-
-damage        = [];
-hazard_names  = {};
-for e_i = 1:length(varargin)
-    damage =  [damage, [varargin{e_i}.ED]' ];
+EDS = struct([]); scenario_names = {};damage = []; hazard_names = {}; %init
+for v_i = 1:length(varargin)
+    if isstruct(varargin{v_i})      
+        EDS = [EDS varargin{v_i}];
+        damage =  [damage, [varargin{v_i}.ED]' ];
+    elseif ischar(varargin{v_i})
+        scenario_names{end+1} = varargin{v_i};
+    end
 end
+
 for h_i = 1:length(varargin{1})
     hazard_names{end+1} = varargin{1}(h_i).hazard.comment;
 end
@@ -106,12 +92,17 @@ end
 damage_(2:end,end+1) = cumsum(damage(:,end));
 damage_count = n_scenarios+1;
 
-% reorder values
-% value        = value(index);
-% value(end+1) = value(end);
-% value        = [0 value];
-
-% climada_waterfall_graph_advanced
+%% get EDS name into legend_str
+for EDS_i = 1:length(EDS)
+    % identification of EDS_i
+    hazard_name       = strtok(EDS(EDS_i).hazard.comment,',');
+    hazard_name       = horzcat(hazard_name, ' ', int2str(EDS(EDS_i).reference_year));
+    [fP, assets_name] = fileparts(EDS(EDS_i).assets.filename);
+    str               = sprintf('%s | %s',assets_name, hazard_name);
+    str               = strrep(str,'_',' '); % since title is LaTEX format
+    str               = strrep(str,'|','\otimes'); % LaTEX format
+    legend_str{EDS_i} = str;
+end % EDS_i
 
 %% figure parameters
 dmg_dig = 0;
@@ -136,7 +127,7 @@ end
 % TAV of portfolio
 TAV_dig = 0;
 TAV_nr = unique([EDS(:).Value]);
-while min(TAV_nr) > 1000
+while mean(TAV_nr) > 1000
     TAV_dig = TAV_dig+3;
     TAV_nr = TAV_nr./1000;
 end
@@ -147,7 +138,7 @@ switch TAV_dig
         TAV_unit = 'm';
     case 9
         TAV_unit = 'bn';
-    case 9
+    case 12
         TAV_unit = 'tn';
 end
 TAV_nr = round(unique([EDS(:).Value])*10^-TAV_dig);
@@ -195,7 +186,8 @@ for i = 1:length(hazard_names)
     hazard_names_str{i} = [c{1} ' ' c{2} ' ' c{3}];
 end
 clear c
-L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Position',[0.56,0.15,0.2,0.1]);
+% L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Position',[0.56,0.15,0.2,0.1]);
+L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Location','West');
 set(L,'Box', 'off')
 
 % plot dotted lines
@@ -280,45 +272,43 @@ text(1-stretch, max(max(damage_))*1.11,textstr_TAV_future, 'color','k','Horizont
 
 clear textstr
 %% set xlabel
+if isempty(scenario_names)
 for d_i = 2:n_scenarios
     fld_i = ['fld_' num2str(d_i)];
-    
     % economic growth (same hazard, no climate change)
     if d_i ==2 || ...
             strcmp(EDS(e_i).hazard.filename,EDS(e_i-1).hazard.filename) && EDS(e_i).Value ~= EDS(e_i-1).Value
         textstr.(fld_i) = {'Increase'; 'from economic'; 'growth'; sprintf('%d',climada_global.future_reference_year)};
-        
         % climate change (different hazard, same asset value, no economic growth)
     elseif d_i == 3
         %~strcmp(EDS(e_i).hazard.filename,EDS(e_i-1).hazard.filename) & EDS(e_i).Value == EDS(e_i-1).Value
         %textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
         textstr.(fld_i) = {'Increase'; 'from moderate'; 'climate change';sprintf('%d',climada_global.future_reference_year)};
-        
         % climate change (same hazard, same asset value, no economic growth)
     elseif strcmp(EDS(e_i).hazard.filename,EDS(e_i-1).hazard.filename) && EDS(e_i).Value == EDS(e_i-1).Value
         %textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
         textstr.(fld_i) = {'Increase'; 'from extreme'; 'climate change';sprintf('%d',EDS(e_i).reference_year)};
-        
         % just any other incremental increase
     else
         textstr.(fld_i) = {'Increase'; 'until'; sprintf('%d',EDS(e_i).reference_year)};
     end
-%     text(d_i-stretch, damage_(1,1)-max(damage(:))*0.02, textstr,...
-%         'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 end
+else
+    for d_i = 1:length(scenario_names)
+        fld_i = ['fld_' num2str(d_i)];
+        c = strsplit(scenario_names{d_i},'; ');
+        textstr.(fld_i) = {c{1}};
+        for c_i = 2:length(c)
+            textstr.(fld_i) = [textstr.(fld_i); c{c_i}];
+        end
+    end
+end
+
 % first and last xlabel
-
-
 textstr.fld_1 = {'Today''s';'expected damage';sprintf('%d',climada_global.present_reference_year)};
-
 fld_total = ['fld_' num2str(n_scenarios+1)];
-textstr.(fld_total) = {'Total';'expected damage';sprintf('%d',max([EDS.reference_year]))};
-
-% text(1-stretch, damage(1,1)-max(max(damage(:,:)))*0.02, {[num2str(climada_global.present_reference_year) ' today''s'];'expected damage'}, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-% text(2-stretch, damage(1,1)-max(max(damage(:,:)))*0.02, {},          'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-% text(3-stretch, damage(1,1)-max(max(damage(:,:)))*0.02, {'Incremental increase';'from climate change'},                                 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-% text(damage_count-stretch, damage(1,1)-max(max(damage(1,:)))*0.02, {[num2str(climada_global.future_reference_year) ', total'];'expected damage'},    'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-
+textstr.(fld_total) = {'Total';'expected damage';sprintf('%d',max([EDS.reference_year]))};  
+   
 for i = 1:damage_count
     text(i-stretch+0.3, damage_(1,1)-max(damage_(:))*0.02,textstr.(['fld_' num2str(i)]),...
         'color','k','HorizontalAlignment','center','VerticalAlignment','top','fontsize',fontsize_2);

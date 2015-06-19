@@ -203,12 +203,12 @@ end
 measures = climada_measures_encode(measures);
 
 % reduce measures struct to contain only those with the right peril ID
-if isfield(measures,'peril_ID') && isfield(measures,'peril_ID')
+if isfield(measures,'peril_ID') && isfield(hazard,'peril_ID')
     measures_ori = measures; % backup copy
     m_flds = fieldnames(measures);
     rm_ndx = [];
     for measure_i = 1:length(measures.cost)
-        if ~strcmp(measures.peril_ID(measure_i),hazard.peril_ID)
+        if ~strcmp(measures.peril_ID{measure_i},hazard.peril_ID) && ~isempty(measures.peril_ID{measure_i})
             rm_ndx = [rm_ndx 1];
         else
             rm_ndx = [rm_ndx 0];
@@ -300,25 +300,26 @@ for measure_i = 1:n_measures+1 % last with no measures
                 if isempty(fE),measures_hazard_file = [fP filesep fN '.mat'];end % append .mat
                 if exist(measures_hazard_file,'file')
                     % orig_hazard = hazard; % backup
-                    fprintf('NOTE: measure %i, modified hazard according to %s\n',measure_i,measures_hazard_file);
+                    cprintf([0 0 1],'NOTE: measure %i, modified hazard according to %s\n',measure_i,measures_hazard_file);
                     %load(measures_hazard_file);
                     
+                    check_plot = 0;
                     if strcmp(measures.name{measure_i},'Embankments')
-                        pause(1)
+                        check_plot = 1;
                     end
                     
                     if isfield(measures,'hazard_event_set_operator')
-                        switch char(measures.hazard_event_set_operator(1))
+                        switch char(measures.hazard_event_set_operator{measure_i}(1))
                             case 'p',  	op = @plus;
                             case 'm', 	op = @minus;
                             case 't', 	op = @times;
                             case 'd',   op = @divide;
                             otherwise
-                                cprintf([1 0.5 0],'WARNING: operator ''%s'' not recognised\n')
-                                op = [];
+                                cprintf([1 0.5 0],'WARNING: operator ''%s'' not recognised\n',measures.hazard_event_set_operator{measure_i})
+                                op = []; % distributed_measures will try to figure it out from the data
                         end
                         if ~strcmp(measures.hazard_event_set_operator,'nil')
-                            hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,op);
+                            hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,op,check_plot);
                         else
                             load(measures_hazard_file);
                         end
@@ -345,7 +346,7 @@ for measure_i = 1:n_measures+1 % last with no measures
                     %     fprintf('WARNING: hazard might not be fully compatible with EDS\n');
                     % end
                 else
-                    fprintf('ERROR: measure %i, hazard NOT switched, hazard set %s not found\n',measure_i,measures_hazard_file);
+                    cprintf([1 0 0],'ERROR: measure %i, hazard NOT switched, hazard set %s not found\n',measure_i,measures_hazard_file);
                 end
             else
                 hazard_switched = 0; % no hazard switched
@@ -372,12 +373,12 @@ for measure_i = 1:n_measures+1 % last with no measures
                 [fP,fN,fE] = fileparts(measures_entity_file);
                 if isempty(fE),measures_entity_file = [fP filesep fN '.mat'];end % append .mat
                 if exist(measures_entity_file,'file')
-                    fprintf('NOTE: measure %i, modified entity according to %s\n',measure_i,measures_entity_file);
+                    cprintf([0 0 1],'NOTE: measure %i, switched entity according to %s\n',measure_i,measures_entity_file);
                     load(measures_entity_file);
                     entity = climada_assets_encode(entity,hazard);
                     entity_switched = 1;
                 else
-                    fprintf('ERROR: measure %i, entity NOT switched, entity %s not found\n',measure_i,measures_entity_file);
+                    cprintf([1 0 0],'ERROR: measure %i, entity NOT switched, entity %s not found\n',measure_i,measures_entity_file);
                 end
             else
                 entity_switched = 0; % no entity switched
@@ -436,7 +437,7 @@ for measure_i = 1:n_measures+1 % last with no measures
     if hazard_switched
         % always switch back, to avoid troubles if hazard passed as struct
         hazard = orig_hazard; % restore
-        fprintf('NOTE: switched hazard back\n');
+        cprintf([0 0 1],'NOTE: switched hazard back\n');
         if measure_i < n_measures
             orig_hazard=[]; % free up memory
         end
@@ -444,7 +445,7 @@ for measure_i = 1:n_measures+1 % last with no measures
     if entity_switched
         % always switch back, to avoid troubles if entity passed as struct
         entity = orig_entity; % restore
-        fprintf('NOTE: switched entity back\n');
+        cprintf([0 0 1],'NOTE: switched entity back\n');
         if measure_i < n_measures
             orig_hazard=[]; % free up memory
         end

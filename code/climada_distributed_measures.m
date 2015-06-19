@@ -151,6 +151,7 @@ if check_plot
     figure('color','w'); hold on
     s = scatter(measure.lon(measure.value>0),measure.lat(measure.value>0),'filled');
     set(s,'cdata',measure.value(measure.value>0),'marker','s')
+    colormap(climada_colormap('schematic'))
     climada_plot_world_borders(1.5)
     axis([min(measure.lon) max(measure.lon) min(measure.lat) max(measure.lat)]);
 end
