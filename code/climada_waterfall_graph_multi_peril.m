@@ -126,7 +126,12 @@ end
 
 % TAV of portfolio
 TAV_dig = 0;
-TAV_nr = unique([EDS(:).Value]);
+if isfield(EDS,'Value_total')
+    TAV_nr = unique([EDS(:).Value_total]);
+else
+    TAV_nr = unique([EDS(:).Value]);
+end
+
 while mean(TAV_nr) > 1000
     TAV_dig = TAV_dig+3;
     TAV_nr = TAV_nr./1000;
@@ -141,7 +146,12 @@ switch TAV_dig
     case 12
         TAV_unit = 'tn';
 end
-TAV_nr = round(unique([EDS(:).Value])*10^-TAV_dig);
+if isfield(EDS,'Value_total')
+    TAV_nr = round(unique([EDS(:).Value_total])*10^-TAV_dig);
+else
+    TAV_nr = round(unique([EDS(:).Value])*10^-TAV_dig);
+end
+
 N      = -abs(floor(log10(max(TAV_nr)))-1);
 TAV_nr = round(TAV_nr*10^N)/10^N;
 

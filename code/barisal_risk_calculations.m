@@ -197,6 +197,8 @@ else
 end
 
 % total value from max of flood entity and cyclone entity at each point
+for i = 1:5
+    EDS = eval(['EDS' num2str(i)]);
 for ed_i = 1:length(EDS)
     ndx = find([EDS.reference_year] == EDS(ed_i).reference_year);
     max_val = [];
@@ -205,6 +207,8 @@ for ed_i = 1:length(EDS)
     end
     
     EDS(ed_i).Value_total = sum(max_val);
+end
+    eval(['EDS' num2str(i) '=EDS;']);
 end
 clear max_val ndx EDS_force_recalc ed_i EDS_load_file EDS_save_file ndx_i
 
@@ -406,15 +410,15 @@ for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
     
     year_f = 2030;
     climada_global.future_reference_year = year_f;
-    
-    % EDS1 for scenario hazard and entity in present reference year
-    [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-    [entity,e_i] = barisal_get_entity(year_i,peril,entity_files);
-    %EDS1    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
-    fprintf('***** EDS1 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-    EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-    scen_name1 = ['Today''s; expected damage; ' num2str(year_i)];
-    
+%     
+%     % EDS1 for scenario hazard and entity in present reference year
+%     [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+%     [entity,e_i] = barisal_get_entity(year_i,peril,entity_files);
+%     %EDS1    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+%     fprintf('***** EDS1 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+%     EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+%     scen_name1 = ['Today''s; expected damage; ' num2str(year_i)];
+%     
     % EDS2 for socio-economic growth scenario: present hazard, future entity 2030
     [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
     [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
@@ -423,13 +427,13 @@ for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
     EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
     scen_name2 = ['Increase; from economic; growth ' num2str(year_f)];
     
-    % EDS3 for climate change scenario: future entity 2030, future hazard 2030
-    [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
-    [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
-    %EDS3    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
-    fprintf('***** EDS3 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-    EDS3(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-    scen_name3 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+%     % EDS3 for climate change scenario: future entity 2030, future hazard 2030
+%     [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
+%     [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
+%     %EDS3    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+%     fprintf('***** EDS3 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+%     EDS3(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+%     scen_name3 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
     
     year_f = 2050;
     climada_global.future_reference_year = year_f;
@@ -442,22 +446,22 @@ for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
     EDS4(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
     scen_name4 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
     
-    % EDS5 for climate change scenario: future entity 2050, future hazard 2050
-    [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
-    [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
-    %EDS3    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
-    fprintf('***** EDS5 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-    EDS5(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-    scen_name5 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+%     % EDS5 for climate change scenario: future entity 2050, future hazard 2050
+%     [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
+%     [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
+%     %EDS3    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+%     fprintf('***** EDS5 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+%     EDS5(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+%     scen_name5 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
 end
 
 % multi peril waterfall
 fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
-print(fig,'-dpng',[results_dir filesep 'BCC_CBA_multi_peril_' num2str(year_f) '_' char(cc_scen) '.png'])
+print(fig,'-dpng',[results_dir filesep 'BCC_waterfall_multi_peril_2030_' char(cc_scen) '.png'])
 close
 
-fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
-print(fig,'-dpng',[results_dir filesep 'BCC_CBA_multi_peril_' num2str(year_f) '_' char(cc_scen) '.png'])
+fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS4,scen_name4,EDS5,scen_name5);
+print(fig,'-dpng',[results_dir filesep 'BCC_waterfall_multi_peril_2050_' char(cc_scen) '.png'])
 close
 
 % end
