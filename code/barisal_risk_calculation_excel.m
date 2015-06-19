@@ -27,6 +27,7 @@ timehorizon = [2030];
 
 
 %% load barisal specifics
+module_data_dir=[climada_modules_dir filesep 'barisal_demo' filesep 'data'];
 BCC_savename = [module_data_dir filesep 'entities' filesep 'BCC_border.mat'];
 load(BCC_savename)
 % load BCC ward boundaries (35 polygons)
@@ -196,6 +197,16 @@ for e_i = 1:length(event_selection);
     %close
 end
 
+% waterfall graph for today, eco, cc, 2030, eco 2050, cc 2050, tcr 2050
+event_selection = [2 5 8 10 12];
+fig = climada_waterfall_graph_barisal(EDS(event_selection),'AED');
+% EDS_ori = EDS;
+EDS = EDS(event_selection);
+fig = climada_waterfall_graph_2timehorizons(EDS,'AED');
+title(sprintf('Hazard type: %s','Monsoon'))
+foldername = sprintf('%sresults%sdamage_plots%sED_waterfall_from_%s.pdf', filesep,filesep,filesep,'Monsoon_2030_2050');
+print(fig,'-dpdf',[module_data_dir foldername])
+        
 
 %% create combined waterfall graph for all hazard types
 % EDS_all_filename = [module_data_dir filesep 'results' filesep 'EDS_all'];
