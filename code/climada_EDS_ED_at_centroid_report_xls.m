@@ -111,7 +111,7 @@ for e_i = 1:numel(EDS)
     hazard_name = strrep(hazard_name,'_',' ');
     
     matr{3,(e_i-1)*2+1 +static_row_no} = sprintf('Total exposure value %s', entity_name);
-    matr{3,(e_i-1)*2+2 +static_row_no} = sprintf('AED %s',hazard_name);
+    matr{3,(e_i-1)*2+2 +static_row_no} = sprintf('AED %s',EDS(e_i).annotation_name);
 
     matr(4:end,(e_i-1)*2+1 +static_row_no) = num2cell(EDS(e_i).assets.Value);
     matr(4:end,(e_i-1)*2+2 +static_row_no) = num2cell(EDS(e_i).ED_at_centroid);

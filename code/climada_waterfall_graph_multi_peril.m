@@ -152,7 +152,7 @@ else
     TAV_nr = round(unique([EDS(:).Value])*10^-TAV_dig);
 end
 
-N      = -abs(floor(log10(max(TAV_nr)))-1);
+N      = 2; % digits after decimal point
 TAV_nr = round(TAV_nr*10^N)/10^N;
 
 % fontsize_  = 8;
@@ -185,7 +185,7 @@ for s_i = 1:n_scenarios+1
         indx = s_i;
         h(h_i) = patch( [s_i-stretch s_i+stretch s_i+stretch s_i-stretch],...
             [damage_(h_i+1,indx) damage_(h_i+1,indx) damage_(h_i,indx) damage_(h_i,indx)],...
-            cmap(h_i,:),'edgecolor','none');
+            cmap(h_i,:).*exp(-0.8*s_i/(n_scenarios+1)),'edgecolor','none');
     end
 end
 % use capital letters for first letter
@@ -276,6 +276,14 @@ textstr_TAV_present = sprintf('Total asset value (%s): %s %d %s',...
     num2str(min([EDS.reference_year])),currency,min(TAV_nr),TAV_unit);
 textstr_TAV_future = sprintf('Total asset value (%s): %s %d %s',...
     num2str(max([EDS.reference_year])),currency,max(TAV_nr),TAV_unit);
+if strcmpi(currency,'PEOPLE')
+    textstr = 'Annual Expect no. of Casualties';
+    textstr_TAV_present = sprintf('Total population (%s): %d %s %s',...
+    num2str(min([EDS.reference_year])),min(TAV_nr),TAV_unit,currency);
+textstr_TAV_future = sprintf('Total population (%s): %d %s %s',...
+    num2str(max([EDS.reference_year])),max(TAV_nr),TAV_unit,currency); 
+end
+
 text(1-stretch, max(max(damage_))*1.21,textstr, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','FontWeight','bold','fontsize',fontsize_);
 text(1-stretch, max(max(damage_))*1.15,textstr_TAV_present, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','FontWeight','normal','fontsize',fontsize_2);
 text(1-stretch, max(max(damage_))*1.11,textstr_TAV_future, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','FontWeight','normal','fontsize',fontsize_2);

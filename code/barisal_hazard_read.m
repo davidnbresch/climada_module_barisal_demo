@@ -80,12 +80,13 @@ for h_i = 1:length(hazard_names)
         end
         
         hazard.units    = units;
-        if strfind(hazard_name,'cyclone')
+        if ~isempty(strfind(hazard_name,'cyclone'))
             hazard.frequency    = [0.05 0.05 0.02 0.03]*1.2;
             hazard.dd           = [10 22 25 30];
             hazard.mm           = [11 11 05 11];
             hazard.yyyy         = [2007 1998 2009 1988];
             hazard.datenum      = datenum(hazard.yyyy,hazard.mm,hazard.dd);
+        elseif ~isempty(strfind(hazard_name,'monsoon'))
         end
         
         save(hazard_set_file_, 'hazard');        
