@@ -98,7 +98,7 @@ clear cc CCSCEN pid PID spec SPEC file_i hazard_file_tmp hazard_file force_hazar
 % Entity excel file from Ecorys (unstructured)
 entity_file_xls = [entities_dir filesep 'BCC_entity_170615_se_1.xls'];
 % entity_file_xls = [entities_dir filesep 'Measure_Spatial_Zoning_se_1.xls']
-entity_file_xls = [entities_dir filesep 'Measure_Early_warning_system_se_1.xls'];
+% entity_file_xls = [entities_dir filesep 'Measure_Early_warning_system_se_1.xls'];
 % entity_file_xls = [entities_dir filesep 'BCC_entity_210615_se_1_population.xls'];
 
 % Damage function file from Ecorys
@@ -477,7 +477,7 @@ cc_scen     = 'moderate'; %{'moderate' 'extreme'};
 year_i      = 2014;
 year_f      = [2030 2050];
 
-EDS_only    = 0;
+EDS_only    = 1;
 
 %init
 clear EDS1 EDS2 EDS3 EDS4 EDS5 measures_impact
@@ -525,22 +525,22 @@ for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
         end
     end
     
-    % EDS2 for socio-economic growth scenario: present hazard, future entity 2030
-    [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-    [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
-    %EDS2    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
-    fprintf('***** EDS2 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-    EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-    scen_name2 = ['Increase; from economic; growth ' num2str(year_f)];
-        fprintf('Annual expected damage: %2.2f mn\n',EDS2(ed_i).ED/1000000)
-    ED_TAV_ratio = EDS2(ed_i).ED_at_centroid./EDS2(ed_i).assets.Value;
-    if any(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1.01)
-        fprintf('WARNING: expected damage greater than asset value for %d assets\n',...
-            sum(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1))
-        fprintf('\t \tmax ratio: %2.2f \tmin ratio: %2.2f \tmean ratio: %2.2f\n',...
-            max(ED_TAV_ratio(ED_TAV_ratio>1)),min(ED_TAV_ratio(ED_TAV_ratio>1)),mean(ED_TAV_ratio(ED_TAV_ratio>1)))
-        clear ED_TAV_ratio
-    end
+%     % EDS2 for socio-economic growth scenario: present hazard, future entity 2030
+%     [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+%     [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
+%     %EDS2    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
+%     fprintf('***** EDS2 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+%     EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+%     scen_name2 = ['Increase; from economic; growth ' num2str(year_f)];
+%         fprintf('Annual expected damage: %2.2f mn\n',EDS2(ed_i).ED/1000000)
+%     ED_TAV_ratio = EDS2(ed_i).ED_at_centroid./EDS2(ed_i).assets.Value;
+%     if any(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1.01)
+%         fprintf('WARNING: expected damage greater than asset value for %d assets\n',...
+%             sum(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1))
+%         fprintf('\t \tmax ratio: %2.2f \tmin ratio: %2.2f \tmean ratio: %2.2f\n',...
+%             max(ED_TAV_ratio(ED_TAV_ratio>1)),min(ED_TAV_ratio(ED_TAV_ratio>1)),mean(ED_TAV_ratio(ED_TAV_ratio>1)))
+%         clear ED_TAV_ratio
+%     end
     
     % EDS3 for climate change scenario: future entity 2030, future hazard 2030
     [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
@@ -576,21 +576,21 @@ for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
     year_f = 2050;
     climada_global.future_reference_year = year_f;
     
-    % EDS4 for socio-economic growth scenario: present hazard, future entity 2050
-    [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-    [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
-    fprintf('***** EDS4 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-    EDS4(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-    scen_name4 = ['Increase; from economic; growth ' num2str(year_f)];
-    fprintf('Annual expected damage: %2.2f mn\n',EDS4(ed_i).ED/1000000)
-    ED_TAV_ratio = EDS4(ed_i).ED_at_centroid./EDS4(ed_i).assets.Value;
-    if any(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1.01)
-        fprintf('WARNING: expected damage greater than asset value for %d assets\n',...
-            sum(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1))
-        fprintf('\t \tmax ratio: %2.2f \tmin ratio: %2.2f \tmean ratio: %2.2f\n',...
-            max(ED_TAV_ratio(ED_TAV_ratio>1)),min(ED_TAV_ratio(ED_TAV_ratio>1)),mean(ED_TAV_ratio(ED_TAV_ratio>1)))
-        clear ED_TAV_ratio
-    end
+%     % EDS4 for socio-economic growth scenario: present hazard, future entity 2050
+%     [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+%     [entity,e_i] = barisal_get_entity(year_f,peril,entity_files);
+%     fprintf('***** EDS4 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+%     EDS4(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+%     scen_name4 = ['Increase; from economic; growth ' num2str(year_f)];
+%     fprintf('Annual expected damage: %2.2f mn\n',EDS4(ed_i).ED/1000000)
+%     ED_TAV_ratio = EDS4(ed_i).ED_at_centroid./EDS4(ed_i).assets.Value;
+%     if any(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1.01)
+%         fprintf('WARNING: expected damage greater than asset value for %d assets\n',...
+%             sum(ED_TAV_ratio(~isnan(ED_TAV_ratio)) > 1))
+%         fprintf('\t \tmax ratio: %2.2f \tmin ratio: %2.2f \tmean ratio: %2.2f\n',...
+%             max(ED_TAV_ratio(ED_TAV_ratio>1)),min(ED_TAV_ratio(ED_TAV_ratio>1)),mean(ED_TAV_ratio(ED_TAV_ratio>1)))
+%         clear ED_TAV_ratio
+%     end
     
     % EDS5 for climate change scenario: future entity 2050, future hazard 2050
     [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
@@ -621,6 +621,8 @@ for peril_ID = peril_IDs %peril_ID = peril_IDs(1)
         end
     end
 end
+
+EDS = [EDS1 EDS3 EDS5];
 
 % multi peril waterfall
 fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
