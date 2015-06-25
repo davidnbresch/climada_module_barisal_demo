@@ -15,7 +15,7 @@ load([results_dir filesep EDS_file])
 %% create DFC graph with different perils
 close all
 climada_figuresize(0.5,0.9);
-[fig,legend_str,return_period,sorted_damage] = climada_EDS_DFC(EDS([3 4 1 2 5]));
+[fig,legend_str,return_period,sorted_damage] = barisal_EDS_DFC(EDS([3 4 1 2 5]));
 print(fig,'-dpdf',[results_dir filesep 'DFC_2014.pdf'])
     
 %% create DFC report (xls) with different perils
@@ -45,9 +45,9 @@ xlswrite(xls_file,matr)
 
 %%
 climada_figuresize(0.5,0.9);
-[fig,legend_str,return_period,sorted_damage] = climada_EDS_DFC(EDS([3 4 1 2 5]));
+[fig,legend_str,return_period,sorted_damage] = barisal_EDS_DFC(EDS([3 4 1 2 5]));
 climada_figuresize(0.5,0.9);
-[fig,legend_str,return_period,sorted_damage] = climada_EDS_DFC(EDS([8 9 6 7 10]));
+[fig,legend_str,return_period,sorted_damage] = barisal_EDS_DFC(EDS([8 9 6 7 10]));
 
 % comparison of moonsoon and cyclone flooding (depth damage only, as this
 % is the driver of losses) in 2014 and 2030 (scenario 1, moderate climate change)
