@@ -185,7 +185,7 @@ for s_i = 1:n_scenarios+1
         indx = s_i;
         h(h_i) = patch( [s_i-stretch s_i+stretch s_i+stretch s_i-stretch],...
             [damage_(h_i+1,indx) damage_(h_i+1,indx) damage_(h_i,indx) damage_(h_i,indx)],...
-            cmap(h_i,:).*exp(-0.8*s_i/(n_scenarios+1)),'edgecolor','none');
+            cmap(h_i,:).*exp(-0.1*s_i/(n_scenarios+1)),'edgecolor','none');
     end
 end
 % use capital letters for first letter
@@ -238,7 +238,11 @@ set(gca,'xticklabel',[],'FontSize',10,'XTick',zeros(1,0),'layer','top');
 xlim([0.5 damage_count+1-0.5])
 ylim([0   max(damage_(:))*1.25])
 
-ylabel(['Damage ' currency ' ' dmg_unit],'fontsize',fontsize_+2)
+if strcmpi(currency,'PEOPLE')
+    ylabel(['Casualties, ' dmg_unit ' of people'],'fontsize',fontsize_+2)
+else
+    ylabel(['Damage ' currency ' ' dmg_unit],'fontsize',fontsize_+2)
+end
 
 
 %% display arrows
@@ -277,7 +281,7 @@ textstr_TAV_present = sprintf('Total asset value (%s): %s %d %s',...
 textstr_TAV_future = sprintf('Total asset value (%s): %s %d %s',...
     num2str(max([EDS.reference_year])),currency,max(TAV_nr),TAV_unit);
 if strcmpi(currency,'PEOPLE')
-    textstr = 'Annual Expect no. of Casualties';
+    textstr = 'Annual Expected no. of Casualties';
     textstr_TAV_present = sprintf('Total population (%s): %d %s %s',...
     num2str(min([EDS.reference_year])),min(TAV_nr),TAV_unit,currency);
 textstr_TAV_future = sprintf('Total population (%s): %d %s %s',...

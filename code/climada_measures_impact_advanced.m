@@ -274,7 +274,7 @@ ED_risk_transfer = zeros(1,n_measures+1); % allocate
 hazard_switched  = 0; % indicated whether a special hazard set for a given measure is used
 entity_switched  = 0; % indicated whether a special entity for a given measure is used
 for measure_i = 1:n_measures+1 % last with no measures
-    
+
     if measure_i <= n_measures
         
         %fprintf('assessing impact of measure %i\n',measure_i); % TEST
@@ -286,7 +286,7 @@ for measure_i = 1:n_measures+1 % last with no measures
                 orig_hazard = hazard;
                 if ~exist(measures_hazard_set_name,'file')
                     % only filename given in measures tab, add path:
-                    if exist(hazard_file,'var')
+                    if exist('hazard_file','var')
                         [hazard_dir] = fileparts(hazard_file);
                     else
                         hazard_dir = [climada_global.data_dir filesep 'hazards']; % default
@@ -360,7 +360,7 @@ for measure_i = 1:n_measures+1 % last with no measures
                 orig_entity = entity;
                 if ~exist(measures_entity_name,'file')
                     % only filename given in measures tab, add path:
-                    if exist(entity_file,'var')
+                    if exist('entity_file','var')
                         [entity_dir] = fileparts(entity_file);
                     else
                         entity_dir = [climada_global.data_dir filesep 'entities']; % default
