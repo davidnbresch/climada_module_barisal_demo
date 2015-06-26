@@ -56,3 +56,7 @@ data/entities/old/
 data/entities/old_2/
 data/hazards/old/
 data/results/old/
+data/results/
+data/entities/
+code/climada_waterfall_graph_copy.m
+code/climada_waterfall_graph_stacked.m
