@@ -213,6 +213,15 @@ if isfield(measures,'peril_ID') && isfield(hazard,'peril_ID')
         else
             rm_ndx = [rm_ndx 0];
         end
+        
+        % some hardwiring for Barisal
+        if ismember(lower(measures.name{measure_i}),...
+                   {'khals deepened 1m' 'khals widened 4m' 'ponds retain' ...
+                    'drainage 5cm less water logging' 'drainage 15cm less water logging' ...
+                    'solid waste management' 'pervious pavement'}) ...
+                && ~isempty(strfind(hazard.filename,'cyclone'))
+            rm_ndx(end) = 1;
+        end
     end
     measures.color_RGB = measures.color_RGB(~rm_ndx,:);
     for m_fld_i = 1:length(m_flds)
@@ -223,7 +232,9 @@ if isfield(measures,'peril_ID') && isfield(hazard,'peril_ID')
 end
 if all(rm_ndx)
     cprintf([1 0.5 0],'WARNING: no measures found with peril ID %s\n',hazard.peril_ID);
-    return;
+    measures = climada_measures_construct([],1); % neutral measure
+    measures.name{1} = 'control';
+%     return;
 end
 
 % check for correct encoding to the hazard
@@ -400,6 +411,12 @@ for measure_i = 1:n_measures+1 % last with no measures
         entity.damagefunctions.PAA       = max(orig_damagefunctions.PAA*measures.PAA_impact_a(measure_i)+measures.PAA_impact_b(measure_i),0);
         annotation_name                  = measures.name{measure_i};
     else
+        if ismember('control',measures.name)
+            % no measures in first place, control measure was added at
+            % the beginning and calculations has already been done, hence,
+            % exit loop
+            break
+        end
         entity.damagefunctions = entity_orig_damagefunctions; % back to original
         annotation_name        = 'control';
     end
@@ -557,7 +574,12 @@ measures_impact.measures         = measures; % store measures into res, so we ha
 % prepare annotation
 [~,hazard_name]   = fileparts(EDS(1).hazard.filename);
 [~,assets_name]   = fileparts(EDS(1).assets.filename);
-[~,measures_name] = fileparts(measures.filename);
+
+if ~isfield(measures,'filename')
+    measures_name = ['Measures_' datestr(now,'yymmddHHMM')];
+else
+    [~,measures_name] = fileparts(measures.filename);
+end
 if strcmp(measures_name,assets_name),measures_name='m';end
 measures_impact.title_str = sprintf('%s @ %s | %s',measures_name,assets_name,hazard_name);
 
@@ -584,8 +606,8 @@ fprintf('total climate risk premium reduction (relative)        %2.2f%%\n',...
     -(measures_impact.risk_premium_net/measures_impact.risk_premium_fgu-1)*100);
 measures_impact.risk_premium_comment='total climate risk divided by the total value of assets';
 
-save(save_filename,'measures_impact')
-fprintf('results written to %s\n',save_filename);
+% save(save_filename,'measures_impact')
+% fprintf('results written to %s\n',save_filename);
 
 if map_risk_premium
     % plot the total climate risk premium

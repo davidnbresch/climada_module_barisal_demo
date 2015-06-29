@@ -34,7 +34,6 @@ if ~climada_init_vars,return;end % init/import global variables
 if ~exist('EDS'     ,'var'),    EDS     =[];	end
 if ~exist('xls_file','var'),    xls_file='';    end
 if ~exist('sheet'   ,'var'),    sheet   ='';    end
-if ~exist('varargin','var'),    varargin='';    end
 
 % PARAMETERS
 % prompt for EDS if not given
@@ -81,13 +80,16 @@ flds = {};
 if ~isempty(varargin)
     for var_i = 1:length(varargin)
         if isfield(EDS,varargin{var_i})
+            ok = [];
             for e_i = EDS_to_print
-                if length(EDS.(varargin{var_i})) == length(EDS(1).ED_at_centroid)
-                    flds{end+1} = varargin{var_i};
+                if length(EDS(e_i).(varargin{var_i})) == length(EDS(1).ED_at_centroid)
+                    ok = [ok 1];
                 else
+                    ok = [ok 0];
                     cprintf([1 0.5 0],'WARNING: length of data field %s of EDS %i incompatible with EDS(1), skipped\n',varargin{var_i},e_i)
                 end
             end
+            if all(ok),  flds{end+1} = varargin{var_i};   end
         else
             cprintf([1 0.5 0],'WARNING: fieldname %s not found\n',varargin{var_i})
         end
@@ -108,77 +110,112 @@ end
 % write data into matrix, which will be outputted to xls
 msgstr = '& '; %init
 for fld_i = 1:length(flds)
-    msgstr = [msgstr flds{fld_i} ', '];
+    msgstr = [msgstr strrep(flds{fld_i},'_',' ') ', '];
 end
 fprintf('writing ED at centroid %s\b\b to xls... ',msgstr)
 
-matr          = cell(length(EDS(1).ED_at_centroid)+3,numel(EDS)*2+2);
-matr{3,1}     = 'X';
-matr{3,2}     = 'Y';
-matr(4:end,1) = num2cell(EDS(1).assets.X);
-matr(4:end,2) = num2cell(EDS(1).assets.Y);
+matr          = cell(length(EDS(1).ED_at_centroid)+4,numel(EDS)*2+2);
+matr{4,1}     = 'X';
+matr{4,2}     = 'Y';
+matr(5:end,1) = num2cell(EDS(1).assets.X);
+matr(5:end,2) = num2cell(EDS(1).assets.Y);
 
-static_row_no = 2;
+static_col = 2;
 
 % special case for Barisal where we have two additional variables to
 % describee the centroids
 if exist(EDS(1).assets.filename,'file')
     load(EDS(1).assets.filename)
-end
-if isfield(entity(1).assets,'Att_100x100_Cell_Code')
-    matr{3,end+1}     = '100x100 Cell code';
-    matr(4:end,end+1) = entity(1).assets.Att_100x100_Cell_Code;
-    static_row_no = static_row_no +1;
-end
-if isfield(entity(1).assets,'Ward_Nr')
-    matr{3,end+1}     = 'Ward no';
-    matr(4:end,end+1) = num2cell(entity(1).assets.Ward_Nr);
-    static_row_no = static_row_no +1;
-end
-if isfield(entity(1).assets,'Category')
-    matr{3,end+1}     = 'Category';
-    matr(4:end,end+1) = entity(1).assets.Category;
-    static_row_no = static_row_no +1;
+    if isfield(entity(1).assets,'Att_100x100_Cell_Code')
+        matr{4,static_col+1}     = '100x100 Cell code';
+        matr(5:end,static_col+1) = entity(1).assets.Att_100x100_Cell_Code;
+        static_col = static_col +1;
+    end
+    if isfield(entity(1).assets,'Ward_Nr')
+        matr{4,static_col+1}     = 'Ward no';
+        matr(5:end,static_col+1) = num2cell(entity(1).assets.Ward_Nr);
+        static_col = static_col +1;
+    end
+    if isfield(entity(1).assets,'Category')
+        matr{4,static_col+1}     = 'Category';
+        matr(5:end,static_col+1) = entity(1).assets.Category;
+        static_col = static_col +1;
+    end
 end
 
-n_flds = 2+length(flds);
+single_Value_col = 1; sim_ndx = ones(1,length(EDS(1).assets.filename)); % init
+for e_i = 1:length(EDS)
+    if any(EDS(e_i).assets.Value ~= EDS(1).assets.Value),    single_Value_col = 0;   end
+%     sim_ndx = sim_ndx & (EDS(e_i).assets.filename == EDS(1).assets.filename);
+end
+
+if single_Value_col    
+    n_cols  = 1+length(flds); 
+    col_1   = 1;
+    
+    [~,entity_name] = fileparts(EDS(1).assets.filename(sim_ndx));
+    entity_name = strrep(entity_name,'_',' ');
+    
+    matr{1,     static_col+1} = sprintf('Total value');
+    matr{2,     static_col+1} = sum(EDS(e_i).assets.Value);
+    matr{4,     static_col+1} = sprintf('Total exposure value %s',entity_name);
+    matr(5:end, static_col+1) = num2cell(entity(1).assets.Value);
+    static_col = static_col +1;
+else
+    n_cols  = 2+length(flds);
+    col_1   = 2;
+end
 
 for e_i = 1:numel(EDS)
     [~,entity_name] = fileparts(EDS(e_i).assets.filename);
     entity_name = strrep(entity_name,'_',' ');
     
-    matr{3,(e_i-1)*n_flds+1 +static_row_no} = sprintf('Total exposure value %s', entity_name);
-    matr{3,(e_i-1)*n_flds+2 +static_row_no} = sprintf('AED %s',EDS(e_i).annotation_name); 
+    if ~single_Value_col
+        matr{1,     (e_i-1)*n_cols+1 +static_col} = sprintf('Total asset value');
+        matr{2,     (e_i-1)*n_cols+1 +static_col} = sum(EDS(e_i).assets.Value);
+        matr{4,     (e_i-1)*n_cols+1 +static_col} = sprintf('Total asset value %s', entity_name);
+        matr(5:end, (e_i-1)*n_cols+1 +static_col) = num2cell(EDS(e_i).assets.Value);
+    end
     
-    matr(4:end,(e_i-1)*n_flds+1 +static_row_no) = num2cell(EDS(e_i).assets.Value);
-    matr(4:end,(e_i-1)*n_flds+2 +static_row_no) = num2cell(EDS(e_i).ED_at_centroid);
+    matr{1,     (e_i-1)*n_cols+col_1 +static_col} = sprintf('Total damage (absolute; %%age of TAV)');
+    matr{2,     (e_i-1)*n_cols+col_1 +static_col} = sum(EDS(e_i).ED_at_centroid);
+    matr{3,     (e_i-1)*n_cols+col_1 +static_col} = sum(EDS(e_i).ED_at_centroid)/sum(EDS(e_i).assets.Value);
+    matr{4,     (e_i-1)*n_cols+col_1 +static_col} = sprintf('AED %s',strrep(EDS(e_i).annotation_name,'_',' ')); 
+    matr(5:end, (e_i-1)*n_cols+col_1 +static_col) = num2cell(EDS(e_i).ED_at_centroid);
 
-    matr{1,(e_i-1)*n_flds+1 +static_row_no} = sprintf('Total Value');
-    matr{2,(e_i-1)*n_flds+1 +static_row_no} = sum(EDS(e_i).assets.Value);
-
-    matr{1,(e_i-1)*n_flds+2 +static_row_no} = sprintf('Total damage');
-    matr{2,(e_i-1)*n_flds+2 +static_row_no} = sum(EDS(e_i).ED_at_centroid);
-    
     if isempty(length(flds)),continue; end
-    for fld_i = 3:length(n_flds)
-        matr{3,(e_i-1)*n_flds+fld_i +static_row_no} = sprintf('%s %s',strrep(flds{fld_i},'_',' '),EDS(e_i).annotation_name);
-        
-        matr(4:end,(e_i-1)*n_flds+fld_i +static_row_no) = num2cell(EDS(e_i).(flds{fld_i}));
-        
-        matr{1,(e_i-1)*n_flds+fld_i +static_row_no} = sprintf(['Total' strrep(flds{fld_i},'_',' ')]);
-        matr{2,(e_i-1)*n_flds+fld_i +static_row_no} = sum(EDS(e_i).(flds{fld_i}));
+    for fld_i =1:length(flds)
+        matr{1,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sprintf(['Total ' strrep(flds{fld_i},'_',' ') ' (absolute; %%age of AED)']);
+        matr{2,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sum(EDS(e_i).(flds{fld_i}));
+        matr{3,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sum(EDS(e_i).(flds{fld_i}))/sum(EDS(end).ED_at_centroid);
+        matr{4,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sprintf('%s %s',strrep(flds{fld_i},'_',' '),EDS(e_i).annotation_name);
+        matr(5:end, (e_i-1)*n_cols+col_1+fld_i+static_col) = num2cell(EDS(e_i).(flds{fld_i}));
     end
 end
+
+
+warning('off','MATLAB:xlswrite:AddSheet'); % suppress warning message
 try
     xlswrite(xls_file,matr,sheet)
 catch
     % probably too large for old excel, try writing to .xlsx instead
-    xlsx_file = [xls_file 'x'];
-    xlswrite(xlsx_file,matr,sheet)
+    try
+        xlsx_file = [xls_file 'x'];
+        xlswrite(xlsx_file,matr,sheet)
+    catch
+        % probably too large for new excel, write to textfile instead
+        cprintf([1 0 0],'FAILED\n')
+        fprintf('attempting to write to text file instead... ')
+        txt_file = strrep(xlsx_file,'.xlsx','.txt');
+        writetable(cell2table(matr),txt_file)
+        fclose all;
+    end
 end
 
 fprintf('done\n')
-
+if single_Value_col
+    cprintf([0 0 1],'NOTE: equivalent asset values for each EDS, truncated into single column\n')
+end
 fprintf('report written to sheet %s of %s\n',sheet,xls_file);
 
 return
