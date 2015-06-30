@@ -288,6 +288,10 @@ for measure_i = 1:n_measures+1 % last with no measures
 
     if measure_i <= n_measures
         
+        if strcmpi(measures.name{measure_i},'Flood resilient crops')
+            pause(0);
+        end
+        
         %fprintf('assessing impact of measure %i\n',measure_i); % TEST
         
         % special treatment if an alternate hazard set is given
@@ -312,12 +316,7 @@ for measure_i = 1:n_measures+1 % last with no measures
                 if exist(measures_hazard_file,'file')
                     % orig_hazard = hazard; % backup
                     cprintf([0 0 1],'NOTE: measure %i, modified hazard according to %s\n',measure_i,measures_hazard_file);
-                    %load(measures_hazard_file);
-                    
-                    check_plot = 0;
-                    if strcmp(measures.name{measure_i},'Embankments')
-                        check_plot = 1;
-                    end
+                    %load(measures_hazard_file);                    
                     
                     if isfield(measures,'hazard_event_set_operator')
                         switch char(measures.hazard_event_set_operator{measure_i}(1))
@@ -330,7 +329,7 @@ for measure_i = 1:n_measures+1 % last with no measures
                                 op = []; % distributed_measures will try to figure it out from the data
                         end
                         if ~strcmp(measures.hazard_event_set_operator,'nil')
-                            hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,op,check_plot);
+                            hazard = climada_distributed_measures(measures_hazard_file,orig_hazard,op,0);
                         else
                             load(measures_hazard_file);
                         end

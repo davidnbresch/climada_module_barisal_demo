@@ -193,6 +193,35 @@ switch dmg_dig
         dmg_unit = '';
 end
 
+% % total value from max of each entity at each point, for each reference year
+% % TAV present
+% max_val = [0];
+% for ed_i = 1:length(EDS)/5
+%     max_val = max(max_val, sum(EDS(ed_i).assets.Value));
+% end
+% for ed_i = 1:length(EDS)/5
+%     EDS(ed_i).Value_total = max_val;
+% end
+% 
+% 
+% % TAV future
+% max_val = [0];
+% for ed_i = 2*length(EDS)/5+1:3*length(EDS)/5
+%     max_val = max(max_val, sum(EDS(ed_i).assets.Value));
+% end
+% for ed_i = length(EDS)/5+1:3*length(EDS)/5 % future value also for middle socio-econ scen
+%     EDS(ed_i).Value_total = max_val;
+% end
+% 
+% % TAV future2
+% max_val = [0];
+% for ed_i = 4*length(EDS)/5+1:length(EDS)
+%     max_val = max(max_val, sum(EDS(ed_i).assets.Value));  
+% end
+% for ed_i = 3*length(EDS)/5+1:length(EDS) % future value also for middle socio-econ scen
+%     EDS(ed_i).Value_total = max_val;
+% end
+
 % TAV of portfolio
 TAV_dig = 0;
 if isfield(EDS,'Value_total')
@@ -387,7 +416,7 @@ if isempty(scenario_names)
     for d_i = 1:damage_count
         switch d_i
             case 1
-                textstr = {'Expected damage'; ['today ' num2str(EDS(d_i).reference_year)]};
+                textstr = {'Expected'; 'damage today';[num2str(EDS(d_i).reference_year)]};
             case 2
                 textstr = {'Increase'; 'from econ.'; sprintf('growth %d' ,EDS(d_i-1).reference_year)};
             case 3

@@ -124,12 +124,31 @@ switch dmg_dig
         dmg_unit = '';
 end
 
+% total value from max of each entity at each point, for each reference year
+% TAV present
+max_val = [0];
+for ed_i = 1:length(EDS)/3
+    max_val = max(max_val, sum(EDS(ed_i).assets.Value));
+end
+for ed_i = 1:length(EDS)/3
+    EDS(ed_i).Value_total = max_val;
+end
+
+% TAV future
+max_val = [0];
+for ed_i = 2*length(EDS)/3+1:length(EDS)
+    max_val = max(max_val, sum(EDS(ed_i).assets.Value));  
+end
+for ed_i = length(EDS)/3+1:length(EDS) % future value also for middle socio-econ scen
+    EDS(ed_i).Value_total = max_val;
+end
+
 % TAV of portfolio
 TAV_dig = 0;
 if isfield(EDS,'Value_total')
     TAV_nr = unique([EDS(:).Value_total]);
 else
-    TAV_nr = unique([EDS(:).Value]);
+    TAV_nr = unique(sum([EDS(:).Value]));
 end
 
 while mean(TAV_nr) > 1000
@@ -146,14 +165,6 @@ switch TAV_dig
     case 12
         TAV_unit = 'tn';
 end
-if isfield(EDS,'Value_total')
-    TAV_nr = round(unique([EDS(:).Value_total])*10^-TAV_dig);
-else
-    TAV_nr = round(unique([EDS(:).Value])*10^-TAV_dig);
-end
-
-N      = 2; % digits after decimal point
-TAV_nr = round(TAV_nr*10^N)/10^N;
 
 % fontsize_  = 8;
 fontsize_  = 12;
@@ -276,15 +287,15 @@ text(damage_count, damage_(end,1)-max(damage_(:))*0.02, ...
 
 %% set title
 textstr = 'Annual Expected Damage (AED)';
-textstr_TAV_present = sprintf('Total asset value (%s): %s %d %s',...
+textstr_TAV_present = sprintf('Total asset value (%s): %s %2.1f %s',...
     num2str(min([EDS.reference_year])),currency,min(TAV_nr),TAV_unit);
-textstr_TAV_future = sprintf('Total asset value (%s): %s %d %s',...
+textstr_TAV_future = sprintf('Total asset value (%s): %s %2.1f %s',...
     num2str(max([EDS.reference_year])),currency,max(TAV_nr),TAV_unit);
 if strcmpi(currency,'PEOPLE')
     textstr = 'Annual Expected no. of Casualties';
-    textstr_TAV_present = sprintf('Total population (%s): %d %s %s',...
+    textstr_TAV_present = sprintf('Total population (%s): %2.1f %s %s',...
     num2str(min([EDS.reference_year])),min(TAV_nr),TAV_unit,currency);
-textstr_TAV_future = sprintf('Total population (%s): %d %s %s',...
+textstr_TAV_future = sprintf('Total population (%s): %2.1f %s %s',...
     num2str(max([EDS.reference_year])),max(TAV_nr),TAV_unit,currency); 
 end
 
