@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 %% plot historical tc tracks
 tc_track_file = [climada_global.data_dir filesep 'tc_tracks' filesep 'tracks_n_indian_proc'];
@@ -136,6 +137,7 @@ datestr(hazard.datenum(indx))
 % res=climada_hazard_plot(hazard,event_i+2,'','','');
 % figure
 % res=climada_hazard_plot(hazard,event_i+3,'','','');
+
 
 
 
