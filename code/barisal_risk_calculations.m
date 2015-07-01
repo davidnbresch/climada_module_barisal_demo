@@ -590,6 +590,12 @@ end
 %     close
 % end
 
+
+%% measures impact (benefits) report per peril
+barisal_MI_per_peril(measures_impact5,measures,peril_IDs)
+
+
+%% multi peril waterfall graph
 if exist('EDS1','var') && exist('EDS2','var') && exist('EDS3','var') && exist('EDS4','var') && exist('EDS5','var')
     % multi peril waterfall 2030
     fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
