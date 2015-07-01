@@ -74,7 +74,7 @@ end
 
 EDS = struct([]); scenario_names = {};damage = []; hazard_names = {}; %init
 for v_i = 1:length(varargin)
-    if isstruct(varargin{v_i})      
+    if isstruct(varargin{v_i})
         EDS = [EDS varargin{v_i}];
         damage =  [damage, [varargin{v_i}.ED]' ];
     elseif ischar(varargin{v_i})
@@ -143,13 +143,13 @@ for EDS_i = 1:length(EDS)
         damage(EDS_i) = EDS(EDS_i).damage_fit(r_index);
     end
     % identification of EDS_i
-    hazard_name       = strtok(EDS(EDS_i).hazard.comment,',');
-    hazard_name       = horzcat(hazard_name, ' ', int2str(EDS(EDS_i).reference_year));
-    [fP, assets_name] = fileparts(EDS(EDS_i).assets.filename);
-    str               = sprintf('%s | %s',assets_name, hazard_name);
-    str               = strrep(str,'_',' '); % since title is LaTEX format
-    str               = strrep(str,'|','\otimes'); % LaTEX format
-    legend_str{EDS_i} = str;
+    %     hazard_name       = strtok(EDS(EDS_i).hazard.comment,',');
+    %     hazard_name       = horzcat(hazard_name, ' ', int2str(EDS(EDS_i).reference_year));
+    %     [fP, assets_name] = fileparts(EDS(EDS_i).assets.filename);
+    %     str               = sprintf('%s | %s',assets_name, hazard_name);
+    %     str               = strrep(str,'_',' '); % since title is LaTEX format
+    %     str               = strrep(str,'|','\otimes'); % LaTEX format
+    %     legend_str{EDS_i} = str;
 end % EDS_i
 
 
@@ -192,6 +192,35 @@ switch dmg_dig
     otherwise
         dmg_unit = '';
 end
+
+% % total value from max of each entity at each point, for each reference year
+% % TAV present
+% max_val = [0];
+% for ed_i = 1:length(EDS)/5
+%     max_val = max(max_val, sum(EDS(ed_i).assets.Value));
+% end
+% for ed_i = 1:length(EDS)/5
+%     EDS(ed_i).Value_total = max_val;
+% end
+% 
+% 
+% % TAV future
+% max_val = [0];
+% for ed_i = 2*length(EDS)/5+1:3*length(EDS)/5
+%     max_val = max(max_val, sum(EDS(ed_i).assets.Value));
+% end
+% for ed_i = length(EDS)/5+1:3*length(EDS)/5 % future value also for middle socio-econ scen
+%     EDS(ed_i).Value_total = max_val;
+% end
+% 
+% % TAV future2
+% max_val = [0];
+% for ed_i = 4*length(EDS)/5+1:length(EDS)
+%     max_val = max(max_val, sum(EDS(ed_i).assets.Value));  
+% end
+% for ed_i = 3*length(EDS)/5+1:length(EDS) % future value also for middle socio-econ scen
+%     EDS(ed_i).Value_total = max_val;
+% end
 
 % TAV of portfolio
 TAV_dig = 0;
@@ -237,15 +266,15 @@ area([damage_count-stretch damage_count+stretch], damage(end-1)*ones(1,2),'facec
 for i = 1:length(damage)-2
     indx = i;
     h(i) = patch( [i-stretch i+stretch i+stretch i-stretch],...
-          [damage(indx) damage(indx) damage(i+1) damage(i+1)],...
-          cmap(i,:),'edgecolor','none');
+        [damage(indx) damage(indx) damage(i+1) damage(i+1)],...
+        cmap(i,:),'edgecolor','none');
 end
 % full bar for 2030 time horizon
 i = 4;
 h(i) = patch( [i-stretch i+stretch i+stretch i-stretch],...
-          [0 0 damage(i+1) damage(i+1)],...
-          cmap(i,:),'edgecolor','none');
-      
+    [0 0 damage(i+1) damage(i+1)],...
+    cmap(i,:),'edgecolor','none');
+
 for i = 1:length(damage)-2
     if i <=3 %first time horizon
         plot([i+stretch 4-stretch],[damage(i+1) damage(i+1)],':','color',cmap(end,:))
@@ -266,21 +295,28 @@ strfmt = ['%2.' int2str(N) 'f'];
 dED    = 0.0;
 for d_i = 2:damage_count-1
     if d_i>2 && value(d_i)<value(d_i+1)
-       indx = find(value(d_i)>value);
-       indx = indx(end)+1;
+        indx = find(value(d_i)>value);
+        indx = indx(end)+1;
     else
         indx = d_i;
     end
-    if d_i ~= 4
+    if d_i ~= 4 && d_i~= 5
         textstr = num2str(damage(d_i+1)-damage(indx),strfmt);
         text(d_i-dED, damage(indx)+ (damage(d_i+1)-damage(indx))/2, ...
             textstr, 'color','w', 'HorizontalAlignment','center',...
             'VerticalAlignment','middle','FontWeight','bold','fontsize',fontsize_);
     end
+    if d_i == 5
+        text(d_i-dED, damage(indx)+ (damage(d_i+1)-damage(indx))/2, ...
+            textstr, 'color','w', 'HorizontalAlignment','center',...
+            'VerticalAlignment','bottom','FontWeight','bold','fontsize',fontsize_);
+    end
 end
 text(1, damage(2)             , num2str(damage_disp(1)  ,strfmt), 'color','k', 'HorizontalAlignment','center', 'VerticalAlignment','bottom','FontWeight','bold','fontsize',fontsize_);
 text(damage_count, damage(end), num2str(damage_disp(end),strfmt), 'color','k', 'HorizontalAlignment','center', 'VerticalAlignment','bottom','FontWeight','bold','fontsize',fontsize_);
 text(4, damage(4), num2str(damage(4),strfmt), 'color','k', 'HorizontalAlignment','center', 'VerticalAlignment','bottom','FontWeight','bold','fontsize',fontsize_);
+
+
 
 
 %remove xlabels and ticks
@@ -365,7 +401,7 @@ if strcmpi(currency,'PEOPLE')
     textstr_TAV_future = sprintf('Total population (%s): %2.0f %s %s',...
         num2str(median(unique([EDS.reference_year]))),median(TAV_nr),TAV_unit,currency);
     textstr_TAV_future2 = sprintf('Total population (%s): %2.0f %s %s',...
-        num2str(max([EDS.reference_year])),max(TAV_nr),TAV_unit,currency); 
+        num2str(max([EDS.reference_year])),max(TAV_nr),TAV_unit,currency);
 end
 
 text(1-stretch, max(max(damage))*1.21,textstr, 'color','k','HorizontalAlignment','left','VerticalAlignment','top','FontWeight','bold','fontsize',fontsize_);
@@ -375,26 +411,46 @@ text(1-stretch, max(max(damage))*1.07,textstr_TAV_future2, 'color','k','Horizont
 
 clear textstr
 
-%% set xlabel 
-for d_i = 1:damage_count
-    switch d_i
-        case 1
-            textstr = {[num2str(climada_global.present_reference_year) ' today''s'];'expected damage'};
-        case 2
-            textstr = {'Increase'; 'from econ.'; 'growth'};
-        case 3
-            textstr = {'Increase'; 'from'; 'climate'; 'change'};
-        case 4
-            textstr = {'Total';'expected';sprintf('damage %d',EDS(d_i-1).reference_year)};
-        case 5
-            textstr = {'Increase'; 'from econ.'; 'growth'; sprintf('%d',EDS(d_i).reference_year)};
-        case 6
-            textstr = {'Increase'; 'from'; 'climate'; 'change'};
-        case 7
-            textstr = {'Total';'expected';sprintf('damage %d',EDS(d_i-2).reference_year)};
+%% set xlabel
+if isempty(scenario_names)
+    for d_i = 1:damage_count
+        switch d_i
+            case 1
+                textstr = {'Expected'; 'damage today';[num2str(EDS(d_i).reference_year)]};
+            case 2
+                textstr = {'Increase'; 'from econ.'; sprintf('growth %d' ,EDS(d_i-1).reference_year)};
+            case 3
+                textstr = {'Increase'; 'from'; 'climate'; 'change'};
+            case 4
+                textstr = {'Total';'expected';sprintf('damage %d',EDS(d_i-1).reference_year)};
+            case 5
+                textstr = {'Increase'; 'from econ.'; 'growth'; sprintf('%d',EDS(d_i).reference_year)};
+            case 6
+                textstr = {'Increase'; 'from'; 'climate'; 'change'};
+            case 7
+                textstr = {'Total';'expected';sprintf('damage %d',EDS(d_i-2).reference_year)};
+        end
+        text(d_i-stretch, damage(1)-max(damage)*0.02, textstr,...
+            'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
     end
-    text(d_i-stretch, damage(1)-max(damage)*0.02, textstr,...
-         'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
+else
+    for d_i = 1:length(scenario_names)
+        fld_i = ['fld_' num2str(d_i)];
+        c = strsplit(scenario_names{d_i},'; ');
+        textstr.(fld_i) = {c{1}};
+        for c_i = 2:length(c)
+            textstr.(fld_i) = [textstr.(fld_i); c{c_i}];
+        end
+    end
+    % first and last xlabel
+    textstr.fld_1 = {'Today''s';'expected damage';sprintf('%d',climada_global.present_reference_year)};
+    fld_total = ['fld_' num2str(n_scenarios)];
+    textstr.(fld_total) = {'Total';'expected damage';sprintf('%d',max([EDS.reference_year]))};  
+
+    for i = 1:n_scenarios
+        text(i-stretch+0.3, damage(1,1)-max(damage(:))*0.02,textstr.(['fld_' num2str(i)]),...
+            'color','k','HorizontalAlignment','center','VerticalAlignment','top','fontsize',fontsize_2);
+    end    
 end
 
 %% set xlabel old
@@ -402,18 +458,18 @@ end
 %     % economic growth (same hazard, no climate change)
 %     if strcmp(EDS(d_i).hazard.filename,EDS(d_i-1).hazard.filename) & EDS(d_i).Value ~= EDS(d_i-1).Value
 %         textstr = {'Increase'; 'from econ.'; 'growth'; sprintf('%d',EDS(d_i).reference_year)};
-%     
-%     % climate change (different hazard, same asset value, no economic growth)    
+%
+%     % climate change (different hazard, same asset value, no economic growth)
 %     elseif ~strcmp(EDS(d_i).hazard.filename,EDS(d_i-1).hazard.filename) & EDS(d_i).Value == EDS(d_i-1).Value
 %         %textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
 %         textstr = {'Increase'; 'from mod.'; 'climate change';sprintf('%d',EDS(d_i).reference_year)};
-%     
-%     % climate change (same hazard, same asset value, no economic growth)    
+%
+%     % climate change (same hazard, same asset value, no economic growth)
 %     elseif strcmp(EDS(d_i).hazard.filename,EDS(d_i-1).hazard.filename) & EDS(d_i).Value == EDS(d_i-1).Value
 %         %textstr = {'Increase'; 'from climate'; sprintf('change; %d',EDS(d_i).reference_year)};
-%         textstr = {'Increase'; 'from extr.'; 'climate change';sprintf('%d',EDS(d_i).reference_year)};    
-%     
-%     % just any other incremental increase    
+%         textstr = {'Increase'; 'from extr.'; 'climate change';sprintf('%d',EDS(d_i).reference_year)};
+%
+%     % just any other incremental increase
 %     else
 %         textstr = {'Increase'; 'until'; sprintf('%d',EDS(d_i).reference_year)};
 %     end
@@ -426,14 +482,14 @@ end
 % text(damage_count-stretch, damage(1)-max(damage)*0.02,textstr,...
 %      'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 
- 
+
 % text(2-stretch, damage(1)-max(damage)*0.02, {'Incremental increase';'from economic';'gowth; 2030'},          'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 % text(3-stretch, damage(1)-max(damage)*0.02, {'Incremental increase';'2050'},                                 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-% 
+%
 % % text(2-stretch, damage(1)-max(damage)*0.02, {'Incremental increase';'from economic';'gowth; no climate';'change'},          'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 % % text(3-stretch, damage(1)-max(damage)*0.02, {'Incremental increase';'from climate change'},                                 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 % % text(4-stretch, damage(1)-max(damage)*0.02, {[num2str(climada_global.future_reference_year) ', total'];'expected damage'},    'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
-% 
+%
 % text(2-stretch, damage(1)-max(damage)*0.02, {'Incremental increase';'from economic';'gowth; 2030'},          'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 % text(3-stretch, damage(1)-max(damage)*0.02, {'Incremental increase';'2050'},                                 'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);
 % text(4-stretch, damage(1)-max(damage)*0.02, {'2050 total';'expected damage'},    'color','k','HorizontalAlignment','left','VerticalAlignment','top','fontsize',fontsize_2);

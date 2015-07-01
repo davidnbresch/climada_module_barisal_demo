@@ -30,6 +30,11 @@ fprintf('measures impact report for:\n')
 for k=1:length(MI_EDS_combined)
     MI_EDS_combined(k).ED_at_centroid   = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
     fld(k).MI_at_centroid               = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
+%     fld(k).MI_frac_of_AED               = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
+%     fld(k).EAD_frac_of_TEV              = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
+
+    fld(k).Value_total      = 0; %init
+
     MI_EDS_combined(k).peril_ID         = '';
     if ~strcmp(MI_EDS_combined(k).annotation_name,'control')
         fprintf('\t%s\n',MI_EDS_combined(k).annotation_name)
@@ -63,18 +68,22 @@ for i = 1:length(measures_impact) % loop through each hazard/entity combo
             
             MI_EDS_combined(j).hazard(end+1)    = measures_impact(i).EDS(ndx).hazard;
             MI_EDS_combined(j).peril_ID         = [MI_EDS_combined(j).peril_ID measures_impact(i).EDS(ndx).peril_ID ' | '];
+            
+            MI_EDS_combined(j).ED               = MI_EDS_combined(j).ED + measures_impact(i).EDS(ndx).ED;
+            fld(j).Value_total                  = max(fld(j).Value_total,sum(measures_impact(i).EDS(ndx).assets.Value)); 
         else
-            MI_EDS_combined(j).hazard           = measures_impact(i).EDS(ndx).hazard;
-            MI_EDS_combined(j).peril_ID         = measures_impact(i).EDS(ndx).peril_ID;
-
             MI_EDS_combined(j).ED_at_centroid   = MI_EDS_combined(j).ED_at_centroid+ctrl_ED_at_c;
             fld(j).MI_at_centroid               = fld(j).MI_at_centroid + 0;
+            
+            MI_EDS_combined(j).ED               = MI_EDS_combined(j).ED + ctrl_ED_at_c;
+            fld(j).Value_total                  = max(fld(j).Value_total,sum(measures_impact(i).EDS(end).assets.Value)); 
         end
     end
 end
 % assign fld.MI_at_centroid to MI_EDS_combined
 for l = 1:length(MI_EDS_combined)
     MI_EDS_combined(l).MI_at_centroid = fld(l).MI_at_centroid;
+    MI_EDS_combined(l).Value_total = fld(l).Value_total;
 end
 
 % move control to end if it isn't already
@@ -87,17 +96,25 @@ end
 MI_EDS_combined(end+1) = MI_EDS_combined(n); % add control to end
 MI_EDS_combined(n)     = [];                 % delete original control
     
+% % stats
+% for l = 1:length(MI_EDS_combined)
+%     MI_EDS_combined(l).MI_fraction_of_AED = MI_EDS_combined(l).MI_at_centroid ./ MI_EDS_combined(end).ED_at_centroid;
+%     MI_EDS_combined(l).MI_fraction_of_TAV = MI_EDS_combined(l).MI_at_centroid ./ MI_EDS_combined(l).assets.Value;
+%     MI_EDS_combined(l).MI_fraction_of_AED(isnan(MI_EDS_combined(l).MI_fraction_of_AED)) = 0; % 0/0
+%     MI_EDS_combined(l).MI_fraction_of_TAV(isnan(MI_EDS_combined(l).MI_fraction_of_TAV)) = 0; % 0/0
+% end
+
 % save(or not)
 if ~isempty(report_xls_file)
     if ~strcmp(report_xls_file,'NO_SAVE')
-        climada_EDS_ED_at_centroid_report_xls(MI_EDS_combined,EDS_report_xls,sheet,'MI_at_centroid');
+        climada_EDS_ED_at_centroid_report_xls(MI_EDS_combined,report_xls_file,sheet,'MI_at_centroid');
     end
 else
     report_xls_file=[module_data_dir filesep 'entities' filesep '*.mat'];
-    [fN, pN] = uiputfile(report_xls_file, 'Save measures imnpact report as:');
+    [fN, pN] = uiputfile(report_xls_file, 'Save measures impact report as:');
     if isequal(fN,0) || isequal(pN,0)
         return; % cancel
     else
-        climada_EDS_ED_at_centroid_report_xls(MI_EDS_combined,EDS_report_xls,sheet,'MI_at_centroid');
+        climada_EDS_ED_at_centroid_report_xls(MI_EDS_combined,report_xls_file,sheet,'MI_at_centroid');
     end
 end

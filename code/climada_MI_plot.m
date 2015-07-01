@@ -1,4 +1,4 @@
-function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscale_check)
+function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscale_check,schematic_check)
 % visualize Annual Expected Damage per centroid as a map
 % NAME:
 %   climada_ED_plot
@@ -31,10 +31,8 @@ function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscal
 % OUTPUTS:
 %   figure
 % MODIFICATION HISTORY:
-% David N. Bresch, david.bresch@gmail.com, 20091228
-% Gilles Stassen, gillesstassen@hotmail.com, 20150519 - update and cleanup
-% Gilles Stassen, gillesstassen@hotmail.com, 20150528 - currency, unit_exp input args added
-% Gilles Stassen, gillesstassen@hotmail.com, 20150528 - logscale_check added
+% Gilles Stassen, gillesstassen@hotmail.com, 20150625 init
+% Gilles Stassen, gillesstassen@hotmail.com, 20150528 - schematic_check added
 %-
 
 global climada_global
@@ -46,6 +44,7 @@ if ~exist('percentage_of_value_flag','var'),    percentage_of_value_flag=0; end
 if ~exist('currency'                ,'var'),    currency=   'USD';          end
 if ~exist('unit_exp'                ,'var'),    unit_exp=   0;              end
 if ~exist('logscale_check'          ,'var'),    logscale_check = 1;         end
+if ~exist('schematic_check'         ,'var'),    schematic_check = 0;        end
 
 % PARAMETERS
 % prompt for event damage set if not given
@@ -106,7 +105,7 @@ for EDS_i = 1: length(EDS)
     end
     % create the figure
     scale  = max(EDS(EDS_i).assets.lon) - min(EDS(EDS_i).assets.lon);
-    ax_buffer = 3; %ax_buffer = 30;
+    ax_buffer = 10; %ax_buffer = 30;
     ax_lim = [min(EDS(EDS_i).assets.lon)-scale/ax_buffer          max(EDS(EDS_i).assets.lon)+scale/ax_buffer ...
         max(min(EDS(EDS_i).assets.lat),-60)-scale/ax_buffer  min(max(EDS(EDS_i).assets.lat),80)+scale/ax_buffer];
     
@@ -130,7 +129,7 @@ for EDS_i = 1: length(EDS)
     cmap = climada_colormap('benefit');
     if percentage_of_value_flag
 
-        nz = MI_sum_centroid>0;
+        nz = MI_sum_centroid>1 | MI_sum_centroid <-1;
         dam_TAV = (MI_sum_centroid(nz) ./ val_sum_centroid(nz)) *100;
         cbar = plotclr(lon_lat(nz,1)', lon_lat(nz,2)', dam_TAV','s',markersize,1,...
             [],[],colormap(cmap),0,logscale_check);
@@ -138,7 +137,7 @@ for EDS_i = 1: length(EDS)
         name_str = sprintf('Expected benefit (as percentage of value) for %s',num2str(EDS(EDS_i).reference_year));
     else
         
-        nz = MI_sum_centroid>0;
+        nz = MI_sum_centroid>1 | MI_sum_centroid <-1;
         cbar = plotclr(lon_lat(nz,1), lon_lat(nz,2), MI_sum_centroid(nz),'s',markersize,1,...
             [],[],colormap(cmap),0,logscale_check);
         if logscale_check
@@ -174,8 +173,13 @@ for EDS_i = 1: length(EDS)
         end
         set(get(cbar,'ylabel'),'String', label_str ,'fontsize',12);
     end
-    xlabel('Longitude')
-    ylabel('Latitude')
+    if schematic_check
+        set(gca,'xtickLabel',[],'ytickLabel',[])
+        set(cbar,'Location','East','Visible','off')
+    else
+        xlabel('Longitude')
+        ylabel('Latitude')
+    end
     
     box on
     climada_plot_world_borders(1)
