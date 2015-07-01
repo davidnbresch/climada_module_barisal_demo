@@ -109,7 +109,7 @@ for EDS_i = 1: length(EDS)
     ax_lim = [min(EDS(EDS_i).assets.lon)-scale/ax_buffer          max(EDS(EDS_i).assets.lon)+scale/ax_buffer ...
         max(min(EDS(EDS_i).assets.lat),-60)-scale/ax_buffer  min(max(EDS(EDS_i).assets.lat),80)+scale/ax_buffer];
     
-    markersize = 2;
+    markersize = 3;
     
     % to deal with multi-valued points
     lon_lat = unique([EDS(EDS_i).assets.lon EDS(EDS_i).assets.lat],'rows');
@@ -126,20 +126,29 @@ for EDS_i = 1: length(EDS)
     end
     
     % fig = climada_figuresize(height,height*scale2+0.15);
-    cmap = climada_colormap('benefit');
+    cmap_a = climada_colormap('benefit');
+    cmap_b = flipud(climada_colormap('schematic'));
     if percentage_of_value_flag
 
-        nz = MI_sum_centroid>1 | MI_sum_centroid <-1;
+        nz = MI_sum_centroid <=-1;
+        dam_TAV = (MI_sum_centroid(nz) ./ val_sum_centroid(nz)) *100;
+        plotclr(lon_lat(nz,1)', lon_lat(nz,2)', dam_TAV','s',markersize,0,...
+            [],[],colormap(cmap_b),0,logscale_check);
+        
+        nz = MI_sum_centroid>=1 ;%| 
         dam_TAV = (MI_sum_centroid(nz) ./ val_sum_centroid(nz)) *100;
         cbar = plotclr(lon_lat(nz,1)', lon_lat(nz,2)', dam_TAV','s',markersize,1,...
-            [],[],colormap(cmap),0,logscale_check);
+            [],[],colormap(cmap_a),0,logscale_check);
         
         name_str = sprintf('Expected benefit (as percentage of value) for %s',num2str(EDS(EDS_i).reference_year));
     else
+        nz = MI_sum_centroid <=-1;
+        plotclr(lon_lat(nz,1), lon_lat(nz,2), MI_sum_centroid(nz),'s',markersize,0,...
+            [],[],colormap(cmap_b),0,logscale_check);
         
-        nz = MI_sum_centroid>1 | MI_sum_centroid <-1;
+        nz = MI_sum_centroid>=1 ;%| MI_sum_centroid <=-1;
         cbar = plotclr(lon_lat(nz,1), lon_lat(nz,2), MI_sum_centroid(nz),'s',markersize,1,...
-            [],[],colormap(cmap),0,logscale_check);
+            [],[],colormap(cmap_a),0,logscale_check);
         if logscale_check
             caxis(log([min(MI_sum_centroid(nz)) max(MI_sum_centroid(nz))]))
         else
