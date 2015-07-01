@@ -527,6 +527,11 @@ fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS4,scen_name
 print(fig,'-dpng',[results_dir filesep 'BCC_waterfall_multi_peril_2050_' char(cc_scen) '.png'])
 close
 
+%% measures impact (benefits) report per peril
+barisal_MI_per_peril(measures_impact5,measures,peril_IDs)
+
+
+
 %% measures impact report
 EDS_report_xls = [results_dir filesep 'BCC_ED_report_measures_' datestr(now,'ddmmyy') '_test.xls'];
 
