@@ -33,6 +33,7 @@ function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscal
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com, 20150625 init
 % Gilles Stassen, gillesstassen@hotmail.com, 20150528 - schematic_check added
+% Lea Mueller, muellele@gmail.com, 20150607, add switch for UTM instead of lat/lon coordinates, inhibit limiting latitude values to -60° and +80°
 %-
 
 global climada_global
@@ -106,8 +107,15 @@ for EDS_i = 1: length(EDS)
     % create the figure
     scale  = max(EDS(EDS_i).assets.lon) - min(EDS(EDS_i).assets.lon);
     ax_buffer = 10; %ax_buffer = 30;
-    ax_lim = [min(EDS(EDS_i).assets.lon)-scale/ax_buffer          max(EDS(EDS_i).assets.lon)+scale/ax_buffer ...
-        max(min(EDS(EDS_i).assets.lat),-60)-scale/ax_buffer  min(max(EDS(EDS_i).assets.lat),80)+scale/ax_buffer];
+    if max(EDS(EDS_i).assets.lon)>1000 %not lat/lon but UTM coordinates
+        min_lat = 0;
+        max_lat = 10^9;
+    else %normal lat/lon coordinates, set maximum south to -60° and maximum north to 80°
+        min_lat = -60;
+        max_lat = 80;
+    end
+    ax_lim = [min(EDS(EDS_i).assets.lon)-scale/ax_buffer               max(EDS(EDS_i).assets.lon)+scale/ax_buffer ...
+              max(min(EDS(EDS_i).assets.lat),min_lat)-scale/ax_buffer  min(max(EDS(EDS_i).assets.lat),max_lat)+scale/ax_buffer];
     
     markersize = 2;
     
