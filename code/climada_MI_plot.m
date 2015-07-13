@@ -1,30 +1,16 @@
 function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscale_check,schematic_check)
 % visualize Annual Expected Damage per centroid as a map
 % NAME:
-%   climada_ED_plot
+%   climada_MI_plot
 % PURPOSE:
-%   plot annual expected damage
+%   plot annual expected measure impact
 % CALLING SEQUENCE:
-%   climada_ED_plot(EDS, percentage_of_value_flag)
+%   climada_MI_plot(EDS, percentage_of_value_flag)
 % EXAMPLE:
-%   climada_ED_plot(EDS, percentage_of_value_flag)
+%   climada_MI_plot(EDS, percentage_of_value_flag)
 % INPUTS:
-%   EDS, the event damage set with fields:
-%       reference_year: the year the losses are references to
-%       event_ID(event_i): the unique ID for each event_i
-%       damage(event_i): the loss amount for event_i
-%       Value: the sum of allValues used in the calculation (to e.g. express
-%           losses in percentage of total Value)
-%       frequency(event_i): the per occurrence event frequency for each event_i
-%       orig_event_flag(event_i): whether an original event (=1) or a
-%           probabilistic one (=0)
-%       comment: a free comment, contains time for calculation
-%       hazard: itself a structure, with:
-%           filename: the filename of the hazard event set
-%           comment: a free comment
-%       assets: struct with lon, lat, value and filename of assets
-%       damagefunctions.filename: the filename of the damage functions
-%       annotation_name: a kind of default title (sometimes empty)
+%   EDS output from climada_measures_impact_report (which has field
+%   .MI_at_centroid)
 % OPTIONAL INPUT PARAMETERS:
 %   percentage_of_value_flag: Set to 1 if you wish to plot damages as
 %                             percentage of asset values
@@ -32,7 +18,7 @@ function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscal
 %   figure
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com, 20150625 init
-% Gilles Stassen, gillesstassen@hotmail.com, 20150528 - schematic_check added
+% Gilles Stassen, gillesstassen@hotmail.com, 20150628 - schematic_check added
 %-
 
 global climada_global
