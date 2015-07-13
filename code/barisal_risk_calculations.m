@@ -26,6 +26,8 @@ climada_admin_name('Bangladesh','Barisal S.',4,1);
 
 clear BCC_border_file BCC_wards_file
 
+return
+
 %% hazard file name
 
 % This section stores the filenames of all the relevant hazards in a cell
@@ -697,15 +699,20 @@ end
 
 for s_i = [1 3 5]
     MI_EDS_combined = eval(['MI_EDS_combined' num2str(s_i)]);
-    for ed_i = 1:length(MI_EDS_combined)-1
+    for ed_i = 1:length(MI_EDS_combined)
+        % use UTM X/Y instead of lat/lon, temporarily overwrite lat/lon
+        MI_EDS_combined(ed_i).assets.lon = MI_EDS_combined(ed_i).assets.X;
+        MI_EDS_combined(ed_i).assets.lat = MI_EDS_combined(ed_i).assets.Y;
         climada_MI_plot(MI_EDS_combined(ed_i), 0,'BDT',0,0,1)
-        shape_plotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
-        print(gcf,'-dpng',[results_dir filesep 'BCC_measure_impact_' ...
+        shape_plotter(BCC_wards_ll,'','x','y','linewidth',1,'color',[81 81 81]/255);
+        print(gcf,'-dpng',[results_dir filesep 'BCC_measure_benefit_' ...
             strrep(MI_EDS_combined(ed_i).annotation_name,' ','_') '_' ...
             num2str(MI_EDS_combined(1).reference_year) '.png'])
         close
     end
 end
+
+
 
 clear -regexp ^scen_name\d{1}$
 clear m measures_impact cc_scen ed_i s_i 
