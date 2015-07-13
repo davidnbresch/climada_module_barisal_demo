@@ -420,8 +420,47 @@ for measure_i = 1:n_measures+1 % last with no measures
         annotation_name        = 'control';
     end
     EDS(measure_i)            = climada_EDS_calc(entity,hazard,annotation_name);
-    entity.assets.DamageFunID = orig_assets_DamageFunID; % reset damagefunctions mapping
-    
+
+    % special routine for resilient buildings barisal in measures package
+    if strcmp(hazard.peril_ID,'FL') && isfield(entity.assets,'most_vuln_building') &&...
+            entity.assets.reference_year > climada_global.present_reference_year 
+        ent_tmp     = entity; % backup
+        test_mode   = 1;
+        switch entity.assets.reference_year
+            case 2030,  mod_A = 0.5;    mod_B = 0.3;
+            case 2050,  mod_A = 1.0;    mod_B = 0.3;
+        end
+        
+        ndx_A = strcmp('A',ent_tmp.assets.most_vuln_building);
+        ndx_B = strcmp('B',ent_tmp.assets.most_vuln_building);
+        
+        damfunIDs_A = ent_tmp.assets.DamageFunID(ndx_A);
+        damfunIDs_B = ent_tmp.assets.DamageFunID(ndx_B);
+        
+        damfun_mod_A = ismember(ent_tmp.damagefunctions.DamageFunID,damfunIDs_A) & (ent_tmp.damagefunctions.Intensity ~= 0); % don't shift the zero
+        damfun_mod_B = ismember(ent_tmp.damagefunctions.DamageFunID,damfunIDs_B) & (ent_tmp.damagefunctions.Intensity ~= 0);
+        
+        ent_tmp.damagefunctions.Intensity(damfun_mod_A) = ent_tmp.damagefunctions.Intensity(damfun_mod_A)+mod_A;
+        ent_tmp.damagefunctions.Intensity(damfun_mod_B) = ent_tmp.damagefunctions.Intensity(damfun_mod_B)+mod_B;
+        
+        if test_mode
+            figure; hold on
+            plot(entity.damagefunctions.Intensity(damfun_mod_A),entity.damagefunctions.MDD(damfun_mod_A),'r')
+            plot(entity.damagefunctions.Intensity(damfun_mod_B),entity.damagefunctions.MDD(damfun_mod_B),'b')
+            plot(ent_tmp.damagefunctions.Intensity(damfun_mod_A),ent_tmp.damagefunctions.MDD(damfun_mod_A),'g')
+            plot(ent_tmp.damagefunctions.Intensity(damfun_mod_B),ent_tmp.damagefunctions.MDD(damfun_mod_B),'m')
+            hold off
+        end
+        EDS_tmp = climada_EDS_calc(ent_tmp,hazard,annotation_name);
+        EDS(measure_i).ED_at_centroid(ndx_A | ndx_B) = EDS_tmp.ED_at_centroid(ndx_A | ndx_B);
+        EDS(measure_i).ED = sum(EDS(measure_i).ED_at_centroid);
+        EDS(measure_i).comment = 'modified for flood resilient buildings, .damage field may contain incorrect values';
+        
+        entity.damagefunctions      = orig_damagefunctions;
+    end
+        
+    entity.assets.DamageFunID   = orig_assets_DamageFunID; % reset damagefunctions mapping
+
     if measure_i<=n_measures % not for the control run (last one)
         
         if measures.hazard_high_frequency_cutoff(measure_i)>0
@@ -463,7 +502,7 @@ for measure_i = 1:n_measures+1 % last with no measures
         entity = orig_entity; % restore
         cprintf([0 0 1],'NOTE: switched entity back\n');
         if measure_i < n_measures
-            orig_hazard=[]; % free up memory
+            orig_entity=[]; % free up memory
         end
     end
 end % measure_i
