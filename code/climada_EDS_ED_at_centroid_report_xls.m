@@ -25,6 +25,8 @@ function climada_EDS_ED_at_centroid_report_xls(EDS,xls_file,sheet,varargin)
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20150430, init
 % Gilles Stassen, gillesstassen@hotmail.com, 20150625, generalisation with varargin
+% Lea Mueller, muellele@gmail.com, 20150730, check that category iscell, otherwise convert to cell from numeric
+% Lea Mueller, muellele@gmail.com, 20150805, check if data is on lat/lon or X/Y basis
 %-
 
 global climada_global
@@ -106,6 +108,14 @@ if isempty(xls_file)
     end
 end
 
+% check if data is on lat/lon or X/Y basis
+has_lon = -1; % no lat/lon, no X/Y data
+if isfield(EDS.assets, 'lon') & isfield(EDS.assets, 'lat')
+    has_lon = 1;
+elseif isfield(EDS.assets, 'X') & isfield(EDS.assets, 'Y')
+    has_lon = 0;
+end
+    
 
 % write data into matrix, which will be outputted to xls
 msgstr = '& '; %init
@@ -115,16 +125,26 @@ end
 fprintf('writing ED at centroid %s\b\b to xls... ',msgstr)
 
 matr          = cell(length(EDS(1).ED_at_centroid)+4,numel(EDS)*2+2);
-matr{4,1}     = 'X';
-matr{4,2}     = 'Y';
-matr(5:end,1) = num2cell(EDS(1).assets.X);
-matr(5:end,2) = num2cell(EDS(1).assets.Y);
 
+if has_lon == 1
+    matr{4,1}     = 'lon';
+    matr{4,2}     = 'lat';
+    matr(5:end,1) = num2cell(EDS(1).assets.lon);
+    matr(5:end,2) = num2cell(EDS(1).assets.lat);
+elseif has_lon == 0
+    matr{4,1}     = 'X';
+    matr{4,2}     = 'Y';
+    matr(5:end,1) = num2cell(EDS(1).assets.X);
+    matr(5:end,2) = num2cell(EDS(1).assets.Y);
+else
+    matr{4,1}     = 'no data';
+    matr{4,2}     = 'no data';
+end
 static_col = 2;
 
 % special case for Barisal where we have two additional variables to
 % describee the centroids
-if exist(EDS(1).assets.filename,'file')
+if exist(EDS(1).assets.filename,'file') 
     load(EDS(1).assets.filename)
     if isfield(entity(1).assets,'Att_100x100_Cell_Code')
         matr{4,static_col+1}     = '100x100 Cell code';
@@ -138,7 +158,11 @@ if exist(EDS(1).assets.filename,'file')
     end
     if isfield(entity(1).assets,'Category')
         matr{4,static_col+1}     = 'Category';
-        matr(5:end,static_col+1) = entity(1).assets.Category;
+        if iscell(entity(1).assets.Category)
+            matr(5:end,static_col+1) = entity(1).assets.Category;
+        elseif isnumeric(entity(1).assets.Category)
+            matr(5:end,static_col+1) = num2cell(entity(1).assets.Category);
+        end
         static_col = static_col +1;
     end
 end
