@@ -1,4 +1,4 @@
-function entity = barisal_ED_find_most_vulnerable(entity, EDS, criterion)
+function entity = barisal_ED_find_most_vulnerable(entity, EDS, criterion_A, criterion_B)
 
 %% compare AED with income
 
@@ -12,7 +12,6 @@ AED_rel(isinf(AED_rel)) = 0;
 AED_rel(isnan(AED_rel)) = 0;
 
 % find top-most relative AEDs
-if isempty(criterion), criterion = 0.25; end
 % Y = prctile(AED_rel,75) 
 [AED_sort AED_sort_indx] = sort(AED_rel,'descend');
 
@@ -20,17 +19,21 @@ if isempty(criterion), criterion = 0.25; end
 n_residential = 6*7753;
 
 % find most vulnerable buildings
-criterion_absolute      = int64(criterion*n_residential);
-indx_most_vuln_building = AED_sort_indx(1:criterion_absolute);
+criterion_absolute_A      = int64(criterion_A*n_residential);
+criterion_absolute_B      = int64(criterion_B*n_residential);
+indx_most_vuln_building_A = AED_sort_indx(1:criterion_absolute_A);
+indx_most_vuln_building_B = AED_sort_indx(1:criterion_absolute_B);
 
 % index with centroids that point to the most vulnerable residential buildings
 indx_all = 1:numel(entity.assets.lon);
-indx_most_vuln_building = ismember(indx_all, indx_most_vuln_building);
+indx_most_vuln_building_A = ismember(indx_all, indx_most_vuln_building_A);
+indx_most_vuln_building_B = ismember(indx_all, indx_most_vuln_building_B);
+
 % sum(indx_most_vuln_building)
 
 % load resilient_buildings_zone_B
 barisal_data_dir= [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
-load([barisal_data_dir filesep 'entities' filesep 'packet' filesep 'resilient_buildings_zones_B.mat'])
+load([barisal_data_dir filesep 'entities' filesep 'Measures_package' filesep 'resilient_buildings_zones_B.mat'])
 
 % find lat/lon in zone B
 indx_zone_B = inpoly([entity.assets.lon entity.assets.lat],[resilient_buildings_zone_B.lon' resilient_buildings_zone_B.lat']);
@@ -39,8 +42,8 @@ indx_zone_B = inpoly([entity.assets.lon entity.assets.lat],[resilient_buildings_
 %     - zeros (not most vulnerable)
 %     - A (most vulnerable buildings in zone A) and 
 %     - B (most vulnerable buildings in zone B)
-most_vuln_zone_B   = logical(indx_most_vuln_building .* indx_zone_B');
-most_vuln_zone_A   = logical(indx_most_vuln_building .* ~indx_zone_B');
+most_vuln_zone_B   = logical(indx_most_vuln_building_B .* indx_zone_B');
+most_vuln_zone_A   = logical(indx_most_vuln_building_A .* ~indx_zone_B');
 most_vuln_building = cell(size(entity.assets.lon));
 most_vuln_building(most_vuln_zone_A) = repmat({'A'},sum(most_vuln_zone_A),1);
 most_vuln_building(most_vuln_zone_B) = repmat({'B'},sum(most_vuln_zone_B),1);
@@ -50,7 +53,7 @@ climada_figuresize(0.4,0.4)
 plot(entity.assets.lon(most_vuln_zone_A), entity.assets.lat(most_vuln_zone_A),'or','markersize',2)
 hold on
 plot(entity.assets.lon(most_vuln_zone_B), entity.assets.lat(most_vuln_zone_B),'ob','markersize',2)
-title(sprintf('%d%% most vulnerable res. buildings in Zone A (red) and B (blue)',criterion*100),'fontsize',10)
+title(sprintf('%d%% most vulnerable res. buildings in Zone A (red) and %d%% in Zone B (blue)',criterion_A*100,criterion_B*100),'fontsize',10)
 axis equal
 
 %% extend to other buildings
@@ -92,9 +95,6 @@ end
 % plot(entity.assets.lon(strcmp(entity.assets.most_vuln_building,'B')), entity.assets.lat(strcmp(entity.assets.most_vuln_building,'B')),'ob','markersize',2)
 % title(sprintf('%d%% most vulnerable res. buildings in Zone A (red) and B (blue)',criterion*100),'fontsize',10)
 % axis equal
-
-
-
 
 
 

@@ -10,13 +10,14 @@ function MI_EDS_combined = climada_measures_impact_report(measures_impact,report
 %   MI_EDS_combined=climada_measures_impact_report(measures_impact,report_xls_file)
 % EXAMPLE:
 %   shape_plotter(shapes,'attribute name','linewidth',2,'color','r')
-% INPUTS: 
+% INPUTS:
 %   measures_impact:   measures impact struct, see climada_measures_impact
 % OPTIONAL INPUT PARAMETERS:
 %   report_xls_file:   xls file to save to
 % OUTPUTS:
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com, 20150623, init
+% Gilles Stassen, 20150707, bug fix for multiple measure matches when using find
 %-
 
 if ~exist('measures_impact'     ,'var'),    measures_impact = [];   end
@@ -30,11 +31,11 @@ fprintf('measures impact report for:\n')
 for k=1:length(MI_EDS_combined)
     MI_EDS_combined(k).ED_at_centroid   = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
     fld(k).MI_at_centroid               = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
-%     fld(k).MI_frac_of_AED               = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
-%     fld(k).EAD_frac_of_TEV              = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
-
+    %     fld(k).MI_frac_of_AED               = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
+    %     fld(k).EAD_frac_of_TEV              = zeros(size(MI_EDS_combined(k).ED_at_centroid)); % init
+    
     fld(k).Value_total      = 0; %init
-
+    
     MI_EDS_combined(k).peril_ID         = '';
     if ~strcmp(MI_EDS_combined(k).annotation_name,'control')
         fprintf('\t%s\n',MI_EDS_combined(k).annotation_name)
@@ -62,21 +63,24 @@ for i = 1:length(measures_impact) % loop through each hazard/entity combo
         % the next measures_impact struct, add to MI_EDS_combined if it
         % does, else add entry to MI_EDS_combined
         ndx = find(strcmpi(MI_EDS_combined(j).annotation_name,{measures_impact(i).EDS(:).annotation_name}));
+        
         if ~isempty(ndx)
-            MI_EDS_combined(j).ED_at_centroid  	= MI_EDS_combined(j).ED_at_centroid + measures_impact(i).EDS(ndx).ED_at_centroid;
-            fld(j).MI_at_centroid               = fld(j).MI_at_centroid + (ctrl_ED_at_c -measures_impact(i).EDS(ndx).ED_at_centroid);
-            
-            MI_EDS_combined(j).hazard(end+1)    = measures_impact(i).EDS(ndx).hazard;
-            MI_EDS_combined(j).peril_ID         = [MI_EDS_combined(j).peril_ID measures_impact(i).EDS(ndx).peril_ID ' | '];
-            
-            MI_EDS_combined(j).ED               = MI_EDS_combined(j).ED + measures_impact(i).EDS(ndx).ED;
-            fld(j).Value_total                  = max(fld(j).Value_total,sum(measures_impact(i).EDS(ndx).assets.Value)); 
+            for ndx_i = ndx
+                MI_EDS_combined(j).ED_at_centroid  	= MI_EDS_combined(j).ED_at_centroid + measures_impact(i).EDS(ndx_i).ED_at_centroid;
+                fld(j).MI_at_centroid               = fld(j).MI_at_centroid + (ctrl_ED_at_c -measures_impact(i).EDS(ndx_i).ED_at_centroid);
+                
+                MI_EDS_combined(j).hazard(end+1)    = measures_impact(i).EDS(ndx_i).hazard;
+                MI_EDS_combined(j).peril_ID         = [MI_EDS_combined(j).peril_ID measures_impact(i).EDS(ndx_i).peril_ID ' | '];
+                
+                MI_EDS_combined(j).ED               = MI_EDS_combined(j).ED + measures_impact(i).EDS(ndx_i).ED;
+                fld(j).Value_total                  = max(fld(j).Value_total,sum(measures_impact(i).EDS(ndx_i).assets.Value));
+            end
         else
             MI_EDS_combined(j).ED_at_centroid   = MI_EDS_combined(j).ED_at_centroid+ctrl_ED_at_c;
             fld(j).MI_at_centroid               = fld(j).MI_at_centroid + 0;
             
             MI_EDS_combined(j).ED               = MI_EDS_combined(j).ED + ctrl_ED_at_c;
-            fld(j).Value_total                  = max(fld(j).Value_total,sum(measures_impact(i).EDS(end).assets.Value)); 
+            fld(j).Value_total                  = max(fld(j).Value_total,sum(measures_impact(i).EDS(end).assets.Value));
         end
     end
 end
@@ -95,7 +99,7 @@ for n = 1:length(MI_EDS_combined)
 end
 MI_EDS_combined(end+1) = MI_EDS_combined(n); % add control to end
 MI_EDS_combined(n)     = [];                 % delete original control
-    
+
 % % stats
 % for l = 1:length(MI_EDS_combined)
 %     MI_EDS_combined(l).MI_fraction_of_AED = MI_EDS_combined(l).MI_at_centroid ./ MI_EDS_combined(end).ED_at_centroid;

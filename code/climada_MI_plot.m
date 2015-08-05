@@ -1,30 +1,16 @@
 function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscale_check,schematic_check)
 % visualize Annual Expected Damage per centroid as a map
 % NAME:
-%   climada_ED_plot
+%   climada_MI_plot
 % PURPOSE:
-%   plot annual expected damage
+%   plot annual expected measure impact
 % CALLING SEQUENCE:
-%   climada_ED_plot(EDS, percentage_of_value_flag)
+%   climada_MI_plot(EDS, percentage_of_value_flag)
 % EXAMPLE:
-%   climada_ED_plot(EDS, percentage_of_value_flag)
+%   climada_MI_plot(EDS, percentage_of_value_flag)
 % INPUTS:
-%   EDS, the event damage set with fields:
-%       reference_year: the year the losses are references to
-%       event_ID(event_i): the unique ID for each event_i
-%       damage(event_i): the loss amount for event_i
-%       Value: the sum of allValues used in the calculation (to e.g. express
-%           losses in percentage of total Value)
-%       frequency(event_i): the per occurrence event frequency for each event_i
-%       orig_event_flag(event_i): whether an original event (=1) or a
-%           probabilistic one (=0)
-%       comment: a free comment, contains time for calculation
-%       hazard: itself a structure, with:
-%           filename: the filename of the hazard event set
-%           comment: a free comment
-%       assets: struct with lon, lat, value and filename of assets
-%       damagefunctions.filename: the filename of the damage functions
-%       annotation_name: a kind of default title (sometimes empty)
+%   EDS output from climada_measures_impact_report (which has field
+%   .MI_at_centroid)
 % OPTIONAL INPUT PARAMETERS:
 %   percentage_of_value_flag: Set to 1 if you wish to plot damages as
 %                             percentage of asset values
@@ -32,8 +18,8 @@ function climada_MI_plot(EDS, percentage_of_value_flag,currency,unit_exp,logscal
 %   figure
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com, 20150625 init
-% Gilles Stassen, gillesstassen@hotmail.com, 20150528 - schematic_check added
-% Lea Mueller, muellele@gmail.com, 20150607, add switch for UTM instead of lat/lon coordinates, inhibit limiting latitude values to -60° and +80°
+% Gilles Stassen, gillesstassen@hotmail.com, 20150628 - schematic_check added
+% Lea Mueller, muellele@gmail.com, 20150706, add switch for UTM instead of lat/lon coordinates, inhibit limiting latitude values to -60° and +80°
 %-
 
 global climada_global
@@ -117,7 +103,7 @@ for EDS_i = 1: length(EDS)
     ax_lim = [min(EDS(EDS_i).assets.lon)-scale/ax_buffer               max(EDS(EDS_i).assets.lon)+scale/ax_buffer ...
               max(min(EDS(EDS_i).assets.lat),min_lat)-scale/ax_buffer  min(max(EDS(EDS_i).assets.lat),max_lat)+scale/ax_buffer];
     
-    markersize = 2;
+    markersize = 3;
     
     % to deal with multi-valued points
     lon_lat = unique([EDS(EDS_i).assets.lon EDS(EDS_i).assets.lat],'rows');
@@ -134,20 +120,29 @@ for EDS_i = 1: length(EDS)
     end
     
     % fig = climada_figuresize(height,height*scale2+0.15);
-    cmap = climada_colormap('benefit');
+    cmap_a = climada_colormap('benefit');
+    cmap_b = flipud(climada_colormap('schematic'));
     if percentage_of_value_flag
 
-        nz = MI_sum_centroid>1 | MI_sum_centroid <-1;
+        nz = MI_sum_centroid <=-1;
+        dam_TAV = (MI_sum_centroid(nz) ./ val_sum_centroid(nz)) *100;
+        plotclr(lon_lat(nz,1)', lon_lat(nz,2)', dam_TAV','s',markersize,0,...
+            [],[],colormap(cmap_b),0,logscale_check);
+        
+        nz = MI_sum_centroid>=1 ;%| 
         dam_TAV = (MI_sum_centroid(nz) ./ val_sum_centroid(nz)) *100;
         cbar = plotclr(lon_lat(nz,1)', lon_lat(nz,2)', dam_TAV','s',markersize,1,...
-            [],[],colormap(cmap),0,logscale_check);
+            [],[],colormap(cmap_a),0,logscale_check);
         
         name_str = sprintf('Expected benefit (as percentage of value) for %s',num2str(EDS(EDS_i).reference_year));
     else
+        nz = MI_sum_centroid <=-1;
+        plotclr(lon_lat(nz,1), lon_lat(nz,2), MI_sum_centroid(nz),'s',markersize,0,...
+            [],[],colormap(cmap_b),0,logscale_check);
         
-        nz = MI_sum_centroid>1 | MI_sum_centroid <-1;
+        nz = MI_sum_centroid>=1 ;%| MI_sum_centroid <=-1;
         cbar = plotclr(lon_lat(nz,1), lon_lat(nz,2), MI_sum_centroid(nz),'s',markersize,1,...
-            [],[],colormap(cmap),0,logscale_check);
+            [],[],colormap(cmap_a),0,logscale_check);
         if logscale_check
             caxis(log([min(MI_sum_centroid(nz)) max(MI_sum_centroid(nz))]))
         else
