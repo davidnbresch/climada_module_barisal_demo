@@ -98,7 +98,9 @@ clear cc CCSCEN pid PID spec SPEC file_i hazard_file_tmp hazard_file force_hazar
 % retrieval later with barisal_get_entity
 
 % Entity excel file from Ecorys (unstructured)
-entity_file_xls = [entities_dir filesep 'BCC_entity_260615_se_1.xls'];
+% entity_file_xls = [entities_dir filesep 'BCC_entity_260615_se_1.xls'];
+entity_file_xls = [entities_dir filesep 'Asset Entity CLIMADA - Effect Project Package 07072015.xls'];
+
 
 % Different entities for the adaptation measures
 % entity_file_xls = [entities_dir filesep 'Measure_spatial_planning_290615_se_1.xls'];
@@ -191,6 +193,13 @@ for s_i = 1:length(sheets)
         entity.assets.Deductible    = entity.assets.Value .* 0;
         entity.assets.Cover         = entity.assets.Value;
         
+        % add income information to entity.assets for residential categories only
+        entity = barisal_entity_pre_process_income(entity);
+        
+        % find top-most vulnerable buildings -- load specific EDS before
+        criterion = 0.050;
+        entity    = barisal_ED_find_most_vulnerable(entity, EDS, criterion);
+        
         % coord transformation from UTM to lat lon
         [entity.assets.lon, entity.assets.lat] = utm2ll_shift(entity.assets.lon, entity.assets.lat);
         
@@ -232,6 +241,42 @@ for s_i = 1:length(sheets)
 end
 clear entity_file_xls sheets ul_loc s_i tc_ndx damfun_file_xls entity_temp_xls fN yr_
 clear fld_i flds nan_ndx entity_file_mat force_damfun_re_read force_assets_re_read asci_file
+
+
+
+
+
+
+%%
+figure
+assets_indx = strcmp(entity.assets.Category,'Residential_buildings_Pucca_ASSETS');
+plotclr(entity.assets.lon(assets_indx), entity.assets.lat(assets_indx), AED_rel(assets_indx),'','',1,0.01,5)
+title('AED relative, Residential_buildings_Pucca_ASSETS')
+
+figure
+assets_indx = strcmp(entity.assets.Category,'Residential_buildings_Pucca_ASSETS');
+plotclr(entity.assets.lon(assets_indx), entity.assets.lat(assets_indx), AED_rel(assets_indx),'','',1)
+title('AED relative, Residential_buildings_Pucca_ASSETS')
+
+
+figure
+assets_indx = strcmp(entity.assets.Category,'Residential_buildings_Katcha_ASSETS');
+plotclr(entity.assets.lon(assets_indx), entity.assets.lat(assets_indx), AED_rel(assets_indx),'','',1,0.01,5)
+title('AED relative, Residential_buildings_Katcha_ASSETS')
+
+
+figure
+assets_indx = strcmp(entity.assets.Category,'Residential_buildings_Pucca_ASSETS');
+plotclr(entity.assets.lon(assets_indx), entity.assets.lat(assets_indx), entity.assets.income(assets_indx),'','',1)
+title('Income, Residential_buildings_Pucca_ASSETS')
+
+figure
+assets_indx = strcmp(entity.assets.Category,'Residential_buildings_Pucca_ASSETS');
+plotclr(entity.assets.lon(assets_indx), entity.assets.lat(assets_indx), measures_impact3(1).EDS(1).ED_at_centroid(assets_indx),'','',1)
+title('ED, Residential_buildings_Pucca_ASSETS')
+
+return
+
 
 %% measures construction
 
@@ -618,7 +663,7 @@ if exist('EDS1','var') && exist('EDS2','var') && exist('EDS3','var') && exist('E
 
 end
 
-for s_i = 3%[1]% 3 5]
+for s_i = 5%[1]% 3 5]
     MI_EDS_combined = eval(['MI_EDS_combined' num2str(s_i)]);
     for ed_i = 1:length(MI_EDS_combined)
         % use UTM X/Y instead of lat/lon, temporarily overwrite lat/lon

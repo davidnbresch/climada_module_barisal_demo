@@ -81,7 +81,7 @@ invalid_fld_2 = ~cellfun(@isempty,invalid_fld_2);
 invalid_flds  = logical(invalid_fld_1+invalid_fld_2);
 
 % special cases for fieldnames that do not need to be multiplied
-ndx_flds_to_copy = ~(invalid_flds+strcmp(flds,'filename')+strcmp(flds,'hazard')+strcmp(flds,'Value')+strcmp(flds,'DamageFunID')+strcmp(flds,'Category'));
+ndx_flds_to_copy = ~(invalid_flds+strcmp(flds,'filename')+strcmp(flds,'hazard')+strcmp(flds,'Value')+strcmp(flds,'DamageFunID')+strcmp(flds,'Category')+strcmp(flds,'Income'));
 ndx_flds_to_copy = find(ndx_flds_to_copy);
 
 for fld_i = 1:length(ndx_flds_to_copy)
