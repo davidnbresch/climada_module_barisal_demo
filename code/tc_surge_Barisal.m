@@ -49,6 +49,7 @@ function [hazard,EDS,centroids,entity]=tc_surge_Barisal(...
 % David N. Bresch, david.bresch@gmail.com, 20141215, cleanup, especially the map border stuff
 % Gilles Stassen, gillesstassen@hotmail.com, 20150202, split entity and
 % centroid generation into separate blocks; new input args: force_centroids_recalc, force_entity_recalc
+% David N. Bresch, david.bresch@gmail.com, 20150819, centroids in their own dir
 %-
 
 hazard=[]; EDS = []; centroids = []; entity = []; % init output
@@ -127,7 +128,7 @@ climada_global.map_border_file=BGD_country_shapefile_mat;
 % directories.
 % see climada_create_GDP_entity to create centroids file
 
-centroids_file  =   [module_data_dir filesep 'system' filesep strcat('Barisal_',num2str(adm_lvl),'_centroids.mat')];
+centroids_file  =   [module_data_dir filesep 'centroids' filesep strcat('Barisal_',num2str(adm_lvl),'_centroids.mat')];
 entity_file     =   [module_data_dir filesep 'entities' filesep strcat('Barisal_',num2str(adm_lvl),'_entity.mat')];
 entity_file_xls =   [module_data_dir filesep 'entities' filesep strcat('Barisal_',num2str(adm_lvl),'_entity.xls')];
 %hrnl_img_file   =   [module_data_dir filesep 'entities' filesep '89_21_91_24_Bangladesh_Barisal_F182010.v4c.avg_lights_x_pct.lzw.tiff'];

@@ -1,5 +1,7 @@
 <<<<<<< HEAD
 
+% David N. Bresch, david.bresch@gmail.com, 20150819, climada_global.centroids_dir introduced
+
 %% plot historical tc tracks
 tc_track_file = [climada_global.data_dir filesep 'tc_tracks' filesep 'tracks_n_indian_proc'];
 load(tc_track_file)
@@ -89,7 +91,7 @@ climada_plot_probabilistic_wind_speed_map(tc_track, (event_i-1)*(ens_size+1)+1)
 
 
 %% create probabilistic tc hazard set
-centroids_file  = [climada_global.data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
+centroids_file  = [climada_global.centroids_dir filesep 'Barisal_BCC_centroids'];
 load(centroids_file)
 hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BCC_hazard_TC_prob'];
 hazard = climada_tc_hazard_set(tc_track, hazard_set_file, centroids);
