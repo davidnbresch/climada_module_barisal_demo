@@ -110,9 +110,9 @@ end
 
 % check if data is on lat/lon or X/Y basis
 has_lon = -1; % no lat/lon, no X/Y data
-if isfield(EDS.assets, 'lon') & isfield(EDS.assets, 'lat')
+if isfield(EDS(1).assets, 'lon') & isfield(EDS(1).assets, 'lat')
     has_lon = 1;
-elseif isfield(EDS.assets, 'X') & isfield(EDS.assets, 'Y')
+elseif isfield(EDS(1).assets, 'X') & isfield(EDS(1).assets, 'Y')
     has_lon = 0;
 end
     
