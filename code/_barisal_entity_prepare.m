@@ -1,5 +1,5 @@
 %% prepare barisal entity
-
+% David N. Bresch, david.bresch@gmail.com, 20150819, climada_global.centroids_dir introduced
 
 %% --------------------
 %  FLOOD
@@ -21,7 +21,7 @@ else
     load(hazard_set_file)
 
     % wind centroids
-    centroids_file  = [climada_global.data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
+    centroids_file  = [climada_global.centroids_dir filesep 'Barisal_BCC_centroids'];
     load(centroids_file)
 end
 
@@ -120,7 +120,7 @@ hazard_set_file = [climada_global.data_dir filesep 'hazards' filesep 'Barisal_BC
 load(hazard_set_file)
 
 % wind centroids
-centroids_file  = [climada_global.data_dir filesep 'system' filesep 'Barisal_BCC_centroids'];
+centroids_file  = [climada_global.centroids_dir filesep 'Barisal_BCC_centroids'];
 load(centroids_file)
   
 
