@@ -1,4 +1,28 @@
 function entity = barisal_entity_pre_process(entity_in)
+% barisal_entity_pre_process
+% MODULE:
+%   barisal_demo
+% NAME:
+%   barisal_entity_pre_process
+% PURPOSE:
+%   Pre process entity into climada entity format from input as provided
+%   by Barisal/Ecorys team, where assetinformation is in a matrix 
+%   (lon, lat, Ward Nr, and two columns for every category (one with 
+%   category name ASSETS and second with category name DAMAGE FUNCTION).
+%   check that column headers have unique names, otherwise data is lost.
+% CALLING SEQUENCE:
+%   entity = barisal_entity_pre_process(entity_in)
+% EXAMPLE:
+%   entity = barisal_entity_pre_process(entity_in)
+% INPUTS:
+%   entity_in: entity as read from Ecorys input in matrix format
+%       climada_xlsread('no',ecorys_entity_file_xls,'Floods_2014',1);
+% OPTIONAL INPUT PARAMETERS:
+% OUTPUTS:
+%   entity: a climada entity structure
+% MODIFICATION HISTORY:
+% Lea Mueller, muellele@gmail.com, 20150909, add documentation
+%-
 
 % entity_in = entity;
 entity = entity_in;
@@ -93,7 +117,9 @@ end
 
 % finally remove both fields (assets and DMG function)
 for asset_fld_i = length(ndx_asset_flds):-1:1
-    entity.assets = rmfield(entity.assets,flds{ndx_asset_flds(asset_fld_i)+1});
+    if isfield(entity.assets,flds{ndx_asset_flds(asset_fld_i)+1})
+        entity.assets = rmfield(entity.assets,flds{ndx_asset_flds(asset_fld_i)+1});
+    end
     entity.assets = rmfield(entity.assets,flds{ndx_asset_flds(asset_fld_i)});
 end  
     
