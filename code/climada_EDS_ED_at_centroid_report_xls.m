@@ -27,6 +27,7 @@ function climada_EDS_ED_at_centroid_report_xls(EDS,xls_file,sheet,varargin)
 % Gilles Stassen, gillesstassen@hotmail.com, 20150625, generalisation with varargin
 % Lea Mueller, muellele@gmail.com, 20150730, check that category iscell, otherwise convert to cell from numeric
 % Lea Mueller, muellele@gmail.com, 20150805, check if data is on lat/lon or X/Y basis
+% Lea Mueller, muellele@gmail.com, 20150910, check first lat/lon, then additionally X/Y can be added
 %-
 
 global climada_global
@@ -109,12 +110,13 @@ if isempty(xls_file)
 end
 
 % check if data is on lat/lon or X/Y basis
-has_lon = -1; % no lat/lon, no X/Y data
-if isfield(EDS(1).assets, 'lon') & isfield(EDS(1).assets, 'lat')
-    has_lon = 1;
-elseif isfield(EDS(1).assets, 'X') & isfield(EDS(1).assets, 'Y')
-    has_lon = 0;
+has_X = -1; % no lat/lon, no X/Y data
+if isfield(EDS(1).assets, 'X') & isfield(EDS(1).assets, 'Y')
+    has_X = 1;
+elseif isfield(EDS(1).assets, 'lon') & isfield(EDS(1).assets, 'lat')
+    has_X = 0;
 end
+
     
 
 % write data into matrix, which will be outputted to xls
@@ -126,16 +128,16 @@ fprintf('writing ED at centroid %s\b\b to xls... ',msgstr)
 
 matr          = cell(length(EDS(1).ED_at_centroid)+4,numel(EDS)*2+2);
 
-if has_lon == 1
-    matr{4,1}     = 'lon';
-    matr{4,2}     = 'lat';
-    matr(5:end,1) = num2cell(EDS(1).assets.lon);
-    matr(5:end,2) = num2cell(EDS(1).assets.lat);
-elseif has_lon == 0
+if has_X == 1
     matr{4,1}     = 'X';
     matr{4,2}     = 'Y';
     matr(5:end,1) = num2cell(EDS(1).assets.X);
     matr(5:end,2) = num2cell(EDS(1).assets.Y);
+elseif has_X == 0
+    matr{4,1}     = 'lon';
+    matr{4,2}     = 'lat';
+    matr(5:end,1) = num2cell(EDS(1).assets.lon);
+    matr(5:end,2) = num2cell(EDS(1).assets.lat);
 else
     matr{4,1}     = 'no data';
     matr{4,2}     = 'no data';
@@ -143,7 +145,7 @@ end
 static_col = 2;
 
 % special case for Barisal where we have two additional variables to
-% describee the centroids
+% describe the centroids
 if exist(EDS(1).assets.filename,'file') 
     load(EDS(1).assets.filename)
     if isfield(entity(1).assets,'Att_100x100_Cell_Code')
