@@ -1,16 +1,35 @@
 function measures = climada_measures_construct(measures,n_measures)
+% climada
+% MODULE:
+%   barisal_demo
+% NAME:
+%   climada_measures_construct
+% MODIFICATION HISTORY:
+% Gilles Stassen, init
+% Lea Mueller, muellele@gmail.com, 20150902, rename to hazard_intensity_impact_b from hazard_intensity_impact
 
 if ~exist('measures'    ,'var'),    measures = struct([]);  end
 if ~exist('n_measures'  ,'var'),    n_measures = 1;         end
 
 if isempty(measures)
-    measures.name={};measures.color={};measures.color_RGB = [];
-    measures.cost= [];measures.hazard_intensity_impact=[];
-    measures.hazard_high_frequency_cutoff=[];measures.hazard_event_set={};
-    measures.MDD_impact_a= [];measures.MDD_impact_b= [];measures.PAA_impact_a= [];
-    measures.PAA_impact_b= [];measures.damagefunctions_map={}; measures.entity_file={};
-    measures.risk_transfer_attachement = [];measures.risk_transfer_cover = [];
-    measures.peril_ID={}; measures.hazard_event_set_operator={}; 
+    measures.name={};
+    measures.color={};
+    measures.color_RGB = [];
+    measures.cost= [];
+    measures.hazard_intensity_impact_a=[];
+    measures.hazard_intensity_impact_b=[];
+    measures.hazard_high_frequency_cutoff=[];
+    measures.hazard_event_set={};
+    measures.MDD_impact_a= [];
+    measures.MDD_impact_b= [];
+    measures.PAA_impact_a= [];
+    measures.PAA_impact_b= [];
+    measures.damagefunctions_map={}; 
+    measures.entity_file={};
+    measures.risk_transfer_attachement = [];
+    measures.risk_transfer_cover = [];
+    measures.peril_ID={}; 
+    measures.hazard_event_set_operator={}; 
 end
 
 if n_measures == 0
@@ -24,17 +43,18 @@ if n_measures >=1
         R = rand; G = rand; B = rand; % random colors for a (pleasant) surprise each time :)
         measures.color{end+1}                           = [num2str(R) ' ' num2str(G) ' ' num2str(B)];
         measures.color_RGB(end+1,:)                     = [R; G; B];
-        measures.cost(end+1)                            = [1];
-        measures.hazard_intensity_impact(end+1)         = [0];
-        measures.hazard_high_frequency_cutoff(end+1)    = [0];
+        measures.cost(end+1)                            = 1;
+        measures.hazard_intensity_impact_a(end+1)       = 1;
+        measures.hazard_intensity_impact_b(end+1)       = 0;
+        measures.hazard_high_frequency_cutoff(end+1)    = 0;
         measures.hazard_event_set{end+1}                = 'nil';
-        measures.MDD_impact_a(end+1)                    = [1];
-        measures.MDD_impact_b(end+1)                    = [0];
-        measures.PAA_impact_a(end+1)                    = [1];
-        measures.PAA_impact_b(end+1)                    = [0];
+        measures.MDD_impact_a(end+1)                    = 1;
+        measures.MDD_impact_b(end+1)                    = 0;
+        measures.PAA_impact_a(end+1)                    = 1;
+        measures.PAA_impact_b(end+1)                    = 0;
         measures.damagefunctions_map{end+1}             = 'nil';
-        measures.risk_transfer_attachement(end+1)       = [0];
-        measures.risk_transfer_cover(end+1)             = [0];
+        measures.risk_transfer_attachement(end+1)       = 0;
+        measures.risk_transfer_cover(end+1)             = 0;
         measures.entity_file{end+1}                     = 'nil';
         measures.peril_ID{end+1}                        = '';
         measures.hazard_event_set_operator{end+1}       = '';

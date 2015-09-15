@@ -1,4 +1,4 @@
-function measures_impact=climada_measures_impact_advanced(entity,hazard,measures_impact_reference,measures,map_risk_premium)
+function measures_impact=climada_measures_impact_advanced(entity,hazard,measures_impact_reference,measures,map_risk_premium,sanity_check)
 % climada
 % NAME:
 %   climada_measures_impact
@@ -75,6 +75,7 @@ function measures_impact=climada_measures_impact_advanced(entity,hazard,measures
 %               original climada_measures_impact; added functionality for
 %               hazard_event_set_operator & measures_distributed
 % Gilles Stassen, gillesstassen@hotmail.com, 20150616, entity switch added
+% Lea Mueller, muellele@gmail.com, 20150902, rename to hazard_intensity_impact_b from hazard_intensity_impact
 %-
 
 global climada_global
@@ -88,6 +89,7 @@ if ~exist('hazard','var'),hazard=[];end
 if ~exist('measures_impact_reference','var'),measures_impact_reference=[];end
 if ~exist('measures','var'),measures='';end
 if ~exist('map_risk_premium','var'),map_risk_premium=0;end
+if ~exist('sanity_check','var'),sanity_check=1;end
 
 % PARAMETERS
 
@@ -279,6 +281,8 @@ end
 orig_damagefunctions = entity.damagefunctions; % copy of this table for speedup
 n_measures           = length(measures.cost);
 
+climada_measures_check(entity.measures)
+
 %fprintf('assessing impacts of %i measures:\n',n_measures);
 
 ED_risk_transfer = zeros(1,n_measures+1); % allocate
@@ -405,10 +409,18 @@ for measure_i = 1:n_measures+1 % last with no measures
             %    measures.damagefunctions_mapping(measure_i).map_to(map_i));
         end % map_i
         
-        entity.damagefunctions.Intensity = max(orig_damagefunctions.Intensity - measures.hazard_intensity_impact(measure_i),0);
+        entity.damagefunctions.Intensity = max(orig_damagefunctions.Intensity - measures.hazard_intensity_impact_b(measure_i),0);
         entity.damagefunctions.MDD       = max(orig_damagefunctions.MDD*measures.MDD_impact_a(measure_i)+measures.MDD_impact_b(measure_i),0);
         entity.damagefunctions.PAA       = max(orig_damagefunctions.PAA*measures.PAA_impact_a(measure_i)+measures.PAA_impact_b(measure_i),0);
         annotation_name                  = measures.name{measure_i};
+        
+        if isfield(measures,'hazard_intensity_impact_a')
+            % for BACKWARD COMPATIBILITY: the following line was used until 20150907
+            %%entity.damagefunctions.Intensity = max(entity.damagefunctions.Intensity*(1-measures.hazard_intensity_impact_a(measure_i)),0);
+            if ~(measures.hazard_intensity_impact_a(measure_i)==0)
+                entity.damagefunctions.Intensity = max(entity.damagefunctions.Intensity/measures.hazard_intensity_impact_a(measure_i),0);
+            end
+        end
     else
         if ismember('control',measures.name)
             % no measures in first place, control measure was added at
@@ -419,7 +431,8 @@ for measure_i = 1:n_measures+1 % last with no measures
         entity.damagefunctions = entity_orig_damagefunctions; % back to original
         annotation_name        = 'control';
     end
-    EDS(measure_i)            = climada_EDS_calc(entity,hazard,annotation_name);
+    
+    EDS(measure_i)            = climada_EDS_calc(entity,hazard,annotation_name,'',0,sanity_check);
 
     % special routine for resilient buildings barisal in measures package
     if strcmp(hazard.peril_ID,'FL') && isfield(entity.assets,'most_vuln_building') &&...
