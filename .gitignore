@@ -1,4 +1,7 @@
 
+*.asv
+data
+
 code/climada_centroids_runoff.m
 code/test_bed.m
 
@@ -50,8 +53,6 @@ data/system/srtm_55_07/srtm_55_07.tfw
 data/system/as_bas_15s_beta/
 data/system/srtm_55_07/srtm_55_07.tif
 
-
-*.asv
 data/entities/old/
 data/entities/old_2/
 data/hazards/old/
