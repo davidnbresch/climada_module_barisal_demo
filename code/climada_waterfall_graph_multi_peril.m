@@ -25,6 +25,7 @@ function  fig = climada_waterfall_graph_multi_peril(check_printplot,currency,var
 %   waterfall graph
 % MODIFICATION HISTORY:
 % Gilles Stassen, gillesstassen@hotmail.com, 20150610, init
+% Lea Mueller, muellele@gmail.com, 20150917, add special colours for Barisal
 %-
 
 global climada_global
@@ -176,12 +177,18 @@ stretch    = 0.3;
 % yellow - red color scheme
 % cmap = climada_colormap('waterfall', length(EDS));
 cmap_tmp = climada_colormap('waterfall', n_hazards);
-cmap      = [ 70 130 180; ... % steel blue
-    99 184 255; ... % steel blue 1
-    255 185  15; ... % darkgoldenrod1
-    238 118   0; ... % darkorange
-    238  64   0 ]/255; %orangered
+% cmap      = [ 70 130 180; ... % steel blue
+%     99 184 255; ... % steel blue 1
+%     255 185  15; ... % darkgoldenrod1
+%     238 118   0; ... % darkorange
+%     238  64   0 ]/255; %orangered
 
+% special colors for barisal
+cmap = [ 31  78 121; ...  % dark blue
+         31  78 121; ...  % dark blue
+        157 195 230; ...  % light blue
+        157 195 230; ...  % light blue
+        208 206 206]/255; % grey
 cmap(end+1,:) = cmap_tmp(end,:); clear cmap_tmp
 
 
@@ -208,8 +215,12 @@ for i = 1:length(hazard_names)
 end
 clear c
 % L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Position',[0.56,0.15,0.2,0.1]);
-L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Location','West');
-set(L,'Box', 'off')
+% L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Location','West');
+% for barisal
+L = legend(h([5 3 1]),'Cyclone Wind Speeds','Cyclone Flooding (depth and duration)','Monsoon Flooding (depth and duration)','Location','West');
+set(L,'Box', 'off','position',[0.1385 0.65 0.4074 0.13])
+% get(L,'position')
+
 
 % plot dotted lines
 for s_i = 1:n_scenarios+1
@@ -254,6 +265,8 @@ if strcmpi(currency,'PEOPLE')
 else
     ylabel(['Damage ' currency ' ' dmg_unit],'fontsize',fontsize_+2)
 end
+% move box upwards so that there is enough space for the labels
+set(gca,'position',[0.1300 0.1600 0.7750 0.8150])
 
 
 %% display arrows

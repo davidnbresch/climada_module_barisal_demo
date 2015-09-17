@@ -7,7 +7,7 @@ climada_global.EDS_at_centroid = 0;
 barisal_data_dir= [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 entities_dir    = [barisal_data_dir filesep 'entities'];
 hazards_dir     = [barisal_data_dir filesep 'hazards'];
-results_dir     = [barisal_data_dir filesep 'results' filesep '20150914_new_runs'];
+results_dir     = [barisal_data_dir filesep 'results' filesep '20150916_new_runs'];
 % results_dir     = [barisal_data_dir filesep 'results' filesep '20150909_new_runs'];
 % results_dir     = [barisal_data_dir filesep 'results'];
 
@@ -124,7 +124,7 @@ sheets          = {'Floods_2014' 'Floods_2030' 'Floods_2050' 'Cyclones_2014' 'Cy
 
 % Whether to re-read entity/damagefunctions from Ecorys xls (1) or load matfiles (0)
 force_assets_re_read   = 0;
-force_damfun_re_read   = 1;
+force_damfun_re_read   = 0;
 counter = 0;
 % counter = 6;
 
@@ -257,6 +257,7 @@ for scenario_eco_i = 1:numel(entity_file_xls)
 
             fprintf('saving entity as %s\n',entity.assets.filename)
             entity_files{counter} = entity.assets.filename;
+            save(entity.assets.filename,'entity')
         end
     end %sheets
 end % scenario_eco_i
@@ -581,6 +582,8 @@ year_i      = 2014;
 year_f      = [2030 2050];
 
 EDS_only    = 1; %EDS_only    = 0;
+silent_mode = 0;
+sanity_check = 1;
 
 %init
 % clear EDS1 EDS2 EDS3 EDS4 EDS5 
@@ -617,7 +620,7 @@ for scenario_eco_i = 1:numel(eco_scen)
             end
             save(measures_impact1(ed_i).filename,'measures_impact1')
         else
-            EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+            EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1,silent_mode,sanity_check);
         end        
 
         if EDS_only
@@ -626,8 +629,8 @@ for scenario_eco_i = 1:numel(eco_scen)
             [entity,e_i] = barisal_get_entity(year_f,peril,entity_files,eco_scen(scenario_eco_i));
             %EDS2    = barisal_get_EDS(EDS,entity_files{e_i},hazard_files{h_i});
             fprintf('\n***** Scenario %d, EDS2 for %s | %s *****\n',scenario_eco_i,char(entity.assets.comment),char(strtok(hazard.comment,',')))
-            EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-            scen_name2 = ['Increase; from economic; growth ' num2str(year_f)];
+            EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1,silent_mode,sanity_check);
+            scen_name2 = sprintf('Increase;from economic;growth %d;scenario %d',num2str(year_f),eco_scen(scenario_eco_i));
             fprintf('Annual expected damage: %2.2f mn\n',EDS2(ed_i).ED/1000000)
             %entity.measures = climada_measures_construct([],1);
             %entity.measures.name{1} = 'control';
@@ -640,10 +643,16 @@ for scenario_eco_i = 1:numel(eco_scen)
         end
 
         % EDS3 for climate change scenario: future entity 2030, future hazard 2030
+        if scenario_eco_i == 2
+            cc_scen = 'extreme';
+        else 
+            cc_scen = 'moderate';
+        end
         [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
         [entity,e_i] = barisal_get_entity(year_f,peril,entity_files,eco_scen(scenario_eco_i));
         fprintf('\n***** Scenario %d, EDS3 for %s | %s *****\n',scenario_eco_i,char(entity.assets.comment),char(strtok(hazard.comment,',')))
-        scen_name3 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+        %scen_name3 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+        scen_name3 = sprintf('Increase;from %s;climate change;%d',cc_scen,num2str(year_f));
         %fprintf('Annual expected damage: %2.2f mn\n',EDS3(ed_i).ED/1000000)
         if ~EDS_only
             measures_impact3(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
@@ -655,7 +664,7 @@ for scenario_eco_i = 1:numel(eco_scen)
             end
             save(measures_impact3(ed_i).filename,'measures_impact3')
         else
-            EDS3(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+            EDS3(ed_i)    = climada_EDS_calc(entity,hazard,'',1,silent_mode,sanity_check);
         end
 
         year_f = 2050;
@@ -666,8 +675,9 @@ for scenario_eco_i = 1:numel(eco_scen)
             [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
             [entity,e_i] = barisal_get_entity(year_f,peril,entity_files,eco_scen(scenario_eco_i));
             fprintf('\n***** Scenario %d, EDS4 for %s | %s *****\n',scenario_eco_i,char(entity.assets.comment),char(strtok(hazard.comment,',')))
-            EDS4(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-            scen_name4 = ['Increase; from economic; growth ' num2str(year_f)];
+            EDS4(ed_i)    = climada_EDS_calc(entity,hazard,'',1,silent_mode,sanity_check);
+            %scen_name4 = ['Increase; from economic; growth ' num2str(year_f)];
+            scen_name4 = sprintf('Increase;from economic; growth %d;scenario %d',num2str(year_f),eco_scen(scenario_eco_i));
             fprintf('Annual expected damage: %2.2f mn\n',EDS4(ed_i).ED/1000000)
             %entity.measures = climada_measures_construct([],1);
             %entity.measures.name{1} = 'control';
@@ -681,10 +691,16 @@ for scenario_eco_i = 1:numel(eco_scen)
         end
 
         % EDS5 for climate change scenario: future entity 2050, future hazard 2050
+        if scenario_eco_i == 2
+            cc_scen = 'extreme';
+        else 
+            cc_scen = 'moderate';
+        end
         [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
         [entity,e_i] = barisal_get_entity(year_f,peril,entity_files,eco_scen(scenario_eco_i));
         fprintf('\n***** Scenario %d, EDS5 for %s | %s *****\n',scenario_eco_i,char(entity.assets.comment),char(strtok(hazard.comment,',')))
-        scen_name5 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+        %scen_name5 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+        scen_name5 = sprintf('Increase;from %s;climate change;%d',cc_scen,num2str(year_f));
         if ~EDS_only
             measures_impact5(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
             measures_impact5(ed_i).filename = [results_dir filesep 'BCC_measure_package_impact_cc_' cc_scen '_' num2str(year_f) '.mat'];
@@ -695,7 +711,7 @@ for scenario_eco_i = 1:numel(eco_scen)
             end
             save(measures_impact5(ed_i).filename,'measures_impact5')
         else
-            EDS5(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+            EDS5(ed_i)    = climada_EDS_calc(entity,hazard,'',1,silent_mode,sanity_check);
         end
         fprintf('Annual expected damage: %2.2f mn\n',EDS5(ed_i).ED/1000000)
     end
@@ -782,37 +798,57 @@ clear m measures_impact cc_scen ed_i s_i
 
 climada_global.present_reference_year = 2014;
 
-for scenario_eco_i = 2:numel(eco_scen)
+eco_scen    = [1 2 3];
+cc_scen     = 'moderate';
+
+
+
+for scenario_eco_i = 1:numel(eco_scen)
     clear EDS_baseline 
     
     load([results_dir filesep sprintf('EDS_scenario_%d.mat',eco_scen(scenario_eco_i))])
     
-%     % multi peril waterfall 2030
-%     fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
-%     print(fig,'-dpdf',[results_dir filesep sprintf('BCC_waterfall_multi_peril_scenario_%d_2030_%s.pdf',eco_scen(scenario_eco_i),char(cc_scen))])
-% 
-%     % multi peril waterfall 2050
-%     fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS4,scen_name4,EDS5,scen_name5);
-%     print(fig,'-dpdf',[results_dir filesep sprintf('BCC_waterfall_multi_peril_scenario_%d_2050_%s.pdf',eco_scen(scenario_eco_i),char(cc_scen))])
-
-    EDS_baseline = [EDS1 EDS3 EDS5]; %save([results_dir filesep 'EDS_baseline.mat'],'EDS_baseline')
-    EDS_report_xls = [results_dir filesep sprintf('BCC_ED_report_scenario_%d_%s.xls',eco_scen(scenario_eco_i),datestr(now,'yyyymmdd'))];
-    EDS_report_csv = [results_dir filesep sprintf('BCC_ED_report_scenario_%d_%s.csv',eco_scen(scenario_eco_i),datestr(now,'yyyymmdd'))];
-
-    if exist(EDS_report_xls,'file'), delete(EDS_report_xls); end
-    % convert back to UTM
-    for ed_i = 1:length(EDS_baseline)
-        [EDS_baseline(ed_i).assets.X,EDS_baseline(ed_i).assets.Y] = ...
-            ll2utm_shift(EDS_baseline(ed_i).assets.lat,EDS_baseline(ed_i).assets.lon);
-        EDS_baseline(ed_i).peril_ID = '';
+    if scenario_eco_i == 2
+        cc_scen = 'extreme';
+    else 
+        cc_scen = 'moderate';
     end
-
-    % write to csv
-    % climada_EDS_ED_at_centroid_report(EDS_baseline,EDS_report_csv);
-
-    % write to excel
-    climada_EDS_ED_at_centroid_report_xls(EDS_baseline,EDS_report_xls);
+    % annotation 
+    year_i = 2014;
+    scen_name1 = ['Today''s; expected damage; ' num2str(year_i)];
+    year_f = 2030;
+    scen_name2 = sprintf('Increase\nfrom economic\ngrowth %d,\nscenario %d',year_f,eco_scen(scenario_eco_i));
+    scen_name3 = sprintf('Increase\nfrom %s\nclimate change\n%d',cc_scen,year_f);
+    year_f = 2050;
+    scen_name4 = sprintf('Increase\nfrom economic\ngrowth %d,\nscenario %d',year_f,eco_scen(scenario_eco_i));
+    scen_name5 = sprintf('Increase\nfrom %s\nclimate change\n%d',cc_scen,year_f);
     
+    % multi peril waterfall 2030
+    fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
+    print(fig,'-dpdf',[results_dir filesep sprintf('BCC_waterfall_multi_peril_scenario_%d_2030_%s.pdf',eco_scen(scenario_eco_i),char(cc_scen))])
+
+    % multi peril waterfall 2050
+    fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS4,scen_name4,EDS5,scen_name5);
+    print(fig,'-dpdf',[results_dir filesep sprintf('BCC_waterfall_multi_peril_scenario_%d_2050_%s.pdf',eco_scen(scenario_eco_i),char(cc_scen))])
+
+%     EDS_baseline = [EDS1 EDS3 EDS5]; %save([results_dir filesep 'EDS_baseline.mat'],'EDS_baseline')
+%     EDS_report_xls = [results_dir filesep sprintf('BCC_ED_report_scenario_%d_%s.xls',eco_scen(scenario_eco_i),datestr(now,'yyyymmdd'))];
+%     EDS_report_csv = [results_dir filesep sprintf('BCC_ED_report_scenario_%d_%s.csv',eco_scen(scenario_eco_i),datestr(now,'yyyymmdd'))];
+% 
+%     if exist(EDS_report_xls,'file'), delete(EDS_report_xls); end
+%     % convert back to UTM
+%     for ed_i = 1:length(EDS_baseline)
+%         [EDS_baseline(ed_i).assets.X,EDS_baseline(ed_i).assets.Y] = ...
+%             ll2utm_shift(EDS_baseline(ed_i).assets.lat,EDS_baseline(ed_i).assets.lon);
+%         EDS_baseline(ed_i).peril_ID = '';
+%     end
+% 
+%     % write to csv
+%     % climada_EDS_ED_at_centroid_report(EDS_baseline,EDS_report_csv);
+% 
+%     % write to excel
+%     climada_EDS_ED_at_centroid_report_xls(EDS_baseline,EDS_report_xls,'ED_at_centroid');
+%     
 %     % write ED per category report
 %     benefit_flag = 0;
 %     assets_flag = 1;
