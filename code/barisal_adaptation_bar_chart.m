@@ -23,7 +23,7 @@ measures = climada_xlsread(0,excel_file,'measures',0);
 measures_impact.Value_unit = 'Tk. Crore';
 measures_impact.title_str = 'Benefit 2015';
 % measures_impact.NPV_total_climate_risk = 100;
-measures_impact.NPV_total_climate_risk = 170;
+measures_impact.NPV_total_climate_risk = 90;
 measures_impact.benefit = measures.benefit_2015;
 measures_impact.cb_ratio = 1./measures.bc_ratio;
 measures_impact.measures.name = measures.name;
@@ -43,7 +43,7 @@ benefit_str = 'Risk reduction in AED (%)';
 scale_benefit = 2.5;
 tcr_off = 1;
 sort_benefit = 1;
-fig = climada_adaptation_bar_chart_v2(measures_impact,sort_benefit,'',scale_benefit,benefit_str,'south',tcr_off);
+fig = climada_adaptation_bar_chart_v2(measures_impact,sort_benefit,scale_benefit,benefit_str,'south',tcr_off);
 print(fig,'-dpdf',[results_dir filesep sprintf('Barisal_measures_proposal.pdf')]);
     
 % sort_benefit = 0;

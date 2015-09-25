@@ -756,6 +756,14 @@ barisal_MI_per_peril(measures_impact5,measures,peril_IDs)
 
 
 %% multi peril waterfall graph
+year_i = 2014;
+scen_name1 = ['Today''s; expected damage; ' num2str(year_i)];
+year_f = 2030;
+eco_scen    = [1 2 3];scenario_eco_i = 2;
+scen_name2 = sprintf('Increase;from economic;growth %d;scenario %d',num2str(year_f),eco_scen(scenario_eco_i));
+cc_scen = 'moderate';
+scen_name3 = sprintf('Increase;from %s;climate change;%d',cc_scen,num2str(year_f));
+
 if exist('EDS1','var') && exist('EDS2','var') && exist('EDS3','var') && exist('EDS4','var') && exist('EDS5','var')
     % multi peril waterfall 2030
     fig = climada_waterfall_graph_multi_peril(0,'BDT',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3);
@@ -800,8 +808,6 @@ climada_global.present_reference_year = 2014;
 
 eco_scen    = [1 2 3];
 cc_scen     = 'moderate';
-
-
 
 for scenario_eco_i = 1:numel(eco_scen)
     clear EDS_baseline 
