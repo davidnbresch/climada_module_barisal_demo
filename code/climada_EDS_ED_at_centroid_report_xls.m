@@ -28,6 +28,7 @@ function climada_EDS_ED_at_centroid_report_xls(EDS,xls_file,sheet,varargin)
 % Lea Mueller, muellele@gmail.com, 20150730, check that category iscell, otherwise convert to cell from numeric
 % Lea Mueller, muellele@gmail.com, 20150805, check if data is on lat/lon or X/Y basis
 % Lea Mueller, muellele@gmail.com, 20150910, check first lat/lon, then additionally X/Y can be added
+% Lea Mueller, muellele@gmail.com, 20150930, ignore EDS that contains different length of centroids
 %-
 
 global climada_global
@@ -171,7 +172,8 @@ end
 
 single_Value_col = 1; sim_ndx = ones(1,length(EDS(1).assets.filename)); % init
 for e_i = 1:length(EDS)
-    if any(EDS(e_i).assets.Value ~= EDS(1).assets.Value),    single_Value_col = 0;   end
+    if sum(EDS(e_i).assets.Value) ~= sum(EDS(1).assets.Value), single_Value_col = 0; end
+        %any(EDS(e_i).assets.Value ~= EDS(1).assets.Value), single_Value_col = 0; end
 %     sim_ndx = sim_ndx & (EDS(e_i).assets.filename == EDS(1).assets.filename);
 end
 
@@ -200,14 +202,22 @@ for e_i = 1:numel(EDS)
         matr{1,     (e_i-1)*n_cols+1 +static_col} = sprintf('Total asset value');
         matr{2,     (e_i-1)*n_cols+1 +static_col} = sum(EDS(e_i).assets.Value);
         matr{4,     (e_i-1)*n_cols+1 +static_col} = sprintf('Total asset value %s', entity_name);
-        matr(5:end, (e_i-1)*n_cols+1 +static_col) = num2cell(EDS(e_i).assets.Value);
+        if ismember(e_i,EDS_to_print)
+            matr(5:end, (e_i-1)*n_cols+1 +static_col) = num2cell(EDS(e_i).assets.Value);
+        else
+            matr{5, (e_i-1)*n_cols+1 +static_col} = 'length not compatible';
+        end
     end
     
     matr{1,     (e_i-1)*n_cols+col_1 +static_col} = sprintf('Total damage (absolute; %%age of TAV)');
     matr{2,     (e_i-1)*n_cols+col_1 +static_col} = sum(EDS(e_i).ED_at_centroid);
     matr{3,     (e_i-1)*n_cols+col_1 +static_col} = sum(EDS(e_i).ED_at_centroid)/sum(EDS(e_i).assets.Value);
     matr{4,     (e_i-1)*n_cols+col_1 +static_col} = sprintf('AED %s',strrep(EDS(e_i).annotation_name,'_',' ')); 
-    matr(5:end, (e_i-1)*n_cols+col_1 +static_col) = num2cell(EDS(e_i).ED_at_centroid);
+    if ismember(e_i,EDS_to_print)
+        matr(5:end, (e_i-1)*n_cols+col_1 +static_col) = num2cell(EDS(e_i).ED_at_centroid);
+    else
+        matr{5, (e_i-1)*n_cols+col_1 +static_col} = 'length not compatible';
+    end
 
     if isempty(length(flds)),continue; end
     for fld_i =1:length(flds)
@@ -215,7 +225,11 @@ for e_i = 1:numel(EDS)
         matr{2,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sum(EDS(e_i).(flds{fld_i}));
         matr{3,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sum(EDS(e_i).(flds{fld_i}))/sum(EDS(end).ED_at_centroid);
         matr{4,     (e_i-1)*n_cols+col_1+fld_i+static_col} = sprintf('%s %s',strrep(flds{fld_i},'_',' '),EDS(e_i).annotation_name);
-        matr(5:end, (e_i-1)*n_cols+col_1+fld_i+static_col) = num2cell(EDS(e_i).(flds{fld_i}));
+        if ismember(e_i,EDS_to_print)
+            matr(5:end, (e_i-1)*n_cols+col_1+fld_i+static_col) = num2cell(EDS(e_i).(flds{fld_i}));
+        else
+            matr{5, (e_i-1)*n_cols+col_1+fld_i+static_col} = 'length not compatible';
+        end
     end
 end
 
