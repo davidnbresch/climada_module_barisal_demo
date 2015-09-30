@@ -114,13 +114,13 @@ while max(max(damage_)) > 1000
 end
 switch dmg_dig
     case 3
-        dmg_unit = 'thousands';
+        dmg_unit = 'thousand';
     case 6
-        dmg_unit = 'millions';
+        dmg_unit = 'million';
     case 9
-        dmg_unit = 'billions';
+        dmg_unit = 'billion';
     case 12
-        dmg_unit = 'trillions';
+        dmg_unit = 'trillion';
     otherwise
         dmg_unit = '';
 end
@@ -185,10 +185,11 @@ cmap_tmp = climada_colormap('waterfall', n_hazards);
 
 % special colors for barisal
 cmap = [ 31  78 121; ...  % dark blue
-         31  78 121; ...  % dark blue
+        % 31  78 121; ...  % dark blue
         157 195 230; ...  % light blue
-        157 195 230; ...  % light blue
+        %157 195 230; ...  % light blue
         208 206 206]/255; % grey
+    
 cmap(end+1,:) = cmap_tmp(end,:); clear cmap_tmp
 
 
@@ -215,9 +216,9 @@ for i = 1:length(hazard_names)
 end
 clear c
 % L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Position',[0.56,0.15,0.2,0.1]);
-% L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Location','West');
+L = legend(h(end:-1:1),strrep(hazard_names_str(end:-1:1),'_',' '),'Location','West');
 % for barisal
-L = legend(h([5 3 1]),'Cyclone Wind Speeds','Cyclone Flooding (depth and duration)','Monsoon Flooding (depth and duration)','Location','West');
+% L = legend(h([5 3 1]),'Cyclone Wind Speeds','Cyclone Flooding (depth and duration)','Monsoon Flooding (depth and duration)','Location','West');
 set(L,'Box', 'off','position',[0.1385 0.65 0.4074 0.13])
 % get(L,'position')
 
@@ -236,7 +237,8 @@ damage_disp(end) = damage_(end,end);
 N = 1;
 
 %display damage string above bars
-strfmt = ['%2.' int2str(N) 'f'];
+% strfmt = ['%2.' int2str(N) 'f'];
+strfmt = ['%2.' int2str(0) 'f'];
 dED    = 0.0;
 for d_i = 2:damage_count-1
     %if d_i>2 & value(d_i)<value(d_i+1)

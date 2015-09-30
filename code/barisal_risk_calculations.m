@@ -481,85 +481,119 @@ clear e_i e_dir_i e_dir_ e_subdir_ e_subdir_ m_i m_i measure_i rm_ndx name
 
 %% population entity & casualties [uncomment, but be careful]
 % 
-% % Entity excel file from Ecorys (unstructured)
-% entity_file_xls = [entities_dir filesep 'BCC_entity_210615_se_1_population.xls'];
-% 
-% % Entity template file from global data dir
-% entity_temp_xls = [climada_global.data_dir filesep 'entities' filesep 'entity_template.xls'];
-% sheets          = {'2014' '2030' '2050'}; % for population entity
-% 
-% force_assets_re_read   = 1;% Whether to re-read entity from xls (1) or load matfiles (0)
-% 
-% for s_i = 1:length(sheets)
-%     clear entity
-%     
-%     % mat file name - separate mat file for each sheet in entity xls
-%     entity_file_mat     = strrep(entity_file_xls,'.xls',['_' lower(sheets{s_i}) '.mat']);
-%     
-%     if exist(entity_file_mat,'file') && ~force_assets_re_read
-%         % Load mat file
-%         fprintf('entity %s .mat file already exists, skipping\n',lower(sheets{s_i}))
-%         entity_files{s_i} = entity_file_mat;
-%         load(entity_file_mat)
-%         % append filename for consistency
-%         entity.assets.filename = entity_file_mat;
-%         % save corrected entity
-%         save(entity.assets.filename,'entity')
-%     else
-%         % read in entity from xls
-%         entity = climada_entity_read_wo_assets(entity_temp_xls);
-%         entity.assets = climada_xlsread('no',entity_file_xls,sheets{s_i},1);
-%         entity.assets.comment = ['Population entity ' sheets{s_i}];
-%         entity.assets.reference_year = str2num(sheets{s_i});
-%         % coord transformation from UTM to lat lon
-%         [entity.assets.lon, entity.assets.lat] = utm2ll_shift(entity.assets.lon, entity.assets.lat);
-%         entity.assets.filename          = entity_file_mat; % for filename consistency
-%         fprintf('saving entity as %s\n',entity.assets.filename)
-%         save(entity.assets.filename,'entity')
-%         entity_files{s_i} = entity.assets.filename;
-%     end
-%     
-% end
-% clear entity_file_xls sheets s_i entity_temp_xls entity_file_mat force_assets_re_read
-% 
-% year_i = 2014; climada_global.present_reference_year = year_i;
-% year_f = 2030; climada_global.future_reference_year  = year_f;
-% cc_scen = 'moderate'; ed_i = 0; clear EDS1 EDS2 EDS3 % init
-% 
-% for peril_ID = {'FL_depth_monsoon' 'FL_depth_cyclone'}
-%     ed_i = ed_i +1;
-%     % EDS1 for scenario hazard and entity in present reference year
-%     [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-%     [entity,e_i] = barisal_get_entity(year_i,'population',entity_files);
-%     fprintf('***** EDS1 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-%     EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-%     scen_name1 = ['Today''s; expected casualties; ' num2str(year_i)];
-%     fprintf('Annual expected casualties: %2.2f mn\n',EDS1(ed_i).ED)
-%     
-%     % EDS2 economic growth, no climate change
-%     [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
-%     [entity,e_i] = barisal_get_entity(year_f,'population',entity_files);
-%     fprintf('***** EDS2 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-%     EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-%     scen_name2 = ['Increase; from population; growth ' num2str(year_f)];
-%     fprintf('Annual expected casualties: %2.2f mn\n',EDS2(ed_i).ED)
-%     
-%     % EDS3 climate change + economic growth
-%     [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
-%     [entity,e_i] = barisal_get_entity(year_f,'population',entity_files);
-%     fprintf('***** EDS3 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
-%     EDS3(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
-%     scen_name3 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
-%     fprintf('Annual expected casualties: %2.2f mn\n',EDS3(ed_i).ED)
-% end
-% % figure; climada_ED_plot(EDS1, 0,'people',0,0)
-% % figure; climada_ED_plot(EDS2, 0,'people',0,0)
-% % figure; climada_ED_plot(EDS3, 0,'people',0,0)
-% 
-% climada_waterfall_graph_multi_peril(0,'people',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3)
+% Entity excel file from Ecorys (unstructured)
+entity_file_xls = [entities_dir filesep 'BCC_entity_210615_scenario 1_population.xls'];
+
+% Entity template file from global data dir
+entity_temp_xls = [climada_global.data_dir filesep 'entities' filesep 'entity_template.xls'];
+sheets          = {'2014' '2030' '2050'}; % for population entity
+
+% load damagefunctions
+load([entities_dir filesep 'BCC_population_entity_090615.mat'])
+damagefunctions = entity.damagefunctions;
+
+force_assets_re_read   = 1;% Whether to re-read entity from xls (1) or load matfiles (0)
+
+for s_i = 1:length(sheets)
+    clear entity
+    
+    % mat file name - separate mat file for each sheet in entity xls
+    entity_file_mat     = strrep(entity_file_xls,'.xls',['_' lower(sheets{s_i}) '.mat']);
+    
+    if exist(entity_file_mat,'file') && ~force_assets_re_read
+        % Load mat file
+        fprintf('entity %s .mat file already exists, skipping\n',lower(sheets{s_i}))
+        entity_files{s_i} = entity_file_mat;
+        load(entity_file_mat)
+        % append filename for consistency
+        entity.assets.filename = entity_file_mat;
+        % save corrected entity
+        save(entity.assets.filename,'entity')
+    else
+        % read in entity from xls
+        entity = climada_entity_read_wo_assets(entity_temp_xls);
+        entity.assets = climada_xlsread('no',entity_file_xls,sheets{s_i},1);
+        entity.assets.comment = ['Population entity ' sheets{s_i}];
+        entity.assets.reference_year = str2num(sheets{s_i});
+        % coord transformation from UTM to lat lon
+        [entity.assets.lon, entity.assets.lat] = utm2ll_shift(entity.assets.lon, entity.assets.lat);
+        entity.assets.filename          = entity_file_mat; % for filename consistency
+        % use people damagefunctions
+        entity.damagefunctions = damagefunctions;
+        fprintf('saving entity as %s\n',entity.assets.filename)
+        save(entity.assets.filename,'entity')
+        entity_files{s_i} = entity.assets.filename;
+    end
+    
+end
+clear entity_file_xls sheets s_i entity_temp_xls entity_file_mat force_assets_re_read
+
+
+%%
+climada_global.Value_unit = 'people';
+
+year_i = 2014; climada_global.present_reference_year = year_i;
+year_f = 2030; climada_global.future_reference_year  = year_f;
+cc_scen = 'moderate'; ed_i = 0; clear EDS1 EDS2 EDS3 % init
+
+for peril_ID = {'FL_depth_monsoon' 'FL_depth_cyclone'}
+    ed_i = ed_i +1;
+    % EDS1 for scenario hazard and entity in present reference year
+    [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+    [entity,e_i] = barisal_get_entity(year_i,'population',entity_files);
+    fprintf('***** EDS1 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+    EDS1(ed_i)    = climada_EDS_calc(entity,hazard,'',1,'',1);
+    scen_name1 = ['Today''s; expected casualties; ' num2str(year_i)];
+    fprintf('Annual expected casualties: %2.2f mn\n',EDS1(ed_i).ED)
+    
+    % EDS2 economic growth, no climate change
+    [hazard,h_i] = barisal_get_hazard(year_i,'',peril_ID,hazard_files);
+    [entity,e_i] = barisal_get_entity(year_f,'population',entity_files);
+    fprintf('***** EDS2 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+    EDS2(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+    scen_name2 = ['Increase; from population; growth ' num2str(year_f)];
+    fprintf('Annual expected casualties: %2.2f mn\n',EDS2(ed_i).ED)
+    
+    % EDS3 climate change + economic growth
+    [hazard,h_i] = barisal_get_hazard(year_f,cc_scen,peril_ID,hazard_files);
+    [entity,e_i] = barisal_get_entity(year_f,'population',entity_files);
+    fprintf('***** EDS3 for %s | %s *****\n',char(entity.assets.comment),char(strtok(hazard.comment,',')))
+    EDS3(ed_i)    = climada_EDS_calc(entity,hazard,'',1);
+    scen_name3 = ['Increase; from ' cc_scen '; climate change; ' num2str(year_f)];
+    fprintf('Annual expected casualties: %2.2f mn\n',EDS3(ed_i).ED)
+end
+% figure; climada_ED_plot(EDS1, 0,'people',0,0)
+% figure; climada_ED_plot(EDS2, 0,'people',0,0)
+% figure; climada_ED_plot(EDS3, 0,'people',0,0)
+
+climada_waterfall_graph_multi_peril(0,'people',EDS1,scen_name1,EDS2,scen_name2,EDS3,scen_name3)
 % print(gcf,'-dpng',[results_dir filesep 'BCC_Barisal_population_waterfall_2030.png'])
 % 
 % 
+save([results_dir filesep 'Barisal_EDS_people_2014_2030_FL_monsoon_cyclone.mat'],'EDS1', 'EDS2', 'EDS3')
+
+% EDS(1) = climada_EDS_combine(EDS1(1),EDS1(2));
+
+EDS(1) = EDS1(1);
+EDS(1).ED = sum([EDS1.ED]);
+EDS(2) = EDS2(1);
+EDS(2).ED = sum([EDS2.ED]);
+EDS(3) = EDS3(1);
+EDS(3).ED = sum([EDS3.ED]);
+EDS(1).hazard.comment = 'FL (monsoon and cyclone)';
+EDS(2).hazard.comment = 'FL (monsoon and cyclone)';
+EDS(3).hazard.comment = 'FL (monsoon and cyclone)';
+EDS(1).assets.filename = 'BCC population 2014';
+EDS(2).assets.filename = 'BCC population 2030';
+EDS(3).assets.filename = 'BCC population 2030';
+
+climada_waterfall_graph(EDS(1), EDS(2), EDS(3),'AED');
+save([results_dir filesep 'Barisal_EDS_people_2014_2030.mat'],'EDS')
+savefig([results_dir filesep 'Barisal_EDS_people_2014_2030.fig'])
+
+
+
+
 
 
 %% Multi scenario EDS calc for waterfall

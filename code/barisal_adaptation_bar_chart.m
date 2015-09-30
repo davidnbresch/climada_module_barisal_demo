@@ -38,6 +38,8 @@ measures_impact(2).benefit = measures.benefit_2050;
 measures_impact(2).measures.cost = measures.cost_capex;
 measures_impact(2).title_str = 'Benefit 2050';
 
+save([results_dir filesep 'measures' filesep 'measures_impact_BDT'],'measures_impact');
+
 % create adaptation bar chart
 benefit_str = 'Risk reduction in AED (%)';
 scale_benefit = 2.5;
