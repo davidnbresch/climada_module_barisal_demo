@@ -7,6 +7,7 @@ function measures = climada_measures_construct(measures,n_measures)
 % MODIFICATION HISTORY:
 % Gilles Stassen, init
 % Lea Mueller, muellele@gmail.com, 20150902, rename to hazard_intensity_impact_b from hazard_intensity_impact
+% Lea Mueller, muellele@gmail.com, 20151117, add filename
 
 if ~exist('measures'    ,'var'),    measures = struct([]);  end
 if ~exist('n_measures'  ,'var'),    n_measures = 1;         end
@@ -79,3 +80,5 @@ if all(n_measures < 0)
 end                  
 
 measures = climada_measures_encode(measures);
+measures.filename = 'constructed directly in matlab';
+
