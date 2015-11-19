@@ -293,8 +293,7 @@ clear fld_i flds nan_ndx entity_file_mat force_damfun_re_read force_assets_re_re
 %% create measures to represent project package (20151117)
 % create four measures
 %  1. reduced FL depth due to a package of measures
-%  2. flood resilient buildings with regional scope of land raising on top of reduced FL depth
-%     read regional scope from excel file, given from Ecorys
+%  2. regional scope of land raising on top of reduced FL depth, read regional scope from excel file, given from Ecorys  
 %  3. reduced FL duration due to a package of measures
 %  4. TC with no measures so that it runs through the calculation nontheless
 clear measures
@@ -309,9 +308,9 @@ measures.peril_ID(measure_i) = {'FL'};
 measures.hazard_event_set{measure_i} = [asci_path filesep 'CaseDifferenceDepth_m.asc'];
 measures.hazard_event_set_operator{measure_i} = 'plus';
 
-% flood resilient buildings
+% land raising at selected locations
 measure_i = 2; 
-measures.name{measure_i} = 'flood resilient buildings';
+measures.name{measure_i} = 'land raising';
 measures.hazard_event_set{measure_i} = [asci_path filesep 'CaseDifferenceDepth_m.asc'];
 measures.hazard_event_set_operator{measure_i} = 'plus';
 measures.hazard_intensity_impact_b(measure_i) = -0.3; % land raising by 0.3m
