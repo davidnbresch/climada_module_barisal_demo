@@ -5,6 +5,7 @@
 % create adaptation bar chart based on measures information from table 5.3
 % from Vulnerability Analysis Report
 % ------------------------------------
+% Lea Mueller, muellele@gmail.com, 20151125, rename to climada_adaptation_bar_chart from climada_adaptation_bar_chart_v2
 
 
 % set directory
@@ -45,7 +46,7 @@ benefit_str = 'Risk reduction in AED (%)';
 scale_benefit = 2.5;
 tcr_off = 1;
 sort_benefit = 1;
-fig = climada_adaptation_bar_chart_v2(measures_impact,sort_benefit,scale_benefit,benefit_str,'south',tcr_off);
+fig = climada_adaptation_bar_chart(measures_impact,sort_benefit,scale_benefit,benefit_str,'south',tcr_off);
 print(fig,'-dpdf',[results_dir filesep sprintf('Barisal_measures_proposal.pdf')]);
     
 % sort_benefit = 0;

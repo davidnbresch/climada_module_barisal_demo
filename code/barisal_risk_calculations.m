@@ -739,7 +739,8 @@ for s_i = 1:length(sheets)
         save(entity.assets.filename,'entity')
     else
         % read in entity from xls
-        entity = climada_entity_read_wo_assets(entity_temp_xls);
+        entity = climada_entity_read(entity_temp_xls);
+        %entity = climada_entity_read_wo_assets(entity_temp_xls);
         entity.assets = climada_xlsread('no',entity_file_xls,sheets{s_i},1);
         entity.assets.comment = ['Population entity ' sheets{s_i}];
         entity.assets.reference_year = str2num(sheets{s_i});

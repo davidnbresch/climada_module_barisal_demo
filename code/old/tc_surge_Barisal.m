@@ -50,6 +50,7 @@ function [hazard,EDS,centroids,entity]=tc_surge_Barisal(...
 % Gilles Stassen, gillesstassen@hotmail.com, 20150202, split entity and
 % centroid generation into separate blocks; new input args: force_centroids_recalc, force_entity_recalc
 % David N. Bresch, david.bresch@gmail.com, 20150819, centroids in their own dir
+% Lea Mueller, muellele@gmail.com, 20151125, rename to climada_centroids_generate from climada_generate_centroids
 %-
 
 hazard=[]; EDS = []; centroids = []; entity = []; % init output
@@ -214,7 +215,7 @@ else
     else centroids_90m_check = 0; end
     if ~centroids_90m_check
         centroid_resolution_km = 1.8;
-        centroids = climada_generate_centroids(centroids_rect,centroid_resolution_km);
+        centroids = climada_centroids_generate(centroids_rect,centroid_resolution_km);
         % Assign elevation to centroids
         [DEM, centroids] = climada_read_srtm_DEM('DL',centroids, DEM_save_file, 5, check_plots);
     else

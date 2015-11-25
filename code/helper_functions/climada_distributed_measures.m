@@ -21,8 +21,7 @@ function [hazard,measure]= climada_distributed_measures(measure_file, hazard,bsx
 %   none
 % MODIFICATION HISTORY:
 % Jacob Anz, j.anz@gmx.net, 20150609
-% Gilles Stassen, gillesstassen@hotmail.com, 20150610, clean up, bsx_fun_op
-%                   added
+% Gilles Stassen, gillesstassen@hotmail.com, 20150610, clean up, bsx_fun_op added               
 %-
 
 global climada_global
