@@ -1,5 +1,6 @@
 % barisal_hazard_read
-module_data_dir=[climada_modules_dir filesep 'climada_module_barisal_demo' filesep 'data'];
+module_data_dir = climada_global.data_dir;
+% module_data_dir=[climada_modules_dir filesep 'climada_module_barisal_demo' filesep 'data'];
 spec = '_rain_only';
 
 hazard_names = {'flood_depth_monsoon' 'flood_depth_cyclone' 'flood_duration_monsoon' 'flood_duration_cyclone'};% 'cyclone_wind'}; 
@@ -16,6 +17,7 @@ future_reference_year = 2050;
 % foldername = [climada_global.data_dir filesep 'hazards' filesep 'Flood_Barisal\'];
 foldername = [module_data_dir filesep 'hazards' filesep 'Flood_Barisal' filesep];
 foldername = '\\CHRB1048.CORP.GWPNET.COM\homes\E\S1T2EN\Documents\climada_GIT\vulnerability_analysis_barisal\3_results\';
+foldername = '\\CHRB1065.CORP.GWPNET.COM\homes\X\S3BXXW\Documents\lea\climada_git\Vulnerability_Analysis_Barisal\3_results\';
 
 %% loop over hazards
 for y_i = future_reference_year
@@ -73,6 +75,8 @@ for h_i = 1:length(hazard_names)
 
         hazard.comment = sprintf('%s %s, modelled by W+B', strrep(hazard_name,'_',' '), cc_scenario{cc_i});
         hazard.reference_year = reference_year;
+        % add fieldname .scenario
+        hazard.scenario = cc_scenario{cc_i};
         if ~isempty(strfind(upper(hazard_name), 'DURATION'))
             hazard.peril_ID = 'FL_';
         else
