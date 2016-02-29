@@ -5,6 +5,7 @@
 %           - new assets (location, values and damage function change)
 %           - reduced hazard (FL depth monsoon, FL duration mosoon, FL depth cyclone, FL duration cyclone)
 %           - land raising by 0.3 m(hazard_intensity_impact_b = -0.3)
+% Lea Mueller, muellele@gmail.com, 20160229, rename to climada_shapeplotter from shape_plotter
 
 clc
 climada_global.waitbar = 0;
@@ -190,7 +191,7 @@ for scenario_eco_i = 1:numel(entity_file_xls)
     %         figure; hold on
     %         climada_entity_plot(entity,5,'BDT',0);
     %         box on
-    %         shape_plotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
+    %         climada_shapeplotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
     %         axis([min(entity.assets.lon)-0.01 max(entity.assets.lon)+0.01 min(entity.assets.lat)-0.01 max(entity.assets.lat)+0.01])
     %
     %         entity_file_mat = strrep(entity_file_mat,'.mat','_slums.mat');
@@ -285,8 +286,15 @@ for scenario_eco_i = 1:numel(entity_file_xls)
             load(entity_file_mat)
             load([entities_dir filesep '20151116_measure_project_package' filesep 'measures_project_package.mat'])
             entity.measures = measures;
+            
+            % add assets specifics
             entity.assets.filename = entity_file_mat;
             entity.assets.region   = sprintf('Barisal, Scenario %d',scenario_eco_i);
+            entity.assets = climada_assets_category_ID(entity.assets); % add .Category_name and .Category_ID
+            if isfield(entity.assets,'X')
+                entity.assets = rmfield(entity.assets,'X');
+                entity.assets = rmfield(entity.assets,'Y');
+            end
             save(entity.assets.filename,'entity')
         end
         
@@ -303,6 +311,10 @@ clear fld_i flds nan_ndx entity_file_mat force_damfun_re_read force_assets_re_re
 %  2. regional scope of land raising on top of reduced FL depth, read regional scope from excel file, given from Ecorys  
 %  3. reduced FL duration due to a package of measures
 %  4. TC with no measures so that it runs through the calculation nontheless
+
+entity_file_xls{1} = [entities_dir filesep '20151116_measure_project_package' filesep 'Assets_at_risk_100x100_16112015 Final FS Project package - scenario 1.xlsx'];
+load([strrep(entity_file_xls{1},'.xlsx','') '_floods_2014'])
+
 clear measures
 n_measures = 4;
 measures = climada_measures_construct('',n_measures);
@@ -395,11 +407,11 @@ for scenario_eco_i = 1:numel(eco_scen)
         scenario = climada_scenario_name(entity,hazard); fprintf('\n***** %s: %s *****\n', scenario.name_simple, peril_ID)
         measures_impact1(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
         measures_impact1(ed_i).filename = [results_dir filesep 'BCC_measure_package_impact_' num2str(year_i) '.mat'];
-        for i = 1:length(measures_impact1(ed_i).EDS)
-            % convert back to UTM
-            [measures_impact1(ed_i).EDS(i).assets.X,measures_impact1(ed_i).EDS(i).assets.Y] = ...
-                ll2utm_shift(measures_impact1(ed_i).EDS(i).assets.lat,measures_impact1(ed_i).EDS(i).assets.lon);
-        end
+        %for i = 1:length(measures_impact1(ed_i).EDS)
+        %    % convert back to UTM
+        %    [measures_impact1(ed_i).EDS(i).assets.X,measures_impact1(ed_i).EDS(i).assets.Y] = ...
+        %        ll2utm_shift(measures_impact1(ed_i).EDS(i).assets.lat,measures_impact1(ed_i).EDS(i).assets.lon);
+        %end
         save(measures_impact1(ed_i).filename,'measures_impact1')   
         
         % ----2030-----
@@ -412,11 +424,11 @@ for scenario_eco_i = 1:numel(eco_scen)
         scenario = climada_scenario_name(entity,hazard); fprintf('\n***** %s: %s *****\n', scenario.name_simple, peril_ID)
         measures_impact2(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
         measures_impact2(ed_i).filename = [results_dir filesep 'BCC_measure_package_impact_' num2str(year_f) '.mat'];
-        for i = 1:length(measures_impact2(ed_i).EDS)
-            % convert back to UTM
-            [measures_impact1(ed_i).EDS(i).assets.X,measures_impact1(ed_i).EDS(i).assets.Y] = ...
-                ll2utm_shift(measures_impact2(ed_i).EDS(i).assets.lat,measures_impact1(ed_i).EDS(i).assets.lon);
-        end
+        %for i = 1:length(measures_impact2(ed_i).EDS)
+        %    % convert back to UTM
+        %    [measures_impact1(ed_i).EDS(i).assets.X,measures_impact1(ed_i).EDS(i).assets.Y] = ...
+        %        ll2utm_shift(measures_impact2(ed_i).EDS(i).assets.lat,measures_impact1(ed_i).EDS(i).assets.lon);
+        %end
         save(measures_impact2(ed_i).filename,'measures_impact2')   
         
 
@@ -435,11 +447,11 @@ for scenario_eco_i = 1:numel(eco_scen)
         scenario = climada_scenario_name(entity,hazard); fprintf('\n***** %s: %s *****\n', scenario.name_simple, peril_ID)
         measures_impact3(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
         measures_impact3(ed_i).filename = [results_dir filesep 'BCC_measure_package_impact_' num2str(year_f) '_cc_' cc_scen '_' num2str(year_f) '.mat'];
-        for i = 1:length(measures_impact3(ed_i).EDS)
-            % convert back to UTM
-            [measures_impact3(ed_i).EDS(i).assets.X,measures_impact3(ed_i).EDS(i).assets.Y] = ...
-                ll2utm_shift(measures_impact3(ed_i).EDS(i).assets.lat,measures_impact3(ed_i).EDS(i).assets.lon);
-        end
+        %for i = 1:length(measures_impact3(ed_i).EDS)
+        %    % convert back to UTM
+        %    [measures_impact3(ed_i).EDS(i).assets.X,measures_impact3(ed_i).EDS(i).assets.Y] = ...
+        %        ll2utm_shift(measures_impact3(ed_i).EDS(i).assets.lat,measures_impact3(ed_i).EDS(i).assets.lon);
+        %end
         save(measures_impact3(ed_i).filename,'measures_impact3')
 
         
@@ -454,11 +466,11 @@ for scenario_eco_i = 1:numel(eco_scen)
         scenario = climada_scenario_name(entity,hazard); fprintf('\n***** %s: %s *****\n', scenario.name_simple, peril_ID)
         measures_impact4(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
         measures_impact4(ed_i).filename = [results_dir filesep 'BCC_measure_package_impact_' num2str(year_f) '.mat'];
-        for i = 1:length(measures_impact4(ed_i).EDS)
-            % convert back to UTM
-            [measures_impact4(ed_i).EDS(i).assets.X,measures_impact4(ed_i).EDS(i).assets.Y] = ...
-                ll2utm_shift(measures_impact4(ed_i).EDS(i).assets.lat,measures_impact4(ed_i).EDS(i).assets.lon);
-        end
+        %for i = 1:length(measures_impact4(ed_i).EDS)
+        %    % convert back to UTM
+        %    [measures_impact4(ed_i).EDS(i).assets.X,measures_impact4(ed_i).EDS(i).assets.Y] = ...
+        %        ll2utm_shift(measures_impact4(ed_i).EDS(i).assets.lat,measures_impact4(ed_i).EDS(i).assets.lon);
+        %end
         save(measures_impact4(ed_i).filename,'measures_impact4')
         
 
@@ -478,11 +490,11 @@ for scenario_eco_i = 1:numel(eco_scen)
         scenario = climada_scenario_name(entity,hazard); fprintf('\n***** %s: %s *****\n', scenario.name_simple, peril_ID)
         measures_impact5(ed_i) = climada_measures_impact_advanced(entity,hazard,'no');
         measures_impact5(ed_i).filename = [results_dir filesep 'BCC_measure_package_impact_' num2str(year_f) '_cc_' cc_scen '_' num2str(year_f) '.mat'];
-        for i = 1:length(measures_impact5(ed_i).EDS)
-            % convert back to UTM
-            [measures_impact5(ed_i).EDS(i).assets.X,measures_impact5(ed_i).EDS(i).assets.Y] = ...
-                ll2utm_shift(measures_impact5(ed_i).EDS(i).assets.lat,measures_impact5(ed_i).EDS(i).assets.lon);
-        end
+        %for i = 1:length(measures_impact5(ed_i).EDS)
+        %    % convert back to UTM
+        %    [measures_impact5(ed_i).EDS(i).assets.X,measures_impact5(ed_i).EDS(i).assets.Y] = ...
+        %        ll2utm_shift(measures_impact5(ed_i).EDS(i).assets.lat,measures_impact5(ed_i).EDS(i).assets.lon);
+        %end
         save(measures_impact5(ed_i).filename,'measures_impact5')
     end
 end %scenario_eco_i
@@ -511,29 +523,30 @@ measures_impact(6:10) = measures_impact2_baseline;
 measures_impact(11:15) = measures_impact3_baseline;
 % measures_impact(16:20) = measures_impact4_baseline;
 % measures_impact(21:25) = measures_impact5_baseline;
-measures_impact(1).filename = [results_dir filesep 'measures_impact_2014_2030_2050_scenario_1']
-save(measures_impact(1).filename,'measures_impact')
-
-% maybe add category tables to baseline scenario
-n_scenarios = numel(measures_impact);
-for scenario_i = 1:n_scenarios  
-    % change Value_unit to BDT, add asset Categories, remove X, Y
-    for m_i = 1:numel(measures_impact(scenario_i).EDS)
-        measures_impact(scenario_i).EDS(m_i).assets.Category = entity.assets.Category;
-        measures_impact(scenario_i).EDS(m_i).assets.Category_name = entity.assets.Category_name;
-        measures_impact(scenario_i).EDS(m_i).assets.Category_ID = entity.assets.Category_ID;
-        if isfield(measures_impact(scenario_i).EDS(m_i).assets,'X')
-            measures_impact(scenario_i).EDS(m_i).assets = rmfield(measures_impact(scenario_i).EDS(m_i).assets,'X');
-            measures_impact(scenario_i).EDS(m_i).assets = rmfield(measures_impact(scenario_i).EDS(m_i).assets,'Y');
-        end
-    end
-end %scenario_i
+% measures_impact(1).filename = [results_dir filesep 'measures_impact_2014_2030_2050_scenario_1']
 measures_impact(1).filename = [results_dir filesep 'measures_impact_2014_2030_scenario_1']
 save(measures_impact(1).filename,'measures_impact')
-% save(measures_impact(1).filename,'measures_impact','-v7.3')
 
-filename = entity(1).assets.filename;
-category_selected = 'Commercial_buildings_Pucca_ASSETS';
+% % maybe add category tables to baseline scenario
+% n_scenarios = numel(measures_impact);
+% for scenario_i = 1:n_scenarios  
+%     % change Value_unit to BDT, add asset Categories, remove X, Y
+%     for m_i = 1:numel(measures_impact(scenario_i).EDS)
+%         measures_impact(scenario_i).EDS(m_i).assets.Category = entity.assets.Category;
+%         measures_impact(scenario_i).EDS(m_i).assets.Category_name = entity.assets.Category_name;
+%         measures_impact(scenario_i).EDS(m_i).assets.Category_ID = entity.assets.Category_ID;
+%         if isfield(measures_impact(scenario_i).EDS(m_i).assets,'X')
+%             measures_impact(scenario_i).EDS(m_i).assets = rmfield(measures_impact(scenario_i).EDS(m_i).assets,'X');
+%             measures_impact(scenario_i).EDS(m_i).assets = rmfield(measures_impact(scenario_i).EDS(m_i).assets,'Y');
+%         end
+%     end
+% end %scenario_i
+% measures_impact(1).filename = [results_dir filesep 'measures_impact_2014_2030_scenario_1']
+% save(measures_impact(1).filename,'measures_impact')
+% % save(measures_impact(1).filename,'measures_impact','-v7.3')
+% 
+% filename = entity(1).assets.filename;
+% category_selected = 'Commercial_buildings_Pucca_ASSETS';
 
 
 
@@ -1150,15 +1163,15 @@ end
 % for ed_i = 1:length(EDS1)
 %     climada_ED_plot(EDS1(ed_i), 0,'BDT',0,0)
 %     print(gcf,'-dpng',[results_dir filesep 'BCC_dmg_slums_' strrep(strtok(EDS1(ed_i).hazard.comment,','),' ','_') '.png'])
-%     shape_plotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
+%     climada_shapeplotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
 %     close
 %     climada_ED_plot(EDS3(ed_i), 0,'BDT',0,0)
 %     print(gcf,'-dpng',[results_dir filesep 'BCC_dmg_slums_' strrep(strtok(EDS3(ed_i).hazard.comment,','),' ','_') '.png'])
-%     shape_plotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
+%     climada_shapeplotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
 %     close
 %     climada_ED_plot(EDS5(ed_i), 0,'BDT',0,0)
 %     print(gcf,'-dpng',[results_dir filesep 'BCC_dmg_slums_' strrep(strtok(EDS5(ed_i).hazard.comment,','),' ','_') '.png'])
-%     shape_plotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
+%     climada_shapeplotter(BCC_wards_ll,'','linewidth',1,'color',[81 81 81]/255);
 %     close
 % end
 
@@ -1202,7 +1215,7 @@ for s_i = [1 3 5]
         MI_EDS_combined(ed_i).assets.lon = MI_EDS_combined(ed_i).assets.X;
         MI_EDS_combined(ed_i).assets.lat = MI_EDS_combined(ed_i).assets.Y;
         climada_MI_plot(MI_EDS_combined(ed_i), 0,'BDT',0,0,1)
-        shape_plotter(BCC_wards_ll,'','x','y','linewidth',1,'color',[81 81 81]/255);
+        climada_shapeplotter(BCC_wards_ll,'','x','y','linewidth',1,'color',[81 81 81]/255);
         print(gcf,'-dpng',[results_dir filesep 'BCC_measure_benefit_' ...
             strrep(MI_EDS_combined(ed_i).annotation_name,' ','_') '_' ...
             num2str(MI_EDS_combined(1).reference_year) '.png'])

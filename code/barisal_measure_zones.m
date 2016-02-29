@@ -6,7 +6,7 @@ filename = 'M:\BGCC\CHR\RK\RS\A_Sustainable_Development\Projects\ECA\BarisalBang
 zones = shaperead(filename);
 
 % figure
-% shape_plotter(zones,'Zones_code')
+% climada_shapeplotter(zones,'Zones_code')
 
 figure
 fill(zones(1).X(~isnan(zones(1).X)),zones(1).Y(~isnan(zones(1).X)),'-b')
