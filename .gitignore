@@ -1,6 +1,6 @@
 
 *.asv
-data
+data/results/20150914_baseline
 
 code/climada_centroids_runoff.m
 code/test_bed.m
@@ -57,7 +57,6 @@ data/entities/old/
 data/entities/old_2/
 data/hazards/old/
 data/results/old/
-data/results/
 data/entities/
 code/climada_waterfall_graph_copy.m
 code/climada_waterfall_graph_stacked.m
