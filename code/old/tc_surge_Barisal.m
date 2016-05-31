@@ -11,7 +11,7 @@ function [hazard,EDS,centroids,entity]=tc_surge_Barisal(...
 %       1) get centroids for the area of interest(see PARAMETERS)
 %          if they do not exist, run GDP_entity in order to create them
 %       2) create TC wind hazard event set
-%          call tc_surge_hazard_create in order to
+%          call climada_ts_hazard_set in order to
 %       3) create bathymetry file for region
 %     	4) create TC surge hazard event set
 %   show the result
@@ -51,6 +51,7 @@ function [hazard,EDS,centroids,entity]=tc_surge_Barisal(...
 % centroid generation into separate blocks; new input args: force_centroids_recalc, force_entity_recalc
 % David N. Bresch, david.bresch@gmail.com, 20150819, centroids in their own dir
 % Lea Mueller, muellele@gmail.com, 20151125, rename to climada_centroids_generate from climada_generate_centroids
+% David N. Bresch, david.bresch@gmail.com, 20160529, calling climada_ts_hazard_set instead of tc_surge_hazard_create
 %-
 
 hazard=[]; EDS = []; centroids = []; entity = []; % init output
@@ -141,7 +142,7 @@ entity_file_xls =   [module_data_dir filesep 'entities' filesep strcat('Barisal_
 unisys_file= [climada_global.data_dir filesep 'tc_tracks' filesep tc_track_file];
 precip_data_file = [module_data_dir filesep 'precip_data' filesep 'precip.mon.total.v6.nc'];
 
-% 3) Bathymetry parameters are set in tc_surge_hazard_create
+% 3) Bathymetry parameters are set in climada_ts_hazard_set
 srtm_data_dir = [module_data_dir filesep 'system' filesep 'srtm_55_08'];
 DEM_save_file = [module_data_dir filesep 'system' filesep strcat('Barisal_',num2str(adm_lvl),'_DEM.mat')];
 
@@ -361,8 +362,8 @@ end
 % -----------------------------------
 if ~exist(hazard_set_file_ts,'file') || force_hazard_recalc
     % policy research working paper 5280 "Vulnerability of Bangladesh to Cyclones in a Changing Climate"
-    surge_params = [0.1252 -1.7005]; 
-    hazard_ts = tc_surge_hazard_create(hazard_tc,hazard_set_file_ts,centroids,[],surge_params);
+    %surge_params = [0.1252 -1.7005]; % 20160529, no parames handed over to climada_ts_hazard_set
+    hazard_ts = climada_ts_hazard_set(hazard_tc,hazard_set_file_ts);
 else
     fprintf('loading TS surge hazard set from %s\n',hazard_set_file_ts);
     load(hazard_set_file_ts);
