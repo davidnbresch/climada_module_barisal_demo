@@ -61,3 +61,7 @@ data/entities/
 code/climada_waterfall_graph_copy.m
 code/climada_waterfall_graph_stacked.m
 .git-rewrite/
+
+data/results/.DS_Store
+
+.DS_Store
