@@ -252,7 +252,7 @@ else
         load(entity_BGD_file)       % Load existing file
     else
         % Entity from high resolution night lights
-        entity_BGD = climada_nightlight_entity(country_name,'Barisal',1);
+        entity_BGD = climada_nightlight_entity(country_name,'Barisal'); % 20160907, dnb
         save(entity_BGD_file,'entity_BGD');     % Save for next time
     end
     
