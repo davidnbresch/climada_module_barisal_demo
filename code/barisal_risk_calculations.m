@@ -9,7 +9,7 @@
 
 clc
 climada_global.waitbar = 0;
-climada_global.EDS_at_centroid = 0;
+climada_global.damage_at_centroid = 0;
 
 %% Directories
 barisal_data_dir = climada_global.data_dir;

@@ -77,7 +77,7 @@ if ~exist('check_plots','var'),                     check_plots = 1;            
 if ~isfield(climada_global,'climada_global_ori')
     climada_global.climada_global_ori = climada_global; % store for reset
 end
-climada_global.EDS_at_centroid = 1;
+climada_global.damage_at_centroid = 1;
 climada_global.waitbar = 0; % suppress waitbar
 climada_global.tc.default_min_TimeStep = 1/4;
 %
